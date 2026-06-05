@@ -1,0 +1,24 @@
+services:
+  # ─── BACKEND (Web Service) ────────────────────────────────────────────────
+  - type: web
+    name: zentrix-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SOURCE_BASE
+        value: https://gzmovieboxapi.septorch.tech
+      - key: SOURCE_KEY
+        value: Godszeal
+      - key: ZENTRIX_API_KEYS
+        sync: false   # set this manually in Render dashboard — never commit keys
+    plan: free
+
+  # ─── FRONTEND (Static Site) ───────────────────────────────────────────────
+  - type: web
+    name: zentrix-frontend
+    runtime: static
+    rootDir: frontend
+    staticPublishPath: .
+    plan: free

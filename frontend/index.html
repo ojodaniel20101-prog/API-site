@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zentrix API — Movie & Series Download API</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+    <style>
+        :root {
+            --accent: #7C3AED;
+            --accent-2: #A78BFA;
+            --accent-3: #C4B5FD;
+            --accent-glow: rgba(124, 58, 237, 0.25);
+            --bg-0: #06060A;
+            --bg-1: #0D0D14;
+            --bg-2: #131320;
+            --bg-3: #1B1B2C;
+            --bg-4: #222236;
+            --text-0: #F5F4FF;
+            --text-1: #B8B5D4;
+            --text-2: #7A7892;
+            --text-3: #4A4860;
+            --border-0: #1E1E2E;
+            --border-1: #2C2C42;
+            --border-2: #3D3D5C;
+            --green: #34D399;
+            --red: #F87171;
+            --yellow: #FBBF24;
+            --r: 14px;
+            --r-sm: 8px;
+            --r-xs: 5px;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-0);
+            color: var(--text-0);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* ─── NOISE OVERLAY ─── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+            opacity: 0.018;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* ─── AMBIENT GLOWS ─── */
+        .ambient {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 50%;
+            filter: blur(120px);
+        }
+        .ambient-1 {
+            width: 700px; height: 500px;
+            top: -200px; left: -200px;
+            background: radial-gradient(ellipse, rgba(124,58,237,0.12), transparent 70%);
+            animation: ambientDrift 25s ease-in-out infinite;
+        }
+        .ambient-2 {
+            width: 500px; height: 600px;
+            bottom: -100px; right: -100px;
+            background: radial-gradient(ellipse, rgba(167,139,250,0.07), transparent 70%);
+            animation: ambientDrift 30s ease-in-out infinite reverse;
+        }
+        @keyframes ambientDrift {
+            0%,100% { transform: translate(0,0) scale(1); }
+            33% { transform: translate(40px,30px) scale(1.05); }
+            66% { transform: translate(-20px,20px) scale(0.95); }
+        }
+
+        /* ─── LAYOUT ─── */
+        .app {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ─── SIDEBAR ─── */
+        .sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            background: rgba(13,13,20,0.6);
+            backdrop-filter: blur(24px);
+            border-right: 1px solid var(--border-0);
+            display: flex;
+            flex-direction: column;
+            padding: 28px 0;
+            z-index: 100;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border-1); border-radius: 4px; }
+
+        .sidebar-logo {
+            padding: 0 24px 28px;
+            border-bottom: 1px solid var(--border-0);
+            margin-bottom: 20px;
+        }
+
+        .logo-mark {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px var(--accent-glow);
+            flex-shrink: 0;
+        }
+
+        .logo-icon svg { width: 20px; height: 20px; color: white; }
+
+        .logo-text {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--text-0);
+        }
+
+        .logo-version {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 2px 8px;
+            background: rgba(124,58,237,0.15);
+            border: 1px solid rgba(124,58,237,0.2);
+            border-radius: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--accent-2);
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-nav { padding: 0 12px; flex: 1; }
+
+        .nav-group { margin-bottom: 28px; }
+
+        .nav-group-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-3);
+            padding: 0 12px;
+            margin-bottom: 6px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: var(--r-sm);
+            text-decoration: none;
+            color: var(--text-2);
+            font-size: 13.5px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            color: var(--text-0);
+            background: var(--bg-3);
+            border-color: var(--border-0);
+        }
+
+        .nav-item.active {
+            color: var(--accent-2);
+            background: rgba(124,58,237,0.1);
+            border-color: rgba(124,58,237,0.2);
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 50%; transform: translateY(-50%);
+            width: 3px; height: 16px;
+            background: var(--accent);
+            border-radius: 0 3px 3px 0;
+        }
+
+        .nav-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0.5;
+            flex-shrink: 0;
+        }
+
+        .nav-item.active .nav-dot { opacity: 1; }
+
+        .method-pill {
+            margin-left: auto;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 4px;
+            background: rgba(124,58,237,0.15);
+            color: var(--accent-2);
+            border: 1px solid rgba(124,58,237,0.2);
+        }
+
+        .sidebar-footer {
+            padding: 20px 24px 0;
+            border-top: 1px solid var(--border-0);
+            margin-top: auto;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: rgba(52, 211, 153, 0.07);
+            border: 1px solid rgba(52, 211, 153, 0.15);
+            border-radius: var(--r-sm);
+        }
+
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green);
+            animation: statusPulse 2.5s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes statusPulse {
+            0%,100% { opacity: 1; box-shadow: 0 0 6px var(--green); }
+            50% { opacity: 0.6; box-shadow: 0 0 12px var(--green); }
+        }
+
+        .status-text {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--green);
+        }
+
+        /* ─── MAIN CONTENT ─── */
+        .content {
+            flex: 1;
+            min-width: 0;
+            overflow-y: auto;
+        }
+
+        /* ─── TOP NAV (mobile) ─── */
+        .topnav {
+            display: none;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            height: 60px;
+            background: rgba(6,6,10,0.92);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-0);
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .topnav-logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+
+        .hamburger {
+            width: 36px; height: 36px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            cursor: pointer;
+            background: none;
+            border: 1px solid var(--border-1);
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .hamburger span {
+            display: block;
+            height: 1.5px;
+            background: var(--text-1);
+            border-radius: 2px;
+            transition: all 0.25s ease;
+        }
+
+        .hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+        .hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        .hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+        .mobile-sidebar {
+            display: none;
+            position: fixed;
+            inset: 60px 0 0 0;
+            background: rgba(6,6,10,0.97);
+            backdrop-filter: blur(20px);
+            z-index: 150;
+            padding: 24px 20px;
+            overflow-y: auto;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .mobile-sidebar.open {
+            transform: translateX(0);
+        }
+
+        /* ─── HERO ─── */
+        .hero {
+            padding: 100px 60px 80px;
+            max-width: 900px;
+            position: relative;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(124,58,237,0.08);
+            border: 1px solid rgba(124,58,237,0.18);
+            border-radius: 100px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--accent-2);
+            letter-spacing: 0.5px;
+            margin-bottom: 28px;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .eyebrow-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: statusPulse 2s infinite;
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(44px, 7vw, 76px);
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 1.05;
+            margin-bottom: 24px;
+            animation: fadeUp 0.5s 0.1s ease both;
+        }
+
+        .hero h1 em {
+            font-style: normal;
+            background: linear-gradient(135deg, var(--accent-2), #E9D5FF, var(--accent-2));
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 4s linear infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .hero-sub {
+            font-size: clamp(15px, 2vw, 18px);
+            color: var(--text-1);
+            max-width: 520px;
+            line-height: 1.7;
+            margin-bottom: 40px;
+            font-weight: 300;
+            animation: fadeUp 0.5s 0.2s ease both;
+        }
+
+        .hero-ctas {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            animation: fadeUp 0.5s 0.3s ease both;
+            margin-bottom: 64px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: var(--r-sm);
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 24px rgba(124,58,237,0.35);
+        }
+
+        .btn-primary:hover {
+            background: #6D28D9;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(124,58,237,0.45);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-1);
+            border: 1px solid var(--border-1);
+        }
+
+        .btn-ghost:hover {
+            background: var(--bg-3);
+            color: var(--text-0);
+            border-color: var(--border-2);
+        }
+
+        /* ─── STATS STRIP ─── */
+        .stats-strip {
+            display: flex;
+            gap: 0;
+            border: 1px solid var(--border-0);
+            border-radius: var(--r);
+            overflow: hidden;
+            animation: fadeUp 0.5s 0.4s ease both;
+            background: var(--bg-1);
+        }
+
+        .stat-item {
+            flex: 1;
+            padding: 20px 24px;
+            border-right: 1px solid var(--border-0);
+            position: relative;
+        }
+
+        .stat-item:last-child { border-right: none; }
+
+        .stat-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text-0);
+            letter-spacing: -0.5px;
+        }
+
+        .stat-value span {
+            background: linear-gradient(135deg, var(--accent-2), var(--accent-3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-2);
+            margin-top: 2px;
+            font-weight: 400;
+        }
+
+        /* ─── SECTIONS ─── */
+        .section {
+            padding: 72px 60px;
+            max-width: 900px;
+            border-top: 1px solid var(--border-0);
+        }
+
+        .section-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(124,58,237,0.08);
+            border: 1px solid rgba(124,58,237,0.15);
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-2);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 18px;
+        }
+
+        .section h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.8px;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .section-desc {
+            color: var(--text-1);
+            font-size: 15px;
+            max-width: 580px;
+            font-weight: 300;
+            line-height: 1.7;
+            margin-bottom: 36px;
+        }
+
+        /* ─── INFO GRID ─── */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .info-card {
+            padding: 20px;
+            background: var(--bg-2);
+            border: 1px solid var(--border-0);
+            border-radius: var(--r-sm);
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .info-card:hover {
+            border-color: var(--border-1);
+            background: var(--bg-3);
+        }
+
+        .info-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-3);
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--text-0);
+            word-break: break-all;
+        }
+
+        .info-note {
+            font-size: 12px;
+            color: var(--text-2);
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        .info-note code {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--accent-2);
+            background: rgba(124,58,237,0.1);
+            padding: 1px 5px;
+            border-radius: 3px;
+        }
+
+        /* ─── ENDPOINT CARD ─── */
+        .endpoint-card {
+            border: 1px solid var(--border-0);
+            border-radius: var(--r);
+            overflow: hidden;
+            background: var(--bg-1);
+        }
+
+        .endpoint-head {
+            padding: 20px 28px;
+            background: linear-gradient(135deg, rgba(124,58,237,0.06), transparent);
+            border-bottom: 1px solid var(--border-0);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .method-badge {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 13px;
+            border-radius: var(--r-xs);
+            background: rgba(124,58,237,0.15);
+            border: 1px solid rgba(124,58,237,0.25);
+            color: var(--accent-2);
+            letter-spacing: 0.5px;
+        }
+
+        .endpoint-path {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-0);
+        }
+
+        .endpoint-body { padding: 28px; }
+
+        .endpoint-desc {
+            font-size: 14px;
+            color: var(--text-1);
+            line-height: 1.7;
+            margin-bottom: 28px;
+            font-weight: 300;
+        }
+
+        /* ─── PARAMS TABLE ─── */
+        .table-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-3);
+            margin-bottom: 12px;
+        }
+
+        .params-wrap { overflow-x: auto; margin-bottom: 32px; }
+
+        .params-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+        }
+
+        .params-table th {
+            text-align: left;
+            padding: 10px 14px;
+            background: var(--bg-2);
+            color: var(--text-3);
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border-0);
+            white-space: nowrap;
+        }
+
+        .params-table td {
+            padding: 13px 14px;
+            border-bottom: 1px solid var(--border-0);
+            color: var(--text-1);
+            vertical-align: top;
+            font-size: 13px;
+        }
+
+        .params-table tr:last-child td { border-bottom: none; }
+
+        .params-table tr:hover td { background: rgba(255,255,255,0.015); }
+
+        .p-name {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-0);
+        }
+
+        .p-type {
+            display: inline-block;
+            padding: 2px 7px;
+            background: rgba(124,58,237,0.1);
+            border-radius: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--accent-2);
+            margin-left: 6px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-req {
+            background: rgba(52,211,153,0.1);
+            color: var(--green);
+            border: 1px solid rgba(52,211,153,0.2);
+        }
+
+        .badge-opt {
+            background: rgba(122,120,146,0.12);
+            color: var(--text-2);
+            border: 1px solid var(--border-0);
+        }
+
+        .badge-cond {
+            background: rgba(251,191,36,0.1);
+            color: var(--yellow);
+            border: 1px solid rgba(251,191,36,0.2);
+        }
+
+        /* ─── CODE BLOCKS ─── */
+        .code-block {
+            background: var(--bg-0);
+            border: 1px solid var(--border-0);
+            border-radius: var(--r-sm);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .code-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: var(--bg-2);
+            border-bottom: 1px solid var(--border-0);
+        }
+
+        .lang-tabs {
+            display: flex;
+            gap: 2px;
+        }
+
+        .lang-tab {
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-2);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .lang-tab:hover { color: var(--text-0); background: var(--bg-3); }
+        .lang-tab.active { color: var(--accent-2); background: rgba(124,58,237,0.12); }
+
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            background: transparent;
+            border: 1px solid var(--border-1);
+            border-radius: 5px;
+            color: var(--text-2);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+
+        .copy-btn:hover { color: var(--text-0); border-color: var(--border-2); }
+        .copy-btn.copied { color: var(--green); border-color: rgba(52,211,153,0.3); }
+
+        .code-panel { display: none; }
+        .code-panel.active { display: block; }
+
+        .code-block pre {
+            margin: 0;
+            padding: 18px 22px;
+            overflow-x: auto;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12.5px;
+            line-height: 1.75;
+        }
+
+        .code-block pre code { font-family: inherit; }
+
+        .hljs { background: transparent !important; padding: 0 !important; }
+
+        /* ─── RESPONSE TABS ─── */
+        .response-tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 12px;
+            background: var(--bg-2);
+            border: 1px solid var(--border-0);
+            border-radius: var(--r-sm);
+            padding: 4px;
+            width: fit-content;
+        }
+
+        .resp-tab {
+            padding: 6px 14px;
+            border-radius: var(--r-xs);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            font-family: 'IBM Plex Mono', monospace;
+            transition: all 0.15s;
+            color: var(--text-2);
+        }
+
+        .resp-tab:hover { color: var(--text-0); }
+
+        .resp-tab.active.ok { background: rgba(52,211,153,0.12); color: var(--green); }
+        .resp-tab.active.err { background: rgba(248,113,113,0.12); color: var(--red); }
+
+        .resp-panel { display: none; }
+        .resp-panel.active { display: block; }
+
+        /* ─── PLAYGROUND ─── */
+        .playground {
+            background: var(--bg-1);
+            border: 1px solid var(--border-0);
+            border-radius: var(--r);
+            overflow: hidden;
+        }
+
+        .playground-head {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-0);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, rgba(124,58,237,0.05), transparent);
+        }
+
+        .playground-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .playground-badge {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 9px;
+            background: rgba(124,58,237,0.12);
+            border: 1px solid rgba(124,58,237,0.2);
+            border-radius: 4px;
+            color: var(--accent-2);
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .playground-body { padding: 24px; }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-2);
+        }
+
+        .field label span {
+            color: var(--accent-2);
+            margin-left: 4px;
+        }
+
+        .field input, .field select {
+            padding: 10px 14px;
+            background: var(--bg-0);
+            border: 1px solid var(--border-1);
+            border-radius: var(--r-sm);
+            color: var(--text-0);
+            font-size: 13px;
+            font-family: 'IBM Plex Mono', monospace;
+            transition: border-color 0.15s;
+            outline: none;
+        }
+
+        .field input:focus, .field select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+        }
+
+        .field input::placeholder { color: var(--text-3); }
+
+        .field select option { background: var(--bg-2); }
+
+        .series-fields {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .series-fields.show { display: grid; }
+
+        .playground-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .btn-run {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 24px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--r-sm);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 16px rgba(124,58,237,0.3);
+        }
+
+        .btn-run:hover {
+            background: #6D28D9;
+            box-shadow: 0 6px 20px rgba(124,58,237,0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-run:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-clear {
+            padding: 11px 18px;
+            background: transparent;
+            border: 1px solid var(--border-1);
+            border-radius: var(--r-sm);
+            color: var(--text-2);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-clear:hover {
+            color: var(--text-0);
+            border-color: var(--border-2);
+        }
+
+        .pg-result {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .pg-result.show { display: block; }
+
+        .result-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .result-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 5px;
+        }
+
+        .result-status.ok {
+            background: rgba(52,211,153,0.1);
+            border: 1px solid rgba(52,211,153,0.2);
+            color: var(--green);
+        }
+
+        .result-status.error {
+            background: rgba(248,113,113,0.1);
+            border: 1px solid rgba(248,113,113,0.2);
+            color: var(--red);
+        }
+
+        .result-status.loading {
+            background: rgba(124,58,237,0.1);
+            border: 1px solid rgba(124,58,237,0.2);
+            color: var(--accent-2);
+        }
+
+        .spinner {
+            width: 12px; height: 12px;
+            border: 2px solid rgba(167,139,250,0.3);
+            border-top-color: var(--accent-2);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .result-time {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--text-3);
+        }
+
+        /* ─── RESPONSE CODES ─── */
+        .codes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .code-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: var(--bg-1);
+            border: 1px solid var(--border-0);
+            border-radius: var(--r-sm);
+            transition: border-color 0.15s;
+        }
+
+        .code-row:hover { border-color: var(--border-1); }
+
+        .code-num {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 5px;
+            min-width: 54px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .code-num.ok { background: rgba(52,211,153,0.1); color: var(--green); border: 1px solid rgba(52,211,153,0.2); }
+        .code-num.err { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+        .code-num.warn { background: rgba(251,191,36,0.1); color: var(--yellow); border: 1px solid rgba(251,191,36,0.2); }
+
+        .code-info { flex: 1; }
+        .code-msg { font-size: 13.5px; font-weight: 600; color: var(--text-0); margin-bottom: 2px; }
+        .code-note { font-size: 12px; color: var(--text-2); }
+
+        /* ─── FOOTER ─── */
+        .footer {
+            border-top: 1px solid var(--border-0);
+            padding: 40px 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-brand {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--text-0);
+        }
+
+        .footer-copy {
+            font-size: 12px;
+            color: var(--text-3);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-links a {
+            font-size: 12px;
+            color: var(--text-2);
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .footer-links a:hover { color: var(--text-0); }
+
+        /* ─── ANIMATIONS ─── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .fade-in.visible { opacity: 1; transform: none; }
+
+        /* ─── SCROLLBAR ─── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--border-2); }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .topnav { display: flex; }
+            .mobile-sidebar { display: block; }
+
+            .hero { padding: 40px 24px 60px; }
+            .section { padding: 48px 24px; }
+            .footer { padding: 32px 24px; }
+
+            .hero h1 { letter-spacing: -1px; }
+
+            .field-row { grid-template-columns: 1fr; }
+            .series-fields.show { grid-template-columns: 1fr; }
+
+            .stats-strip { flex-direction: column; }
+            .stat-item { border-right: none; border-bottom: 1px solid var(--border-0); }
+            .stat-item:last-child { border-bottom: none; }
+
+            .endpoint-head { padding: 16px 20px; }
+            .endpoint-body { padding: 20px; }
+
+            .footer { flex-direction: column; align-items: flex-start; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Ambient -->
+    <div class="ambient ambient-1"></div>
+    <div class="ambient ambient-2"></div>
+
+    <div class="app">
+        <!-- ─── SIDEBAR ─── -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <a class="logo-mark" href="#">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    </div>
+                    <div>
+                        <div class="logo-text">ZENTRIX</div>
+                        <div class="logo-version">v1.0 · STABLE</div>
+                    </div>
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-group">
+                    <div class="nav-group-label">Overview</div>
+                    <a class="nav-item active" href="#hero" onclick="scrollTo('hero')">
+                        <span class="nav-dot"></span>
+                        Introduction
+                    </a>
+                    <a class="nav-item" href="#getting-started" onclick="scrollTo('getting-started')">
+                        <span class="nav-dot"></span>
+                        Getting Started
+                    </a>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group-label">API Reference</div>
+                    <a class="nav-item" href="#endpoints" onclick="scrollTo('endpoints')">
+                        <span class="nav-dot"></span>
+                        Endpoints
+                        <span class="method-pill">GET</span>
+                    </a>
+                    <a class="nav-item" href="#playground" onclick="scrollTo('playground')">
+                        <span class="nav-dot"></span>
+                        Playground
+                    </a>
+                    <a class="nav-item" href="#response-codes" onclick="scrollTo('response-codes')">
+                        <span class="nav-dot"></span>
+                        Response Codes
+                    </a>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group-label">Integration</div>
+                    <a class="nav-item" href="#examples" onclick="scrollTo('examples')">
+                        <span class="nav-dot"></span>
+                        Code Examples
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span class="status-text">All systems operational</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ─── MOBILE TOP NAV ─── -->
+        <nav class="topnav" id="topnav">
+            <div class="topnav-logo">ZENTRIX</div>
+            <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </nav>
+
+        <!-- Mobile sidebar overlay -->
+        <div class="mobile-sidebar" id="mobile-sidebar">
+            <div class="nav-group">
+                <div class="nav-group-label">Overview</div>
+                <a class="nav-item" href="#hero" onclick="mobileNav('hero')"><span class="nav-dot"></span>Introduction</a>
+                <a class="nav-item" href="#getting-started" onclick="mobileNav('getting-started')"><span class="nav-dot"></span>Getting Started</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-label">API Reference</div>
+                <a class="nav-item" href="#endpoints" onclick="mobileNav('endpoints')"><span class="nav-dot"></span>Endpoints <span class="method-pill">GET</span></a>
+                <a class="nav-item" href="#playground" onclick="mobileNav('playground')"><span class="nav-dot"></span>Playground</a>
+                <a class="nav-item" href="#response-codes" onclick="mobileNav('response-codes')"><span class="nav-dot"></span>Response Codes</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-label">Integration</div>
+                <a class="nav-item" href="#examples" onclick="mobileNav('examples')"><span class="nav-dot"></span>Code Examples</a>
+            </div>
+        </div>
+
+        <!-- ─── MAIN CONTENT ─── -->
+        <main class="content" id="content">
+
+            <!-- HERO -->
+            <section id="hero">
+                <div class="hero">
+                    <div class="hero-eyebrow">
+                        <span class="eyebrow-dot"></span>
+                        API Documentation — v1.0
+                    </div>
+                    <h1><em>Zentrix</em> API</h1>
+                    <p class="hero-sub">
+                        Powerful movie & series downloads via clean HTTP requests.
+                        Built for developers who want speed, reliability, and zero friction.
+                    </p>
+                    <div class="hero-ctas">
+                        <a href="#getting-started" class="btn btn-primary">
+                            Get Started
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                        <a href="#playground" class="btn btn-ghost">
+                            Try it Live
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        </a>
+                    </div>
+
+                    <div class="stats-strip">
+                        <div class="stat-item">
+                            <div class="stat-value"><span>99.9%</span></div>
+                            <div class="stat-label">Uptime SLA</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value"><span>&lt;200ms</span></div>
+                            <div class="stat-label">Avg. Response Time</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value"><span>4K+</span></div>
+                            <div class="stat-label">Titles Available</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value"><span>100</span></div>
+                            <div class="stat-label">Req/min Rate Limit</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- GETTING STARTED -->
+            <section class="section fade-in" id="getting-started">
+                <span class="section-tag">Quick Start</span>
+                <h2>Getting Started</h2>
+                <p class="section-desc">Everything you need to integrate with Zentrix API in under 5 minutes.</p>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-label">Base URL</div>
+                        <div class="info-value">https://zentrix-api.onrender.com/v1</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Protocol</div>
+                        <div class="info-value">HTTPS Only</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Authentication</div>
+                        <div class="info-value">X-API-Key</div>
+                        <div class="info-note">Pass your key in every request header as <code>X-API-Key: your_key</code></div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Response Format</div>
+                        <div class="info-value">application/json</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Rate Limit</div>
+                        <div class="info-value">100 req / min</div>
+                        <div class="info-note">Per API key. Exceeding returns <code>429</code></div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Versioning</div>
+                        <div class="info-value">/v1/ prefix</div>
+                        <div class="info-note">Breaking changes will increment the version path</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ENDPOINTS -->
+            <section class="section fade-in" id="endpoints">
+                <span class="section-tag">API Reference</span>
+                <h2>Endpoints</h2>
+                <p class="section-desc">Currently available endpoint for searching and retrieving download links.</p>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-head">
+                        <span class="method-badge">GET</span>
+                        <span class="endpoint-path">/api/download</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p class="endpoint-desc">
+                            Search for a movie or series and retrieve download links with full metadata.
+                            Supports quality selection, series episode targeting, and subtitle retrieval.
+                        </p>
+
+                        <div class="table-title">Query Parameters</div>
+                        <div class="params-wrap">
+                            <table class="params-table">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><span class="p-name">query</span><span class="p-type">string</span></td>
+                                        <td><span class="badge badge-req">required</span></td>
+                                        <td></td>
+                                        <td>Movie or series name to search</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="p-name">type</span><span class="p-type">string</span></td>
+                                        <td><span class="badge badge-opt">optional</span></td>
+                                        <td>Default: auto-detect</td>
+                                        <td><code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">movie</code> or <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">series</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="p-name">season</span><span class="p-type">integer</span></td>
+                                        <td><span class="badge badge-cond">conditional</span></td>
+                                        <td></td>
+                                        <td>Season number — required when type is <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">series</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="p-name">episode</span><span class="p-type">integer</span></td>
+                                        <td><span class="badge badge-cond">conditional</span></td>
+                                        <td></td>
+                                        <td>Episode number — required when type is <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">series</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="p-name">quality</span><span class="p-type">string</span></td>
+                                        <td><span class="badge badge-opt">optional</span></td>
+                                        <td>Default: best</td>
+                                        <td>Preferred quality: <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">360</code> · <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">480</code> · <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">720</code> · <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">1080</code></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Response example with tabs -->
+                        <div class="table-title" style="margin-bottom:12px">Response Example</div>
+                        <div class="response-tabs">
+                            <button class="resp-tab active ok" onclick="switchRespTab(this, 'resp-ok')">200 OK</button>
+                            <button class="resp-tab err" onclick="switchRespTab(this, 'resp-404')">404 Not Found</button>
+                            <button class="resp-tab err" onclick="switchRespTab(this, 'resp-401')">401 Unauthorized</button>
+                        </div>
+
+                        <div class="resp-panel active" id="resp-ok">
+                            <div class="code-block">
+                                <div class="code-head">
+                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green)">● 200 OK</span>
+                                    <button class="copy-btn" onclick="copyBlock(this, 'json-ok')">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                        Copy
+                                    </button>
+                                </div>
+                                <pre><code class="language-json" id="json-ok">{
+  "status": "success",
+  "data": {
+    "title": "Inception",
+    "year": 2010,
+    "type": "movie",
+    "quality": "1080p",
+    "file_size": "2.4 GB",
+    "download_url": "https://cdn.zentrix.dev/dl/inception-2010-1080p.mp4",
+    "subtitle_url": "https://cdn.zentrix.dev/subs/inception-2010-en.srt"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="resp-panel" id="resp-404">
+                            <div class="code-block">
+                                <div class="code-head">
+                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--red)">● 404 Not Found</span>
+                                    <button class="copy-btn" onclick="copyBlock(this, 'json-404')">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                        Copy
+                                    </button>
+                                </div>
+                                <pre><code class="language-json" id="json-404">{
+  "status": "error",
+  "code": 404,
+  "message": "No results found for the given query.",
+  "query": "xyzunknownmovie"
+}</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="resp-panel" id="resp-401">
+                            <div class="code-block">
+                                <div class="code-head">
+                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--red)">● 401 Unauthorized</span>
+                                    <button class="copy-btn" onclick="copyBlock(this, 'json-401')">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                        Copy
+                                    </button>
+                                </div>
+                                <pre><code class="language-json" id="json-401">{
+  "status": "error",
+  "code": 401,
+  "message": "Invalid or missing API key. Include your key as X-API-Key header."
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PLAYGROUND -->
+            <section class="section fade-in" id="playground">
+                <span class="section-tag">Interactive</span>
+                <h2>API Playground</h2>
+                <p class="section-desc">Test the endpoint directly from your browser. Enter your API key and parameters below.</p>
+
+                <div class="playground">
+                    <div class="playground-head">
+                        <span class="playground-title">Try /api/download</span>
+                        <span class="playground-badge">LIVE</span>
+                    </div>
+                    <div class="playground-body">
+                        <div class="field-row">
+                            <div class="field" style="grid-column: 1 / -1">
+                                <label>Query <span>*</span></label>
+                                <input type="text" id="pg-query" placeholder="e.g. Inception" />
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label>Type</label>
+                                <select id="pg-type" onchange="toggleSeriesFields()">
+                                    <option value="">Auto-detect</option>
+                                    <option value="movie">movie</option>
+                                    <option value="series">series</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Quality</label>
+                                <select id="pg-quality">
+                                    <option value="">Best available</option>
+                                    <option value="1080">1080p</option>
+                                    <option value="720">720p</option>
+                                    <option value="480">480p</option>
+                                    <option value="360">360p</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="series-fields" id="series-fields">
+                            <div class="field">
+                                <label>Season</label>
+                                <input type="number" id="pg-season" placeholder="1" min="1" />
+                            </div>
+                            <div class="field">
+                                <label>Episode</label>
+                                <input type="number" id="pg-episode" placeholder="1" min="1" />
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>API Key <span>*</span></label>
+                            <input type="password" id="pg-apikey" placeholder="your_api_key_here" />
+                        </div>
+
+                        <div class="playground-actions">
+                            <button class="btn-run" id="pg-run-btn" onclick="runPlayground()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                Send Request
+                            </button>
+                            <button class="btn-clear" onclick="clearPlayground()">Clear</button>
+                        </div>
+
+                        <div class="pg-result" id="pg-result">
+                            <div class="result-head">
+                                <div class="result-status" id="pg-status"></div>
+                                <div class="result-time" id="pg-time"></div>
+                            </div>
+                            <div class="code-block">
+                                <pre><code class="language-json" id="pg-output"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RESPONSE CODES -->
+            <section class="section fade-in" id="response-codes">
+                <span class="section-tag">Reference</span>
+                <h2>Response Codes</h2>
+                <p class="section-desc">Standard HTTP response codes returned by the Zentrix API.</p>
+
+                <div class="codes-list">
+                    <div class="code-row">
+                        <span class="code-num ok">200</span>
+                        <div class="code-info">
+                            <div class="code-msg">OK</div>
+                            <div class="code-note">Request successful. Download links and metadata returned.</div>
+                        </div>
+                    </div>
+                    <div class="code-row">
+                        <span class="code-num err">400</span>
+                        <div class="code-info">
+                            <div class="code-msg">Bad Request</div>
+                            <div class="code-note">Missing required parameters or invalid query format.</div>
+                        </div>
+                    </div>
+                    <div class="code-row">
+                        <span class="code-num err">401</span>
+                        <div class="code-info">
+                            <div class="code-msg">Unauthorized</div>
+                            <div class="code-note">Missing or invalid API key in the <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">X-API-Key</code> header.</div>
+                        </div>
+                    </div>
+                    <div class="code-row">
+                        <span class="code-num err">404</span>
+                        <div class="code-info">
+                            <div class="code-msg">Not Found</div>
+                            <div class="code-note">No results found for the given search query.</div>
+                        </div>
+                    </div>
+                    <div class="code-row">
+                        <span class="code-num warn">429</span>
+                        <div class="code-info">
+                            <div class="code-msg">Too Many Requests</div>
+                            <div class="code-note">Rate limit exceeded (100 req/min). Slow down and retry after 60 seconds.</div>
+                        </div>
+                    </div>
+                    <div class="code-row">
+                        <span class="code-num err">500</span>
+                        <div class="code-info">
+                            <div class="code-msg">Internal Server Error</div>
+                            <div class="code-note">Something went wrong on our end. Please try again later.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CODE EXAMPLES -->
+            <section class="section fade-in" id="examples">
+                <span class="section-tag">Integration</span>
+                <h2>Code Examples</h2>
+                <p class="section-desc">Ready-to-paste snippets for the most popular languages and tools.</p>
+
+                <div class="code-block">
+                    <div class="code-head">
+                        <div class="lang-tabs">
+                            <button class="lang-tab active" onclick="switchLangTab(this, 'ex-curl')">cURL</button>
+                            <button class="lang-tab" onclick="switchLangTab(this, 'ex-python')">Python</button>
+                            <button class="lang-tab" onclick="switchLangTab(this, 'ex-js')">JavaScript</button>
+                            <button class="lang-tab" onclick="switchLangTab(this, 'ex-node')">Node.js</button>
+                        </div>
+                        <button class="copy-btn" id="ex-copy-btn" onclick="copyActiveExample()">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            Copy
+                        </button>
+                    </div>
+
+                    <div class="code-panel active" id="ex-curl">
+                        <pre><code class="language-bash"># Movie download
+curl -X GET "https://zentrix-api.onrender.com/v1/api/download?query=Inception&type=movie&quality=1080" \
+  -H "X-API-Key: your_api_key_here" \
+  -H "Accept: application/json"
+
+# Series episode
+curl -X GET "https://zentrix-api.onrender.com/v1/api/download?query=Breaking+Bad&type=series&season=1&episode=1" \
+  -H "X-API-Key: your_api_key_here"</code></pre>
+                    </div>
+
+                    <div class="code-panel" id="ex-python">
+                        <pre><code class="language-python">import requests
+
+BASE_URL = "https://zentrix-api.onrender.com/v1"
+API_KEY = "your_api_key_here"
+
+def download_movie(title: str, quality: str = "1080") -> dict:
+    resp = requests.get(
+        f"{BASE_URL}/api/download",
+        headers={"X-API-Key": API_KEY},
+        params={"query": title, "type": "movie", "quality": quality}
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+def download_episode(title: str, season: int, episode: int) -> dict:
+    resp = requests.get(
+        f"{BASE_URL}/api/download",
+        headers={"X-API-Key": API_KEY},
+        params={"query": title, "type": "series", "season": season, "episode": episode}
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+# Usage
+data = download_movie("Inception", quality="1080")
+print(f"Title: {data['data']['title']}")
+print(f"Download: {data['data']['download_url']}")</code></pre>
+                    </div>
+
+                    <div class="code-panel" id="ex-js">
+                        <pre><code class="language-javascript">const ZENTRIX_BASE = 'https://zentrix-api.onrender.com/v1';
+const API_KEY = 'your_api_key_here';
+
+async function getDownloadLink({ query, type = 'movie', quality = '1080', season, episode } = {}) {
+  const params = new URLSearchParams({ query, type, quality });
+  if (season) params.append('season', season);
+  if (episode) params.append('episode', episode);
+
+  const res = await fetch(`${ZENTRIX_BASE}/api/download?${params}`, {
+    headers: { 'X-API-Key': API_KEY, 'Accept': 'application/json' }
+  });
+
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// Movie
+getDownloadLink({ query: 'Inception' })
+  .then(({ data }) => console.log(data.download_url))
+  .catch(console.error);
+
+// Episode
+getDownloadLink({ query: 'Breaking Bad', type: 'series', season: 1, episode: 1 })
+  .then(({ data }) => console.log(data.download_url));</code></pre>
+                    </div>
+
+                    <div class="code-panel" id="ex-node">
+                        <pre><code class="language-javascript">// Node.js with axios
+const axios = require('axios');
+
+const zentrix = axios.create({
+  baseURL: 'https://zentrix-api.onrender.com/v1',
+  headers: { 'X-API-Key': process.env.ZENTRIX_API_KEY }
+});
+
+async function search(query, options = {}) {
+  const { data } = await zentrix.get('/api/download', {
+    params: { query, ...options }
+  });
+  return data;
+}
+
+// Async/await usage
+(async () => {
+  try {
+    const result = await search('Inception', { type: 'movie', quality: '1080' });
+    console.log('Download URL:', result.data.download_url);
+    console.log('Subtitle URL:', result.data.subtitle_url);
+  } catch (err) {
+    if (err.response?.status === 429) {
+      console.error('Rate limited — wait 60s and retry');
+    } else {
+      console.error(err.message);
+    }
+  }
+})();</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FOOTER -->
+            <footer class="footer">
+                <div>
+                    <div class="footer-brand">ZENTRIX</div>
+                    <div class="footer-copy" style="margin-top:4px">&copy; 2025 Zentrix API. All rights reserved.</div>
+                </div>
+                <div class="footer-links">
+                    <a href="#">Terms</a>
+                    <a href="#">Privacy</a>
+                    <a href="#">Status</a>
+                    <a href="#">Support</a>
+                </div>
+            </footer>
+
+        </main>
+    </div>
+
+    <script>
+        hljs.highlightAll();
+
+        // ─── MOBILE MENU ───
+        function toggleMobileMenu() {
+            const btn = document.getElementById('hamburger');
+            const menu = document.getElementById('mobile-sidebar');
+            btn.classList.toggle('open');
+            menu.classList.toggle('open');
+        }
+
+        function mobileNav(id) {
+            document.getElementById('hamburger').classList.remove('open');
+            document.getElementById('mobile-sidebar').classList.remove('open');
+            setTimeout(() => scrollToSection(id), 10);
+        }
+
+        // ─── SCROLL SPY ───
+        const sections = ['hero', 'getting-started', 'endpoints', 'playground', 'response-codes', 'examples'];
+
+        function updateActiveNav() {
+            const content = document.getElementById('content');
+            const scrollY = content.scrollTop;
+
+            let current = sections[0];
+            for (const id of sections) {
+                const el = document.getElementById(id);
+                if (el && el.offsetTop - 100 <= scrollY) current = id;
+            }
+
+            document.querySelectorAll('.sidebar .nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('href') === '#' + current) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        document.getElementById('content').addEventListener('scroll', updateActiveNav);
+
+        // ─── SCROLL TO ───
+        function scrollToSection(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                document.getElementById('content').scrollTo({ top: el.offsetTop - 20, behavior: 'smooth' });
+            }
+        }
+
+        // Override anchor clicks in sidebar
+        document.querySelectorAll('.sidebar .nav-item').forEach(item => {
+            item.addEventListener('click', e => {
+                e.preventDefault();
+                const id = item.getAttribute('href').replace('#', '');
+                scrollToSection(id);
+            });
+        });
+
+        // ─── FADE IN OBSERVER ───
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.08 });
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        // ─── RESPONSE TAB ───
+        function switchRespTab(btn, panelId) {
+            document.querySelectorAll('.resp-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.resp-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(panelId).classList.add('active');
+        }
+
+        // ─── LANG TABS ───
+        function switchLangTab(btn, panelId) {
+            document.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.code-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(panelId).classList.add('active');
+        }
+
+        // ─── COPY ───
+        function copyBlock(btn, id) {
+            const text = document.getElementById(id).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                btn.classList.add('copied');
+                btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
+                }, 2000);
+            });
+        }
+
+        function copyActiveExample() {
+            const active = document.querySelector('.code-panel.active code');
+            if (!active) return;
+            navigator.clipboard.writeText(active.textContent).then(() => {
+                const btn = document.getElementById('ex-copy-btn');
+                btn.classList.add('copied');
+                btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
+                }, 2000);
+            });
+        }
+
+        // ─── SERIES FIELDS ───
+        function toggleSeriesFields() {
+            const type = document.getElementById('pg-type').value;
+            const fields = document.getElementById('series-fields');
+            fields.classList.toggle('show', type === 'series');
+        }
+
+        // ─── PLAYGROUND ───
+        async function runPlayground() {
+            const query = document.getElementById('pg-query').value.trim();
+            const apiKey = document.getElementById('pg-apikey').value.trim();
+            const type = document.getElementById('pg-type').value;
+            const quality = document.getElementById('pg-quality').value;
+            const season = document.getElementById('pg-season').value;
+            const episode = document.getElementById('pg-episode').value;
+
+            if (!query) { alert('Query is required.'); return; }
+            if (!apiKey) { alert('API key is required.'); return; }
+
+            const resultEl = document.getElementById('pg-result');
+            const statusEl = document.getElementById('pg-status');
+            const timeEl = document.getElementById('pg-time');
+            const outputEl = document.getElementById('pg-output');
+            const btn = document.getElementById('pg-run-btn');
+
+            resultEl.classList.add('show');
+            btn.disabled = true;
+            statusEl.className = 'result-status loading';
+            statusEl.innerHTML = `<div class="spinner"></div> Sending...`;
+            timeEl.textContent = '';
+            outputEl.textContent = '';
+
+            const params = new URLSearchParams({ query });
+            if (type) params.append('type', type);
+            if (quality) params.append('quality', quality);
+            if (season) params.append('season', season);
+            if (episode) params.append('episode', episode);
+
+            const start = Date.now();
+            try {
+                const res = await fetch(`https://zentrix-api.onrender.com/v1/api/download?${params}`, {
+                    headers: { 'X-API-Key': apiKey, 'Accept': 'application/json' }
+                });
+                const elapsed = Date.now() - start;
+                let json;
+                try { json = await res.json(); } catch { json = { error: 'Non-JSON response' }; }
+
+                timeEl.textContent = `${elapsed}ms`;
+
+                if (res.ok) {
+                    statusEl.className = 'result-status ok';
+                    statusEl.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span> ${res.status} OK`;
+                } else {
+                    statusEl.className = 'result-status error';
+                    statusEl.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span> ${res.status} ${res.statusText}`;
+                }
+
+                outputEl.textContent = JSON.stringify(json, null, 2);
+                hljs.highlightElement(outputEl);
+
+            } catch (err) {
+                const elapsed = Date.now() - start;
+                timeEl.textContent = `${elapsed}ms`;
+                statusEl.className = 'result-status error';
+                statusEl.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span> Network Error`;
+                outputEl.textContent = JSON.stringify({ error: err.message, note: 'This playground connects to a live endpoint. Make sure your API key is valid and the server is running.' }, null, 2);
+                hljs.highlightElement(outputEl);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function clearPlayground() {
+            document.getElementById('pg-query').value = '';
+            document.getElementById('pg-apikey').value = '';
+            document.getElementById('pg-type').value = '';
+            document.getElementById('pg-quality').value = '';
+            document.getElementById('pg-season').value = '';
+            document.getElementById('pg-episode').value = '';
+            document.getElementById('pg-result').classList.remove('show');
+            document.getElementById('series-fields').classList.remove('show');
+        }
+
+        // Keyboard shortcut: Enter to run playground
+        document.getElementById('pg-query').addEventListener('keydown', e => {
+            if (e.key === 'Enter') runPlayground();
+        });
+    </script>
+</body>
+</html>
