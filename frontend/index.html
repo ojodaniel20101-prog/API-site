@@ -635,7 +635,7 @@
     </div>
 
     <div class="stats-bar">
-      <div class="stat-pill"><div class="stat-dot"></div> <strong id="apiCount">12</strong> APIs Available</div>
+      <div class="stat-pill"><div class="stat-dot"></div> <strong id="apiCount">16</strong> APIs Available</div>
       <div class="stat-pill baseurl-pill">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         Base URL: <strong id="baseUrlText">api.zentrixtech.name.ng</strong>
@@ -670,9 +670,17 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         All
       </button>
-      <button class="cat-btn" data-cat="AI" onclick="filterCat(this,'AI')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 0 2h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1 0-2h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/></svg>
-        AI
+      <button class="cat-btn" data-cat="AI Chat" onclick="filterCat(this,'AI Chat')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        AI Chat
+      </button>
+      <button class="cat-btn" data-cat="AI Media" onclick="filterCat(this,'AI Media')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        AI Media
+      </button>
+      <button class="cat-btn" data-cat="AI Image" onclick="filterCat(this,'AI Image')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        AI Image
       </button>
       <button class="cat-btn" data-cat="Media" onclick="filterCat(this,'Media')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
@@ -718,7 +726,7 @@
 
     <div class="section-head">
       <div class="section-title">API Marketplace</div>
-      <div class="section-count" id="filteredCount">Showing 12 APIs</div>
+      <div class="section-count" id="filteredCount">Showing 16 APIs</div>
     </div>
     <div class="api-grid" id="apiGrid"></div>
 
@@ -901,6 +909,63 @@
           <div class="docs-param"><span class="param-name">ep_id</span><span class="param-opt">optional</span> — Episode hash ID (speeds up extraction)</div>
         </div>
         <div class="docs-code">GET /api/anime/stream?title=Naruto&ep_number=1&apikey=KEY</div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">💬 AI Chat</div>
+        <p class="docs-text">Chat with various AI models using the following endpoints.</p>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/ai/chat</div>
+        </div>
+        <p class="docs-text">Multi-model AI chat (ChatGPT, Claude, Gemini, etc.).</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">message</span><span class="param-req">required</span> — User message</div>
+          <div class="docs-param"><span class="param-name">model</span><span class="param-opt">optional</span> — AI model (default: chatgpt)</div>
+          <div class="docs-param"><span class="param-name">sessionId</span><span class="param-opt">optional</span> — Session memory ID</div>
+        </div>
+        <div class="docs-code">GET /api/ai/chat?message=hello&model=chatgpt&apikey=KEY</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/ai/qwen</div>
+        </div>
+        <p class="docs-text">Direct access to Alibaba's Qwen AI.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">message</span><span class="param-req">required</span> — User message</div>
+          <div class="docs-param"><span class="param-name">sessionId</span><span class="param-opt">optional</span> — Session memory ID</div>
+        </div>
+        <div class="docs-code">GET /api/ai/qwen?message=hello&apikey=KEY</div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">🎵 AI Media</div>
+        <p class="docs-text">Generate AI music tracks from text prompts.</p>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/ai/music</div>
+        </div>
+        <p class="docs-text">Start a music generation job. Returns a <code>taskId</code>.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">prompt</span><span class="param-req">required</span> — Music description</div>
+        </div>
+        <div class="docs-code">GET /api/ai/music?prompt=lofi+hip+hop&apikey=KEY</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/ai/music/result</div>
+        </div>
+        <p class="docs-text">Poll for the result of a music generation job.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">taskId</span><span class="param-req">required</span> — Task ID from /api/ai/music</div>
+        </div>
+        <div class="docs-code">GET /api/ai/music/result?taskId=abc&apikey=KEY</div>
       </div>
 
       <div class="docs-section">
@@ -1213,6 +1278,65 @@ const APIS = [
       { name: 'prompt', label: 'Blending Instruction (optional)', placeholder: 'merge into one scene', type: 'text' },
     ],
     endpoint: '/api/image/blend',
+    method: 'GET',
+  },
+  {
+    id: 'ai-chat',
+    name: 'AI Chat',
+    category: 'AI Chat',
+    badge: 'auth',
+    desc: 'Chat with multiple AI models (ChatGPT, Claude, Gemini, DeepSeek, etc.). Supports session memory.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/ai/chat', desc: 'Chat with AI models' }],
+    fields: [
+      { name: 'message', label: 'Message', placeholder: 'Hello, how are you?', type: 'text' },
+      { name: 'sessionId', label: 'Session ID', placeholder: 'zentrix_chat', type: 'text' },
+      { name: 'model', label: 'Model', type: 'select', options: ['chatgpt', 'claude', 'gemini', 'grok', 'deepseek', 'qwen', 'kimi', 'perplexity'] },
+    ],
+    endpoint: '/api/ai/chat',
+    method: 'GET',
+  },
+  {
+    id: 'ai-qwen',
+    name: 'Qwen AI',
+    category: 'AI Chat',
+    badge: 'auth',
+    desc: 'Direct access to Alibaba\'s Qwen AI for high-quality conversations and reasoning.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6a6 6 0 1 0 6 6 6 6 0 0 0-6-6zm0 10a4 4 0 1 1 4-4 4 4 0 0 1-4 4z"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/ai/qwen', desc: 'Chat with Qwen AI' }],
+    fields: [
+      { name: 'message', label: 'Message', placeholder: 'Explain quantum physics', type: 'text' },
+      { name: 'sessionId', label: 'Session ID', placeholder: 'zentrix_qwen', type: 'text' },
+    ],
+    endpoint: '/api/ai/qwen',
+    method: 'GET',
+  },
+  {
+    id: 'ai-music',
+    name: 'AI Music',
+    category: 'AI Media',
+    badge: 'auth',
+    desc: 'Generate AI music from text prompts. Returns a task_id to poll for the final audio result.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/ai/music', desc: 'Generate AI music' }],
+    fields: [
+      { name: 'prompt', label: 'Music Prompt', placeholder: 'lofi hip hop beat for studying', type: 'text' },
+    ],
+    endpoint: '/api/ai/music',
+    method: 'GET',
+  },
+  {
+    id: 'ai-music-result',
+    name: 'Music Result',
+    category: 'AI Media',
+    badge: 'auth',
+    desc: 'Poll for the result of an AI music generation job using the taskId.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/ai/music/result', desc: 'Get music result' }],
+    fields: [
+      { name: 'taskId', label: 'Task ID', placeholder: 'from music response', type: 'text' },
+    ],
+    endpoint: '/api/ai/music/result',
     method: 'GET',
   },
 ];
@@ -1833,6 +1957,7 @@ document.getElementById('tokenEyeBtn').addEventListener('click', () => {
 
 // ===================== INIT =====================
 document.getElementById('apiCount').textContent = APIS.length;
+document.getElementById('filteredCount').textContent = `Showing ${APIS.length} APIs`;
 renderGrid();
 updateTokenUI();
 
