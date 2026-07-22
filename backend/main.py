@@ -115,7 +115,10 @@ CDN_HEADERS = {
 def build_url(path: str, request: Request | None = None) -> str:
     base = BASE_URL
     if not base and request is not None:
-        base = str(request.base_url).rstrip("/")
+        # Check for Railway/Proxy forwarded protocol
+        protocol = request.headers.get("x-forwarded-proto", "http")
+        host = request.headers.get("x-forwarded-host") or request.url.netloc
+        base = f"{protocol}://{host}"
     return f"{base}{path}" if base else path
 
 
@@ -129,7 +132,10 @@ def make_token(url: str) -> str:
 
 def decode_token(token: str) -> str | None:
     try:
-        return base64.urlsafe_b64decode(token + "==").decode("utf-8")
+        missing_padding = len(token) % 4
+        if missing_padding:
+            token += "=" * (4 - missing_padding)
+        return base64.urlsafe_b64decode(token).decode("utf-8")
     except Exception:
         return None
 
