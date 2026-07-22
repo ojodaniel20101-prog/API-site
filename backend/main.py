@@ -282,21 +282,21 @@ async def search(
     items = result.get("items", [])
     pager = result.get("pager", {})
 
-    # Serialize SearchResultItem objects to dicts
+    # Serialize search result dicts
     serialized = []
     for item in items:
         serialized.append({
-            "subjectId": item.subjectId,
-            "title": item.title,
-            "subjectType": item.subjectType,
-            "detailPath": item.detailPath,
-            "releaseDate": item.releaseDate,
-            "imdbRatingValue": item.imdbRatingValue,
-            "hasResource": item.hasResource,
-            "poster": item.cover,
-            "genre": item.genre,
-            "duration": item.duration,
-            "description": item.description,
+            "subjectId": item.get("subjectId", ""),
+            "title": item.get("title", ""),
+            "subjectType": item.get("subjectType", ""),
+            "detailPath": item.get("detailPath", ""),
+            "releaseDate": item.get("releaseDate", ""),
+            "imdbRatingValue": item.get("imdbRatingValue", 0),
+            "hasResource": item.get("hasResource", False),
+            "poster": item.get("cover", ""),
+            "genre": item.get("genre", []),
+            "duration": item.get("duration", 0),
+            "description": item.get("description", ""),
         })
 
     return {
@@ -329,8 +329,8 @@ async def get_sources(
     if not items:
         return JSONResponse(status_code=404, content={"success": False, "error": f"No results found for '{q}'"})
     item = items[0]
-    subject_id = item.subjectId
-    detail_path = item.detailPath
+    subject_id = item.get("subjectId", "")
+    detail_path = item.get("detailPath", "")
 
     # Step 2: Get streams
     try:
@@ -396,7 +396,7 @@ async def get_details(
     items = result.get("items", [])
     if not items:
         return JSONResponse(status_code=404, content={"success": False, "error": f"No results found for '{q}'"})
-    detail_path = items[0].detailPath
+    detail_path = items[0].get("detailPath", "")
     try:
         data = zentrix_details(detail_path=detail_path)
     except Exception as e:
@@ -597,16 +597,16 @@ async def anime_search(
     serialized = []
     for item in items:
         serialized.append({
-            "subjectId": item.subjectId,
-            "title": item.title,
-            "subjectType": item.subjectType,
-            "detailPath": item.detailPath,
-            "releaseDate": item.releaseDate,
-            "imdbRatingValue": item.imdbRatingValue,
-            "hasResource": item.hasResource,
-            "poster": item.cover,
-            "genre": item.genre,
-            "duration": item.duration,
+            "subjectId": item.get("subjectId", ""),
+            "title": item.get("title", ""),
+            "subjectType": item.get("subjectType", ""),
+            "detailPath": item.get("detailPath", ""),
+            "releaseDate": item.get("releaseDate", ""),
+            "imdbRatingValue": item.get("imdbRatingValue", 0),
+            "hasResource": item.get("hasResource", False),
+            "poster": item.get("cover", ""),
+            "genre": item.get("genre", []),
+            "duration": item.get("duration", 0),
         })
 
     pager = result.get("pager", {})
@@ -631,7 +631,7 @@ async def anime_episodes(
     items = result.get("items", [])
     if not items:
         return JSONResponse(status_code=404, content={"success": False, "error": f"No results found for '{q}'"})
-    detail_path = items[0].detailPath
+    detail_path = items[0].get("detailPath", "")
     try:
         data = zentrix_details(detail_path=detail_path)
     except Exception as e:
@@ -668,8 +668,8 @@ async def anime_stream(
     items = result.get("items", [])
     if not items:
         return JSONResponse(status_code=404, content={"success": False, "error": f"No results found for '{q}'"})
-    subject_id = items[0].subjectId
-    detail_path = items[0].detailPath
+    subject_id = items[0].get("subjectId", "")
+    detail_path = items[0].get("detailPath", "")
     try:
         downloads, captions = zentrix_media(subject_id=subject_id, detail_path=detail_path, season=season, episode=episode)
     except Exception as e:
@@ -689,7 +689,7 @@ async def anime_stream(
         })
 
     subtitles = [{"language": cap.lan, "languageName": cap.lanName, "url": cap.url} for cap in captions]
-    return {"success": True, "creator": "ZENTRIX TECH", "title": items[0].title, "streams": streams, "subtitles": subtitles}
+    return {"success": True, "creator": "ZENTRIX TECH", "title": items[0].get("title", ""), "streams": streams, "subtitles": subtitles}
 
 
 
