@@ -609,10 +609,28 @@ async def anime_search(
 
 @app.get("/api/anime/episodes")
 async def anime_episodes(
-    id: str = Query(..., description="Anime ID from /api/anime/search"),
-    url: str = Query(..., description="Anime URL from /api/anime/search"),
+    id: Optional[str] = Query(None, description="Anime ID from /api/anime/search (optional, if title is provided)"),
+    url: Optional[str] = Query(None, description="Anime URL from /api/anime/search (optional, if title is provided)"),
+    title: Optional[str] = Query(None, description="Anime title to search (optional, if id/url are not provided)"),
 ):
     """Get episode list for an anime."""
+    if not id or not url:
+        if not title:
+            return JSONResponse(status_code=400, content={"success": False, "error": "Either id/url or title must be provided."})
+        try:
+            search_results = ah_search(title)
+            if not search_results:
+                return JSONResponse(status_code=404, content={"success": False, "error": f"No anime found for title '{title}'"})
+            # Pick the top/best match
+            id = search_results[0].get("id")
+            url = search_results[0].get("url")
+            if not id or not url:
+                return JSONResponse(status_code=404, content={"success": False, "error": f"Could not resolve id/url for title '{title}'"})
+        except AnimeHeavenError as e:
+            return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
+
     try:
         episodes = ah_episodes(url, id)
     except AnimeHeavenError as e:
@@ -652,12 +670,29 @@ def _build_anime_stream_response(
 @app.get("/api/anime/stream")
 async def anime_stream(
     request: Request,
-    id: str = Query(..., description="Anime ID"),
     ep_number: str = Query(..., description="Episode number"),
+    id: Optional[str] = Query(None, description="Anime ID (optional, if title is provided)"),
+    url: Optional[str] = Query(None, description="Anime URL (optional, if title is provided)"),
+    title: Optional[str] = Query(None, description="Anime title (optional, if id/url are not provided)"),
     ep_id: str = Query("", description="Episode hash ID (optional, speeds up extraction)"),
-    title: str = Query("", description="Anime title (optional, for filename)"),
 ):
     """Get stream URL for an anime episode (token-proxied for in-browser playback)."""
+    if not id or not url:
+        if not title:
+            return JSONResponse(status_code=400, content={"success": False, "error": "Either id/url or title must be provided."})
+        try:
+            search_results = ah_search(title)
+            if not search_results:
+                return JSONResponse(status_code=404, content={"success": False, "error": f"No anime found for title \'{title}\'"})
+            id = search_results[0].get("id")
+            url = search_results[0].get("url")
+            if not id or not url:
+                return JSONResponse(status_code=404, content={"success": False, "error": f"Could not resolve id/url for title \'{title}\'"})
+        except AnimeHeavenError as e:
+            return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
+
     try:
         return _build_anime_stream_response(request, id, ep_number, ep_id, title)
     except AnimeHeavenError as e:
@@ -669,12 +704,29 @@ async def anime_stream(
 @app.get("/api/anime/download")
 async def anime_download(
     request: Request,
-    id: str = Query(..., description="Anime ID"),
     ep_number: str = Query(..., description="Episode number"),
+    id: Optional[str] = Query(None, description="Anime ID (optional, if title is provided)"),
+    url: Optional[str] = Query(None, description="Anime URL (optional, if title is provided)"),
+    title: Optional[str] = Query(None, description="Anime title (optional, if id/url are not provided)"),
     ep_id: str = Query("", description="Episode hash ID (optional, speeds up extraction)"),
-    title: str = Query("", description="Anime title (optional, for filename)"),
 ):
     """Get download URL for an anime episode (token-proxied)."""
+    if not id or not url:
+        if not title:
+            return JSONResponse(status_code=400, content={"success": False, "error": "Either id/url or title must be provided."})
+        try:
+            search_results = ah_search(title)
+            if not search_results:
+                return JSONResponse(status_code=404, content={"success": False, "error": f"No anime found for title \'{title}\'"})
+            id = search_results[0].get("id")
+            url = search_results[0].get("url")
+            if not id or not url:
+                return JSONResponse(status_code=404, content={"success": False, "error": f"Could not resolve id/url for title \'{title}\'"})
+        except AnimeHeavenError as e:
+            return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
+
     try:
         return _build_anime_stream_response(request, id, ep_number, ep_id, title)
     except AnimeHeavenError as e:

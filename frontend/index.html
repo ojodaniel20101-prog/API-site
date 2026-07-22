@@ -880,9 +880,11 @@
         </div>
         <p class="docs-text">Get episode list and season breakdown for an anime.</p>
         <div class="docs-params">
-          <div class="docs-param"><span class="param-name">detailPath</span><span class="param-req">required</span> — From anime search results</div>
+          <div class="docs-param"><span class="param-name">title</span><span class="param-req">required</span> — Anime title to search</div>
+          <div class="docs-param"><span class="param-name">id</span><span class="param-opt">optional</span> — Anime ID from search results</div>
+          <div class="docs-param"><span class="param-name">url</span><span class="param-opt">optional</span> — Anime URL from search results</div>
         </div>
-        <div class="docs-code">GET /api/anime/episodes?detailPath=/anime/tt123&apikey=KEY</div>
+        <div class="docs-code">GET /api/anime/episodes?title=Naruto&apikey=KEY</div>
 
         <div class="docs-divider"></div>
 
@@ -892,12 +894,13 @@
         </div>
         <p class="docs-text">Get stream URLs for a specific anime episode.</p>
         <div class="docs-params">
-          <div class="docs-param"><span class="param-name">id</span><span class="param-req">required</span> — Subject ID</div>
-          <div class="docs-param"><span class="param-name">detailPath</span><span class="param-req">required</span> — Detail path</div>
-          <div class="docs-param"><span class="param-name">season</span><span class="param-req">required</span> — Season number</div>
+          <div class="docs-param"><span class="param-name">title</span><span class="param-req">required</span> — Anime title</div>
           <div class="docs-param"><span class="param-name">episode</span><span class="param-req">required</span> — Episode number</div>
+          <div class="docs-param"><span class="param-name">id</span><span class="param-opt">optional</span> — Anime ID from search results</div>
+          <div class="docs-param"><span class="param-name">url</span><span class="param-opt">optional</span> — Anime URL from search results</div>
+          <div class="docs-param"><span class="param-name">ep_id</span><span class="param-opt">optional</span> — Episode hash ID (speeds up extraction)</div>
         </div>
-        <div class="docs-code">GET /api/anime/stream?id=tt123&detailPath=/anime/tt123&season=1&episode=1&apikey=KEY</div>
+        <div class="docs-code">GET /api/anime/stream?title=Naruto&episode=1&apikey=KEY</div>
       </div>
 
       <div class="docs-section">
@@ -1093,7 +1096,9 @@ const APIS = [
       { method: 'GET', path: '/api/anime/episodes', desc: 'Get episode list for anime' },
     ],
     fields: [
-      { name: 'q', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
+      { name: 'title', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
+      { name: 'id', label: 'Anime ID (optional)', placeholder: 'from search results', type: 'text' },
+      { name: 'url', label: 'Anime URL (optional)', placeholder: 'from search results', type: 'text' },
     ],
     endpoint: '/api/anime/episodes',
     method: 'GET',
@@ -1109,9 +1114,10 @@ const APIS = [
       { method: 'GET', path: '/api/anime/stream', desc: 'Get stream URLs for anime episode' },
     ],
     fields: [
-      { name: 'q', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
-      { name: 'season', label: 'Season', placeholder: '1', type: 'text' },
+      { name: 'title', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
       { name: 'episode', label: 'Episode', placeholder: '1', type: 'text' },
+      { name: 'id', label: 'Anime ID (optional)', placeholder: 'from search results', type: 'text' },
+      { name: 'url', label: 'Anime URL (optional)', placeholder: 'from search results', type: 'text' },
     ],
     endpoint: '/api/anime/stream',
     method: 'GET',
@@ -1887,8 +1893,8 @@ async function searchAnime() {
   btn.classList.remove('loading'); btn.disabled = false;
 }
 
-async function loadAnimeEpisodes(id, url, title) {
-  _currentAnime = { id, title };
+async function loadAnimeEpisodes(title, id = null, url = null) {
+  _currentAnime = { id, url, title };
   document.getElementById('animeResults').style.display = 'none';
   document.getElementById('animePlayer').style.display = 'none';
   const container = document.getElementById('animeEpisodes');
@@ -1897,7 +1903,10 @@ async function loadAnimeEpisodes(id, url, title) {
   try {
     const key = globalToken;
     const headers = key ? {'x-api-key': key} : {};
-    const res = await fetch(`${BASE_URL}/api/anime/episodes?id=${encodeURIComponent(id)}&url=${encodeURIComponent(url)}`, { headers });
+    let fetchUrl = `${BASE_URL}/api/anime/episodes?title=${encodeURIComponent(title)}`;
+    if (id) fetchUrl += `&id=${encodeURIComponent(id)}`;
+    if (url) fetchUrl += `&url=${encodeURIComponent(url)}`;
+    const res = await fetch(fetchUrl, { headers });
     const data = await res.json();
     if (!data.success || !data.episodes || !data.episodes.length) {
       container.innerHTML = `<div style="padding:16px;color:var(--text-secondary);font-size:13px;">No episodes found.</div>`;
@@ -1932,7 +1941,10 @@ async function playAnimeEpisode(epNumber, epId) {
   try {
     const key = globalToken;
     const headers = key ? {'x-api-key': key} : {};
-    const res = await fetch(`${BASE_URL}/api/anime/stream?id=${encodeURIComponent(_currentAnime.id)}&ep_number=${encodeURIComponent(epNumber)}&ep_id=${encodeURIComponent(epId)}&title=${encodeURIComponent(_currentAnime.title)}`, { headers });
+    let fetchUrl = `${BASE_URL}/api/anime/stream?ep_number=${encodeURIComponent(epNumber)}&ep_id=${encodeURIComponent(epId)}&title=${encodeURIComponent(_currentAnime.title)}`;
+    if (_currentAnime.id) fetchUrl += `&id=${encodeURIComponent(_currentAnime.id)}`;
+    if (_currentAnime.url) fetchUrl += `&url=${encodeURIComponent(_currentAnime.url)}`;
+    const res = await fetch(fetchUrl, { headers });
     const data = await res.json();
     if (!data.success || !data.stream_url) {
       player.innerHTML = `<div style="padding:16px;color:var(--error);font-size:13px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);">${escHtml(data.error || 'Stream not available')}</div>`;
@@ -1962,7 +1974,10 @@ async function downloadAnimeEpisode(epNumber, epId) {
   try {
     const key = globalToken;
     const headers = key ? {'x-api-key': key} : {};
-    const res = await fetch(`${BASE_URL}/api/anime/download?id=${encodeURIComponent(_currentAnime.id)}&ep_number=${encodeURIComponent(epNumber)}&ep_id=${encodeURIComponent(epId)}&title=${encodeURIComponent(_currentAnime.title)}`, { headers });
+    let fetchUrl = `${BASE_URL}/api/anime/download?ep_number=${encodeURIComponent(epNumber)}&ep_id=${encodeURIComponent(epId)}&title=${encodeURIComponent(_currentAnime.title)}`;
+    if (_currentAnime.id) fetchUrl += `&id=${encodeURIComponent(_currentAnime.id)}`;
+    if (_currentAnime.url) fetchUrl += `&url=${encodeURIComponent(_currentAnime.url)}`;
+    const res = await fetch(fetchUrl, { headers });
     const data = await res.json();
     if (!data.success || !data.download_url) {
       showToast(data.error || 'Download not available', 'error');
