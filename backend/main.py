@@ -14,13 +14,17 @@ Endpoints:
   GET  /api/anime/search             -> Search anime
   GET  /api/anime/episodes           -> Get episode list
   GET  /api/anime/stream             -> Get anime stream URL
-  GET  /api/anime/download           -> Get anime download URL
-  GET  /api/image/generate           -> Text-to-image generation
-  GET  /api/image/edit               -> Edit image with AI prompt
-  GET  /api/image/transform          -> Transform image (img2img)
-  GET  /api/image/transform/result   -> Poll transform result by task_id
-  GET  /api/image/blend              -> Blend up to 4 images
-  GET  /zentrix/stream               -> Proxy video stream
+    GET  /api/anime/download           -> Get anime download URL
+    GET  /api/ai/chat                  -> Chat with AI (multiple models)
+    GET  /api/ai/qwen                  -> Chat with Alibaba Qwen AI
+    GET  /api/ai/music                 -> Generate AI music
+    GET  /api/ai/music/result          -> Get AI music generation result
+    GET  /api/image/generate           -> Text-to-image generation
+    GET  /api/image/edit               -> Edit image with AI prompt
+    GET  /api/image/transform          -> Transform image (img2img)
+    GET  /api/image/transform/result   -> Poll transform result by task_id
+    GET  /api/image/blend              -> Blend up to 4 images
+    GET  /zentrix/stream               -> Proxy video stream
   GET  /zentrix/download             -> Proxy video download
   GET  /zentrix/encode               -> Encode CDN URL to token
 
@@ -1016,23 +1020,23 @@ async def image_transform_result(
 
 @app.get("/api/image/blend")
 async def image_blend(
-    image1: str = Query(..., description="First image URL (required)"),
-    image2: str = Query("", description="Second image URL (optional)"),
+    image1: str = Query(..., description="First image URL"),
+    image2: str = Query(..., description="Second image URL"),
     image3: str = Query("", description="Third image URL (optional)"),
     image4: str = Query("", description="Fourth image URL (optional)"),
-    prompt: str = Query("", description="Blending instruction (optional)"),
+    prompt: str = Query("Blend these images together creatively", description="Blending instruction"),
 ):
-    """Blend up to 4 images together using AI."""
-    params: dict = {"image1": image1}
-    if image2: params["image2"] = image2
-    if image3: params["image3"] = image3
-    if image4: params["image4"] = image4
-    if prompt: params["prompt"] = prompt
+    """Blend up to 4 images using AI."""
+    params = {"image1": image1, "image2": image2, "prompt": prompt}
+    if image3:
+        params["image3"] = image3
+    if image4:
+        params["image4"] = image4
 
     async with httpx.AsyncClient(timeout=90) as client:
         try:
             resp = await client.get(
-                f"{_OMEGA_BASE}/api/ai/nanobana-pro-v3",
+                f"{_OMEGA_BASE}/api/ai/nano-banana-blend",
                 params=params,
             )
             data = resp.json()
@@ -1045,6 +1049,109 @@ async def image_blend(
     cleaned = _clean_omega(data)
     if "image" in cleaned:
         cleaned["image"] = await _rehost_image(cleaned["image"])
+    cleaned["success"] = True
+    cleaned["creator"] = "ZENTRIX TECH"
+    return cleaned
+
+
+# ================================================================================
+# AI CHAT & MEDIA ENDPOINTS
+# ================================================================================
+
+@app.get("/api/ai/chat")
+async def ai_chat(
+    message: str = Query(..., description="User message"),
+    session_id: str = Query("zentrix_chat", alias="sessionId", description="Session ID for conversation memory"),
+    model: str = Query("chatgpt", description="AI model to use (chatgpt, claude, gemini, deepseek, etc.)"),
+):
+    """Chat with various AI models."""
+    async with httpx.AsyncClient(timeout=60) as client:
+        try:
+            resp = await client.get(
+                f"{_OMEGA_BASE}/api/ai/Chatai",
+                params={"message": message, "sessionId": session_id, "model": model, "action": "chat"},
+            )
+            data = resp.json()
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+    if not resp.is_success:
+        return JSONResponse(status_code=resp.status_code, content={"success": False, "error": data.get("error", "Chat failed")})
+
+    cleaned = _clean_omega(data)
+    cleaned["success"] = True
+    cleaned["creator"] = "ZENTRIX TECH"
+    return cleaned
+
+
+@app.get("/api/ai/qwen")
+async def ai_qwen(
+    message: str = Query(..., description="User message"),
+    session_id: str = Query("zentrix_qwen", alias="sessionId", description="Session ID for conversation memory"),
+):
+    """Chat with Alibaba's Qwen AI."""
+    async with httpx.AsyncClient(timeout=60) as client:
+        try:
+            resp = await client.get(
+                f"{_OMEGA_BASE}/api/ai/Qwen-mv2",
+                params={"message": message, "sessionId": session_id},
+            )
+            data = resp.json()
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+    if not resp.is_success:
+        return JSONResponse(status_code=resp.status_code, content={"success": False, "error": data.get("error", "Qwen chat failed")})
+
+    cleaned = _clean_omega(data)
+    cleaned["success"] = True
+    cleaned["creator"] = "ZENTRIX TECH"
+    return cleaned
+
+
+@app.get("/api/ai/music")
+async def ai_music(
+    prompt: str = Query(..., description="Music generation prompt"),
+):
+    """Generate AI music. Returns a task_id to poll for result."""
+    async with httpx.AsyncClient(timeout=60) as client:
+        try:
+            resp = await client.get(
+                f"{_OMEGA_BASE}/api/ai/sonu3",
+                params={"prompt": prompt, "action": "generate"},
+            )
+            data = resp.json()
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+    if not resp.is_success:
+        return JSONResponse(status_code=resp.status_code, content={"success": False, "error": data.get("error", "Music generation failed")})
+
+    cleaned = _clean_omega(data)
+    cleaned["success"] = True
+    cleaned["creator"] = "ZENTRIX TECH"
+    return cleaned
+
+
+@app.get("/api/ai/music/result")
+async def ai_music_result(
+    task_id: str = Query(..., alias="taskId", description="Task ID from /api/ai/music"),
+):
+    """Poll for AI music generation result."""
+    async with httpx.AsyncClient(timeout=30) as client:
+        try:
+            resp = await client.get(
+                f"{_OMEGA_BASE}/api/ai/sonu3",
+                params={"taskId": task_id, "action": "result"},
+            )
+            data = resp.json()
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+    if not resp.is_success:
+        return JSONResponse(status_code=resp.status_code, content={"success": False, "error": data.get("error", "Music result poll failed")})
+
+    cleaned = _clean_omega(data)
     cleaned["success"] = True
     cleaned["creator"] = "ZENTRIX TECH"
     return cleaned
