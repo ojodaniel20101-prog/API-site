@@ -1,1941 +1,1828 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zentrix API — Movie & Series Download API</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
-    <style>
-        :root {
-            --accent: #7C3AED;
-            --accent-2: #A78BFA;
-            --accent-3: #C4B5FD;
-            --accent-glow: rgba(124, 58, 237, 0.25);
-            --bg-0: #06060A;
-            --bg-1: #0D0D14;
-            --bg-2: #131320;
-            --bg-3: #1B1B2C;
-            --bg-4: #222236;
-            --text-0: #F5F4FF;
-            --text-1: #B8B5D4;
-            --text-2: #7A7892;
-            --text-3: #4A4860;
-            --border-0: #1E1E2E;
-            --border-1: #2C2C42;
-            --border-2: #3D3D5C;
-            --green: #34D399;
-            --red: #F87171;
-            --yellow: #FBBF24;
-            --r: 14px;
-            --r-sm: 8px;
-            --r-xs: 5px;
-        }
-
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-        html {
-            scroll-behavior: smooth;
-            scroll-padding-top: 0;
-        }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--bg-0);
-            color: var(--text-0);
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
-            overflow-x: hidden;
-        }
-
-        /* ─── NOISE OVERLAY ─── */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-            opacity: 0.018;
-            pointer-events: none;
-            z-index: 9999;
-        }
-
-        /* ─── AMBIENT GLOWS ─── */
-        .ambient {
-            position: fixed;
-            pointer-events: none;
-            z-index: 0;
-            border-radius: 50%;
-            filter: blur(120px);
-        }
-        .ambient-1 {
-            width: 700px; height: 500px;
-            top: -200px; left: -200px;
-            background: radial-gradient(ellipse, rgba(124,58,237,0.12), transparent 70%);
-            animation: ambientDrift 25s ease-in-out infinite;
-        }
-        .ambient-2 {
-            width: 500px; height: 600px;
-            bottom: -100px; right: -100px;
-            background: radial-gradient(ellipse, rgba(167,139,250,0.07), transparent 70%);
-            animation: ambientDrift 30s ease-in-out infinite reverse;
-        }
-        @keyframes ambientDrift {
-            0%,100% { transform: translate(0,0) scale(1); }
-            33% { transform: translate(40px,30px) scale(1.05); }
-            66% { transform: translate(-20px,20px) scale(0.95); }
-        }
-
-        /* ─── LAYOUT ─── */
-        .app {
-            display: flex;
-            min-height: 100vh;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* ─── SIDEBAR ─── */
-        .sidebar {
-            width: 260px;
-            flex-shrink: 0;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow-y: auto;
-            background: rgba(13,13,20,0.6);
-            backdrop-filter: blur(24px);
-            border-right: 1px solid var(--border-0);
-            display: flex;
-            flex-direction: column;
-            padding: 28px 0;
-            z-index: 100;
-        }
-
-        .sidebar::-webkit-scrollbar { width: 4px; }
-        .sidebar::-webkit-scrollbar-track { background: transparent; }
-        .sidebar::-webkit-scrollbar-thumb { background: var(--border-1); border-radius: 4px; }
-
-        .sidebar-logo {
-            padding: 0 24px 28px;
-            border-bottom: 1px solid var(--border-0);
-            margin-bottom: 20px;
-        }
-
-        .logo-mark {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-        }
-
-        .logo-icon {
-            width: 38px; height: 38px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 20px var(--accent-glow);
-            flex-shrink: 0;
-        }
-
-        .logo-icon svg { width: 20px; height: 20px; color: white; }
-
-        .logo-text {
-            font-family: 'Syne', sans-serif;
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            color: var(--text-0);
-        }
-
-        .logo-version {
-            display: inline-block;
-            margin-top: 6px;
-            padding: 2px 8px;
-            background: rgba(124,58,237,0.15);
-            border: 1px solid rgba(124,58,237,0.2);
-            border-radius: 4px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 10px;
-            color: var(--accent-2);
-            letter-spacing: 0.5px;
-        }
-
-        .sidebar-nav { padding: 0 12px; flex: 1; }
-
-        .nav-group { margin-bottom: 28px; }
-
-        .nav-group-label {
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text-3);
-            padding: 0 12px;
-            margin-bottom: 6px;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 9px 12px;
-            border-radius: var(--r-sm);
-            text-decoration: none;
-            color: var(--text-2);
-            font-size: 13.5px;
-            font-weight: 500;
-            transition: all 0.15s ease;
-            cursor: pointer;
-            border: 1px solid transparent;
-            position: relative;
-        }
-
-        .nav-item:hover {
-            color: var(--text-0);
-            background: var(--bg-3);
-            border-color: var(--border-0);
-        }
-
-        .nav-item.active {
-            color: var(--accent-2);
-            background: rgba(124,58,237,0.1);
-            border-color: rgba(124,58,237,0.2);
-        }
-
-        .nav-item.active::before {
-            content: '';
-            position: absolute;
-            left: -12px;
-            top: 50%; transform: translateY(-50%);
-            width: 3px; height: 16px;
-            background: var(--accent);
-            border-radius: 0 3px 3px 0;
-        }
-
-        .nav-dot {
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: currentColor;
-            opacity: 0.5;
-            flex-shrink: 0;
-        }
-
-        .nav-item.active .nav-dot { opacity: 1; }
-
-        .method-pill {
-            margin-left: auto;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 9px;
-            font-weight: 600;
-            padding: 2px 7px;
-            border-radius: 4px;
-            background: rgba(124,58,237,0.15);
-            color: var(--accent-2);
-            border: 1px solid rgba(124,58,237,0.2);
-        }
-
-        .sidebar-footer {
-            padding: 20px 24px 0;
-            border-top: 1px solid var(--border-0);
-            margin-top: auto;
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 14px;
-            background: rgba(52, 211, 153, 0.07);
-            border: 1px solid rgba(52, 211, 153, 0.15);
-            border-radius: var(--r-sm);
-        }
-
-        .status-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: var(--green);
-            box-shadow: 0 0 6px var(--green);
-            animation: statusPulse 2.5s ease-in-out infinite;
-            flex-shrink: 0;
-        }
-
-        @keyframes statusPulse {
-            0%,100% { opacity: 1; box-shadow: 0 0 6px var(--green); }
-            50% { opacity: 0.6; box-shadow: 0 0 12px var(--green); }
-        }
-
-        .status-text {
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--green);
-        }
-
-        /* ─── MAIN CONTENT ─── */
-        .content {
-            flex: 1;
-            min-width: 0;
-            overflow-y: auto;
-        }
-
-        /* ─── TOP NAV (mobile) ─── */
-        .topnav {
-            display: none;
-            position: sticky;
-            top: 0;
-            z-index: 200;
-            height: 60px;
-            background: rgba(6,6,10,0.92);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-0);
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-        }
-
-        .topnav-logo {
-            font-family: 'Syne', sans-serif;
-            font-size: 16px;
-            font-weight: 800;
-            letter-spacing: 2px;
-        }
-
-        .hamburger {
-            width: 36px; height: 36px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 5px;
-            cursor: pointer;
-            background: none;
-            border: 1px solid var(--border-1);
-            border-radius: 8px;
-            padding: 8px;
-        }
-
-        .hamburger span {
-            display: block;
-            height: 1.5px;
-            background: var(--text-1);
-            border-radius: 2px;
-            transition: all 0.25s ease;
-        }
-
-        .hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
-        .hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
-        .hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
-
-        .mobile-sidebar {
-            display: none;
-            position: fixed;
-            inset: 60px 0 0 0;
-            background: rgba(6,6,10,0.97);
-            backdrop-filter: blur(20px);
-            z-index: 150;
-            padding: 24px 20px;
-            overflow-y: auto;
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-        }
-
-        .mobile-sidebar.open {
-            transform: translateX(0);
-        }
-
-        /* ─── HERO ─── */
-        .hero {
-            padding: 100px 60px 80px;
-            max-width: 900px;
-            position: relative;
-        }
-
-        .hero-eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 16px;
-            background: rgba(124,58,237,0.08);
-            border: 1px solid rgba(124,58,237,0.18);
-            border-radius: 100px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px;
-            font-weight: 500;
-            color: var(--accent-2);
-            letter-spacing: 0.5px;
-            margin-bottom: 28px;
-            animation: fadeUp 0.5s ease both;
-        }
-
-        .eyebrow-dot {
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: var(--accent);
-            animation: statusPulse 2s infinite;
-        }
-
-        .hero h1 {
-            font-family: 'Syne', sans-serif;
-            font-size: clamp(44px, 7vw, 76px);
-            font-weight: 800;
-            letter-spacing: -2px;
-            line-height: 1.05;
-            margin-bottom: 24px;
-            animation: fadeUp 0.5s 0.1s ease both;
-        }
-
-        .hero h1 em {
-            font-style: normal;
-            background: linear-gradient(135deg, var(--accent-2), #E9D5FF, var(--accent-2));
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: gradientShift 4s linear infinite;
-        }
-
-        @keyframes gradientShift {
-            0% { background-position: 0% center; }
-            100% { background-position: 200% center; }
-        }
-
-        .hero-sub {
-            font-size: clamp(15px, 2vw, 18px);
-            color: var(--text-1);
-            max-width: 520px;
-            line-height: 1.7;
-            margin-bottom: 40px;
-            font-weight: 300;
-            animation: fadeUp 0.5s 0.2s ease both;
-        }
-
-        .hero-ctas {
-            display: flex;
-            gap: 14px;
-            flex-wrap: wrap;
-            animation: fadeUp 0.5s 0.3s ease both;
-            margin-bottom: 64px;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            border-radius: var(--r-sm);
-            font-size: 14px;
-            font-weight: 600;
-            font-family: inherit;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            border: none;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-            box-shadow: 0 4px 24px rgba(124,58,237,0.35);
-        }
-
-        .btn-primary:hover {
-            background: #6D28D9;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(124,58,237,0.45);
-        }
-
-        .btn-ghost {
-            background: transparent;
-            color: var(--text-1);
-            border: 1px solid var(--border-1);
-        }
-
-        .btn-ghost:hover {
-            background: var(--bg-3);
-            color: var(--text-0);
-            border-color: var(--border-2);
-        }
-
-        /* ─── STATS STRIP ─── */
-        .stats-strip {
-            display: flex;
-            gap: 0;
-            border: 1px solid var(--border-0);
-            border-radius: var(--r);
-            overflow: hidden;
-            animation: fadeUp 0.5s 0.4s ease both;
-            background: var(--bg-1);
-        }
-
-        .stat-item {
-            flex: 1;
-            padding: 20px 24px;
-            border-right: 1px solid var(--border-0);
-            position: relative;
-        }
-
-        .stat-item:last-child { border-right: none; }
-
-        .stat-value {
-            font-family: 'Syne', sans-serif;
-            font-size: 26px;
-            font-weight: 800;
-            color: var(--text-0);
-            letter-spacing: -0.5px;
-        }
-
-        .stat-value span {
-            background: linear-gradient(135deg, var(--accent-2), var(--accent-3));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-2);
-            margin-top: 2px;
-            font-weight: 400;
-        }
-
-        /* ─── SECTIONS ─── */
-        .section {
-            padding: 72px 60px;
-            max-width: 900px;
-            border-top: 1px solid var(--border-0);
-        }
-
-        .section-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            background: rgba(124,58,237,0.08);
-            border: 1px solid rgba(124,58,237,0.15);
-            border-radius: 5px;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--accent-2);
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            margin-bottom: 18px;
-        }
-
-        .section h2 {
-            font-family: 'Syne', sans-serif;
-            font-size: 32px;
-            font-weight: 800;
-            letter-spacing: -0.8px;
-            margin-bottom: 10px;
-            line-height: 1.2;
-        }
-
-        .section-desc {
-            color: var(--text-1);
-            font-size: 15px;
-            max-width: 580px;
-            font-weight: 300;
-            line-height: 1.7;
-            margin-bottom: 36px;
-        }
-
-        /* ─── INFO GRID ─── */
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 14px;
-        }
-
-        .info-card {
-            padding: 20px;
-            background: var(--bg-2);
-            border: 1px solid var(--border-0);
-            border-radius: var(--r-sm);
-            transition: border-color 0.2s, background 0.2s;
-        }
-
-        .info-card:hover {
-            border-color: var(--border-1);
-            background: var(--bg-3);
-        }
-
-        .info-label {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            color: var(--text-3);
-            margin-bottom: 8px;
-        }
-
-        .info-value {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 13px;
-            color: var(--text-0);
-            word-break: break-all;
-        }
-
-        .info-note {
-            font-size: 12px;
-            color: var(--text-2);
-            margin-top: 6px;
-            line-height: 1.5;
-        }
-
-        .info-note code {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px;
-            color: var(--accent-2);
-            background: rgba(124,58,237,0.1);
-            padding: 1px 5px;
-            border-radius: 3px;
-        }
-
-        /* ─── ENDPOINT CARD ─── */
-        .endpoint-card {
-            border: 1px solid var(--border-0);
-            border-radius: var(--r);
-            overflow: hidden;
-            background: var(--bg-1);
-        }
-
-        .endpoint-head {
-            padding: 20px 28px;
-            background: linear-gradient(135deg, rgba(124,58,237,0.06), transparent);
-            border-bottom: 1px solid var(--border-0);
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-
-        .method-badge {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 5px 13px;
-            border-radius: var(--r-xs);
-            background: rgba(124,58,237,0.15);
-            border: 1px solid rgba(124,58,237,0.25);
-            color: var(--accent-2);
-            letter-spacing: 0.5px;
-        }
-
-        .endpoint-path {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text-0);
-        }
-
-        .endpoint-body { padding: 28px; }
-
-        .endpoint-desc {
-            font-size: 14px;
-            color: var(--text-1);
-            line-height: 1.7;
-            margin-bottom: 28px;
-            font-weight: 300;
-        }
-
-        /* ─── PARAMS TABLE ─── */
-        .table-title {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            color: var(--text-3);
-            margin-bottom: 12px;
-        }
-
-        .params-wrap { overflow-x: auto; margin-bottom: 32px; }
-
-        .params-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13.5px;
-        }
-
-        .params-table th {
-            text-align: left;
-            padding: 10px 14px;
-            background: var(--bg-2);
-            color: var(--text-3);
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid var(--border-0);
-            white-space: nowrap;
-        }
-
-        .params-table td {
-            padding: 13px 14px;
-            border-bottom: 1px solid var(--border-0);
-            color: var(--text-1);
-            vertical-align: top;
-            font-size: 13px;
-        }
-
-        .params-table tr:last-child td { border-bottom: none; }
-
-        .params-table tr:hover td { background: rgba(255,255,255,0.015); }
-
-        .p-name {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 12.5px;
-            font-weight: 600;
-            color: var(--text-0);
-        }
-
-        .p-type {
-            display: inline-block;
-            padding: 2px 7px;
-            background: rgba(124,58,237,0.1);
-            border-radius: 4px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 10px;
-            color: var(--accent-2);
-            margin-left: 6px;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 2px 7px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-        }
-
-        .badge-req {
-            background: rgba(52,211,153,0.1);
-            color: var(--green);
-            border: 1px solid rgba(52,211,153,0.2);
-        }
-
-        .badge-opt {
-            background: rgba(122,120,146,0.12);
-            color: var(--text-2);
-            border: 1px solid var(--border-0);
-        }
-
-        .badge-cond {
-            background: rgba(251,191,36,0.1);
-            color: var(--yellow);
-            border: 1px solid rgba(251,191,36,0.2);
-        }
-
-        /* ─── CODE BLOCKS ─── */
-        .code-block {
-            background: var(--bg-0);
-            border: 1px solid var(--border-0);
-            border-radius: var(--r-sm);
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .code-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 14px;
-            background: var(--bg-2);
-            border-bottom: 1px solid var(--border-0);
-        }
-
-        .lang-tabs {
-            display: flex;
-            gap: 2px;
-        }
-
-        .lang-tab {
-            padding: 5px 12px;
-            border-radius: 5px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-2);
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            transition: all 0.15s;
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        .lang-tab:hover { color: var(--text-0); background: var(--bg-3); }
-        .lang-tab.active { color: var(--accent-2); background: rgba(124,58,237,0.12); }
-
-        .copy-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 5px 12px;
-            background: transparent;
-            border: 1px solid var(--border-1);
-            border-radius: 5px;
-            color: var(--text-2);
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all 0.15s;
-        }
-
-        .copy-btn:hover { color: var(--text-0); border-color: var(--border-2); }
-        .copy-btn.copied { color: var(--green); border-color: rgba(52,211,153,0.3); }
-
-        .code-panel { display: none; }
-        .code-panel.active { display: block; }
-
-        .code-block pre {
-            margin: 0;
-            padding: 18px 22px;
-            overflow-x: auto;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 12.5px;
-            line-height: 1.75;
-        }
-
-        .code-block pre code { font-family: inherit; }
-
-        .hljs { background: transparent !important; padding: 0 !important; }
-
-        /* ─── RESPONSE TABS ─── */
-        .response-tabs {
-            display: flex;
-            gap: 2px;
-            margin-bottom: 12px;
-            background: var(--bg-2);
-            border: 1px solid var(--border-0);
-            border-radius: var(--r-sm);
-            padding: 4px;
-            width: fit-content;
-        }
-
-        .resp-tab {
-            padding: 6px 14px;
-            border-radius: var(--r-xs);
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            background: transparent;
-            border: none;
-            font-family: 'IBM Plex Mono', monospace;
-            transition: all 0.15s;
-            color: var(--text-2);
-        }
-
-        .resp-tab:hover { color: var(--text-0); }
-
-        .resp-tab.active.ok { background: rgba(52,211,153,0.12); color: var(--green); }
-        .resp-tab.active.err { background: rgba(248,113,113,0.12); color: var(--red); }
-
-        .resp-panel { display: none; }
-        .resp-panel.active { display: block; }
-
-        /* ─── PLAYGROUND ─── */
-        .playground {
-            background: var(--bg-1);
-            border: 1px solid var(--border-0);
-            border-radius: var(--r);
-            overflow: hidden;
-        }
-
-        .playground-head {
-            padding: 18px 24px;
-            border-bottom: 1px solid var(--border-0);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: linear-gradient(135deg, rgba(124,58,237,0.05), transparent);
-        }
-
-        .playground-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 15px;
-            font-weight: 700;
-        }
-
-        .playground-badge {
-            font-size: 10px;
-            font-weight: 600;
-            padding: 3px 9px;
-            background: rgba(124,58,237,0.12);
-            border: 1px solid rgba(124,58,237,0.2);
-            border-radius: 4px;
-            color: var(--accent-2);
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        .playground-body { padding: 24px; }
-
-        .field-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-bottom: 14px;
-        }
-
-        .field {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .field label {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-2);
-        }
-
-        .field label span {
-            color: var(--accent-2);
-            margin-left: 4px;
-        }
-
-        .field input, .field select {
-            padding: 10px 14px;
-            background: var(--bg-0);
-            border: 1px solid var(--border-1);
-            border-radius: var(--r-sm);
-            color: var(--text-0);
-            font-size: 13px;
-            font-family: 'IBM Plex Mono', monospace;
-            transition: border-color 0.15s;
-            outline: none;
-        }
-
-        .field input:focus, .field select:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
-        }
-
-        .field input::placeholder { color: var(--text-3); }
-
-        .field select option { background: var(--bg-2); }
-
-        .series-fields {
-            display: none;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-bottom: 14px;
-        }
-
-        .series-fields.show { display: grid; }
-
-        .playground-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 18px;
-        }
-
-        .btn-run {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 11px 24px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: var(--r-sm);
-            font-size: 13px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 16px rgba(124,58,237,0.3);
-        }
-
-        .btn-run:hover {
-            background: #6D28D9;
-            box-shadow: 0 6px 20px rgba(124,58,237,0.4);
-            transform: translateY(-1px);
-        }
-
-        .btn-run:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-clear {
-            padding: 11px 18px;
-            background: transparent;
-            border: 1px solid var(--border-1);
-            border-radius: var(--r-sm);
-            color: var(--text-2);
-            font-size: 13px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-
-        .btn-clear:hover {
-            color: var(--text-0);
-            border-color: var(--border-2);
-        }
-
-        .pg-result {
-            margin-top: 20px;
-            display: none;
-        }
-
-        .pg-result.show { display: block; }
-
-        .result-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .result-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 5px 12px;
-            border-radius: 5px;
-        }
-
-        .result-status.ok {
-            background: rgba(52,211,153,0.1);
-            border: 1px solid rgba(52,211,153,0.2);
-            color: var(--green);
-        }
-
-        .result-status.error {
-            background: rgba(248,113,113,0.1);
-            border: 1px solid rgba(248,113,113,0.2);
-            color: var(--red);
-        }
-
-        .result-status.loading {
-            background: rgba(124,58,237,0.1);
-            border: 1px solid rgba(124,58,237,0.2);
-            color: var(--accent-2);
-        }
-
-        .spinner {
-            width: 12px; height: 12px;
-            border: 2px solid rgba(167,139,250,0.3);
-            border-top-color: var(--accent-2);
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .result-time {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px;
-            color: var(--text-3);
-        }
-
-        /* ─── RESPONSE CODES ─── */
-        .codes-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .code-row {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 16px 20px;
-            background: var(--bg-1);
-            border: 1px solid var(--border-0);
-            border-radius: var(--r-sm);
-            transition: border-color 0.15s;
-        }
-
-        .code-row:hover { border-color: var(--border-1); }
-
-        .code-num {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 13px;
-            font-weight: 700;
-            padding: 5px 12px;
-            border-radius: 5px;
-            min-width: 54px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-        .code-num.ok { background: rgba(52,211,153,0.1); color: var(--green); border: 1px solid rgba(52,211,153,0.2); }
-        .code-num.err { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
-        .code-num.warn { background: rgba(251,191,36,0.1); color: var(--yellow); border: 1px solid rgba(251,191,36,0.2); }
-
-        .code-info { flex: 1; }
-        .code-msg { font-size: 13.5px; font-weight: 600; color: var(--text-0); margin-bottom: 2px; }
-        .code-note { font-size: 12px; color: var(--text-2); }
-
-        /* ─── FOOTER ─── */
-        .footer {
-            border-top: 1px solid var(--border-0);
-            padding: 40px 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .footer-brand {
-            font-family: 'Syne', sans-serif;
-            font-size: 16px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            color: var(--text-0);
-        }
-
-        .footer-copy {
-            font-size: 12px;
-            color: var(--text-3);
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 20px;
-        }
-
-        .footer-links a {
-            font-size: 12px;
-            color: var(--text-2);
-            text-decoration: none;
-            transition: color 0.15s;
-        }
-
-        .footer-links a:hover { color: var(--text-0); }
-
-        /* ─── ANIMATIONS ─── */
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(18px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .fade-in {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.5s ease, transform 0.5s ease;
-        }
-
-        .fade-in.visible { opacity: 1; transform: none; }
-
-        /* ─── SCROLLBAR ─── */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border-1); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--border-2); }
-
-        /* ─── RESPONSIVE ─── */
-        @media (max-width: 900px) {
-            .sidebar { display: none; }
-            .topnav { display: flex; }
-            .mobile-sidebar { display: block; }
-
-            .hero { padding: 40px 24px 60px; }
-            .section { padding: 48px 24px; }
-            .footer { padding: 32px 24px; }
-
-            .hero h1 { letter-spacing: -1px; }
-
-            .field-row { grid-template-columns: 1fr; }
-            .series-fields.show { grid-template-columns: 1fr; }
-
-            .stats-strip { flex-direction: column; }
-            .stat-item { border-right: none; border-bottom: 1px solid var(--border-0); }
-            .stat-item:last-child { border-bottom: none; }
-
-            .endpoint-head { padding: 16px 20px; }
-            .endpoint-body { padding: 20px; }
-
-            .footer { flex-direction: column; align-items: flex-start; gap: 12px; }
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+<title>Zentrix API — Developer Portal v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-orb1: #6c3fa6;
+    --bg-orb2: #1a6bdc;
+    --bg-orb3: #0d9488;
+    --bg-base: #08060f;
+    --glass-bg: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.12);
+    --glass-hover: rgba(255,255,255,0.1);
+    --glass-strong: rgba(255,255,255,0.09);
+    --text-primary: #f0eeff;
+    --text-secondary: rgba(240,238,255,0.55);
+    --text-dim: rgba(240,238,255,0.3);
+    --accent: #a78bfa;
+    --accent2: #38bdf8;
+    --accent3: #34d399;
+    --success: #34d399;
+    --error: #f87171;
+    --warning: #fbbf24;
+    --glow: rgba(167,139,250,0.18);
+    --glow-strong: rgba(167,139,250,0.35);
+    --radius: 18px;
+    --radius-sm: 10px;
+    --blur: blur(24px);
+    --transition: 0.22s cubic-bezier(.4,0,.2,1);
+  }
+
+  body.light {
+    --bg-orb1: #a78bfa;
+    --bg-orb2: #60a5fa;
+    --bg-orb3: #34d399;
+    --bg-base: #e8e6f5;
+    --glass-bg: rgba(255,255,255,0.45);
+    --glass-border: rgba(255,255,255,0.7);
+    --glass-hover: rgba(255,255,255,0.65);
+    --glass-strong: rgba(255,255,255,0.55);
+    --text-primary: #1a1535;
+    --text-secondary: rgba(26,21,53,0.6);
+    --text-dim: rgba(26,21,53,0.35);
+    --accent: #7c3aed;
+    --accent2: #0ea5e9;
+    --accent3: #059669;
+    --glow: rgba(124,58,237,0.12);
+    --glow-strong: rgba(124,58,237,0.25);
+  }
+
+  html, body { height: 100%; font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 14px; touch-action: pan-x pan-y; }
+
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* === BACKGROUND ORBS === */
+  .bg-layer {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  }
+  .orb {
+    position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.45;
+    animation: orbFloat 12s ease-in-out infinite;
+  }
+  .orb1 { width: 520px; height: 520px; background: var(--bg-orb1); top: -120px; left: -80px; animation-delay: 0s; }
+  .orb2 { width: 400px; height: 400px; background: var(--bg-orb2); bottom: -80px; right: -60px; animation-delay: -4s; }
+  .orb3 { width: 300px; height: 300px; background: var(--bg-orb3); top: 40%; left: 40%; animation-delay: -8s; }
+  @keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.04); }
+    66% { transform: translate(-20px, 25px) scale(0.97); }
+  }
+  body.light .orb { opacity: 0.28; }
+
+  /* === LAYOUT === */
+  .app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* === HEADER === */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 62px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 18px; font-weight: 700; letter-spacing: -0.3px; color: var(--text-primary);
+    white-space: nowrap;
+  }
+  .logo-icon { width: 30px; height: 30px; flex-shrink: 0; }
+  .logo span { color: var(--accent); }
+
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  /* Search */
+  .search-wrap {
+    position: relative; display: flex; align-items: center;
+  }
+  .search-input {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 50px;
+    color: var(--text-primary);
+    font-family: inherit; font-size: 13px;
+    padding: 8px 14px 8px 36px;
+    width: 220px;
+    outline: none;
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    transition: border-color var(--transition), width var(--transition), box-shadow var(--transition);
+  }
+  .search-input::placeholder { color: var(--text-dim); }
+  .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); width: 280px; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-dim); pointer-events: none; }
+  .search-results {
+    position: absolute; top: calc(100% + 8px); right: 0; min-width: 300px;
+    background: var(--glass-strong);
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    display: none; flex-direction: column; z-index: 200;
+    animation: fadeDown 0.18s ease;
+  }
+  .search-results.open { display: flex; }
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .search-result-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 16px; cursor: pointer;
+    border-bottom: 1px solid var(--glass-border);
+    transition: background var(--transition);
+  }
+  .search-result-item:last-child { border-bottom: none; }
+  .search-result-item:hover { background: var(--glass-hover); }
+  .search-result-item .sri-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--glass-bg); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sri-info { display: flex; flex-direction: column; gap: 1px; }
+  .sri-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .sri-tag { font-size: 11px; color: var(--text-dim); }
+
+  /* Theme toggle */
+  .theme-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary); transition: background var(--transition), border-color var(--transition);
+    flex-shrink: 0;
+  }
+  .theme-btn:hover { background: var(--glass-hover); border-color: var(--accent); color: var(--accent); }
+
+  /* === MAIN === */
+  main { flex: 1; padding: 28px 24px 40px; max-width: 1200px; margin: 0 auto; width: 100%; }
+
+  /* === HERO === */
+  .hero { text-align: center; padding: 30px 0 40px; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: 50px; padding: 5px 14px; margin-bottom: 18px;
+    font-size: 11px; font-weight: 500; color: var(--accent); text-transform: uppercase; letter-spacing: 1.2px;
+  }
+  .hero h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 700; letter-spacing: -0.8px; line-height: 1.1; color: var(--text-primary); margin-bottom: 12px; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { font-size: 15px; color: var(--text-secondary); max-width: 520px; margin: 0 auto; line-height: 1.6; }
+
+  /* === STATS BAR === */
+  .stats-bar {
+    display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin: 24px 0 36px;
+  }
+  .stat-pill {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: 50px; padding: 7px 16px;
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--text-secondary);
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  }
+  .stat-pill strong { color: var(--text-primary); font-weight: 600; }
+  .stat-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); box-shadow: 0 0 6px var(--success); animation: pulse 2s ease infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* === BASE URL COPY === */
+  .baseurl-pill { gap: 6px; }
+  .baseurl-copy-btn {
+    background: none; border: none; cursor: pointer; padding: 2px 4px; border-radius: 5px;
+    color: var(--text-dim); transition: color var(--transition), background var(--transition);
+    display: flex; align-items: center; line-height: 1;
+  }
+  .baseurl-copy-btn:hover { color: var(--accent); background: var(--glow); }
+  .baseurl-copy-btn.copied { color: var(--success); }
+
+  /* === TOKEN ROW === */
+  .token-row-wrap {
+    display: flex; align-items: center; gap: 12px;
+    margin: -16px 0 28px;
+    flex-wrap: wrap;
+  }
+  .token-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.9px; color: var(--text-dim); white-space: nowrap; flex-shrink: 0;
+  }
+  .token-input-group {
+    display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: 50px; padding: 4px 6px 4px 14px;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  .token-input-group:focus-within {
+    border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow);
+  }
+  .token-inp {
+    flex: 1; min-width: 0; background: none; border: none; outline: none;
+    color: var(--text-primary); font-family: 'SF Mono','Fira Code',monospace; font-size: 12px;
+    letter-spacing: 0.4px;
+  }
+  .token-inp::placeholder { color: var(--text-dim); font-family: inherit; letter-spacing: 0; }
+  .token-eye {
+    background: none; border: none; cursor: pointer; color: var(--text-dim);
+    padding: 4px; display: flex; align-items: center; transition: color var(--transition);
+    flex-shrink: 0;
+  }
+  .token-eye:hover { color: var(--accent); }
+  .token-apply {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 50px; color: #fff;
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    padding: 6px 14px; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    transition: opacity var(--transition), box-shadow var(--transition);
+  }
+  .token-apply:hover { opacity: 0.88; box-shadow: 0 2px 12px var(--glow-strong); }
+  .token-clear {
+    background: none; border: none; cursor: pointer; color: var(--error);
+    padding: 4px; display: flex; align-items: center; flex-shrink: 0;
+    transition: opacity var(--transition);
+  }
+  .token-clear:hover { opacity: 0.7; }
+  .token-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 50px;
+    background: rgba(52,211,153,0.14); color: var(--success);
+    border: 1px solid rgba(52,211,153,0.28); white-space: nowrap; flex-shrink: 0;
+  }
+
+  /* === CATEGORY FILTER === */
+  .cat-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .cat-btn {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: 50px; padding: 7px 16px;
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    color: var(--text-secondary); cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: all var(--transition);
+  }
+  .cat-btn:hover, .cat-btn.active {
+    background: var(--glow); border-color: var(--accent); color: var(--accent);
+    box-shadow: 0 0 18px var(--glow);
+  }
+
+  /* === API GRID === */
+  .api-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .api-card {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: var(--radius); padding: 16px;
+    cursor: pointer; position: relative; overflow: hidden;
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+  }
+  .api-card::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .api-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 8px 40px var(--glow); }
+  .card-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .card-icon {
+    width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+    background: var(--glass-strong); border: 1px solid var(--glass-border);
+    display: flex; align-items: center; justify-content: center; color: var(--accent);
+  }
+  .card-meta { flex: 1; min-width: 0; }
+  .card-name { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+  .card-cat { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; }
+  .card-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px; }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; }
+  .card-badge {
+    font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 50px;
+    text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .badge-free { background: rgba(52,211,153,0.15); color: var(--success); border: 1px solid rgba(52,211,153,0.25); }
+  .badge-auth { background: rgba(167,139,250,0.15); color: var(--accent); border: 1px solid rgba(167,139,250,0.25); }
+  .badge-premium { background: rgba(251,191,36,0.12); color: var(--warning); border: 1px solid rgba(251,191,36,0.2); }
+  .card-try {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 600; color: var(--accent);
+    background: none; border: none; cursor: pointer; font-family: inherit;
+    transition: gap var(--transition);
+  }
+  .card-try:hover { gap: 8px; }
+
+  /* === MODAL OVERLAY === */
+  .overlay {
+    position: fixed; inset: 0; z-index: 300;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    animation: fadeIn 0.2s ease;
+    pointer-events: none; opacity: 0; transition: opacity var(--transition);
+  }
+  .overlay.open { opacity: 1; pointer-events: all; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--glass-strong);
+    backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px; width: 100%; max-width: 580px;
+    max-height: 90vh; overflow-y: auto; padding: 28px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+    position: relative;
+    transform: translateY(20px); transition: transform 0.22s cubic-bezier(.4,0,.2,1);
+    scrollbar-width: thin; scrollbar-color: var(--glass-border) transparent;
+  }
+  .overlay.open .modal { transform: translateY(0); }
+  .modal-close {
+    position: absolute; top: 18px; right: 18px;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary); transition: all var(--transition);
+  }
+  .modal-close:hover { background: rgba(248,113,113,0.15); border-color: var(--error); color: var(--error); }
+  .modal-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding-right: 40px; }
+  .modal-icon {
+    width: 50px; height: 50px; border-radius: 14px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    display: flex; align-items: center; justify-content: center; color: var(--accent); flex-shrink: 0;
+  }
+  .modal-title { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+  .modal-subtitle { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .modal-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 22px; }
+
+  /* === TABS === */
+  .modal-tabs { display: flex; gap: 4px; margin-bottom: 22px; background: var(--glass-bg); border-radius: 10px; padding: 4px; border: 1px solid var(--glass-border); }
+  .tab-btn {
+    flex: 1; padding: 8px; border-radius: 7px; font-family: inherit; font-size: 12px; font-weight: 600;
+    background: none; border: none; cursor: pointer; color: var(--text-dim);
+    transition: all var(--transition);
+  }
+  .tab-btn.active { background: var(--glass-strong); color: var(--text-primary); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* === FORM ELEMENTS === */
+  .field-group { margin-bottom: 16px; }
+  .field-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;
+    color: var(--text-dim); margin-bottom: 7px;
+  }
+  .glass-input {
+    width: 100%;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm); color: var(--text-primary);
+    font-family: inherit; font-size: 13px;
+    padding: 11px 14px; outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  .glass-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); }
+  .glass-input::placeholder { color: var(--text-dim); }
+  .input-wrap { position: relative; }
+  .input-wrap .glass-input { padding-right: 42px; }
+  .input-action {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: var(--text-dim);
+    transition: color var(--transition); padding: 2px;
+  }
+  .input-action:hover { color: var(--accent); }
+  select.glass-input { -webkit-appearance: none; appearance: none; cursor: pointer; }
+
+  /* === VERIFY SECTION === */
+  .verify-row { display: flex; gap: 8px; align-items: flex-end; }
+  .verify-row .field-group { flex: 1; margin-bottom: 0; }
+  .verify-btn {
+    display: flex; align-items: center; gap: 7px; padding: 11px 18px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: var(--radius-sm); color: #fff;
+    font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: opacity var(--transition), box-shadow var(--transition), transform var(--transition);
+    white-space: nowrap;
+  }
+  .verify-btn:hover { opacity: 0.9; box-shadow: 0 4px 20px var(--glow-strong); transform: translateY(-1px); }
+  .verify-btn:active { transform: translateY(0); }
+  .verify-status {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-radius: var(--radius-sm);
+    font-size: 12px; font-weight: 500; margin-top: 10px;
+    transition: all var(--transition);
+  }
+  .verify-status.success { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25); color: var(--success); }
+  .verify-status.error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25); color: var(--error); }
+  .verify-status.hidden { display: none; }
+
+  /* === RUN BUTTON === */
+  .run-btn {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 9px;
+    padding: 13px; border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    border: none; color: #fff; font-family: inherit; font-size: 14px; font-weight: 700;
+    cursor: pointer; letter-spacing: 0.3px; margin-top: 6px;
+    transition: opacity var(--transition), box-shadow var(--transition), transform var(--transition);
+    position: relative; overflow: hidden;
+  }
+  .run-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .run-btn:hover { opacity: 0.92; box-shadow: 0 6px 30px var(--glow-strong); transform: translateY(-1px); }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .run-btn.loading .btn-label { opacity: 0; }
+  .run-btn .spinner { display: none; }
+  .run-btn.loading .spinner { display: block; }
+  .run-btn.loading .btn-icon { display: none; }
+
+  /* === RESPONSE VIEWER === */
+  .response-panel {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm); overflow: hidden; margin-top: 16px;
+  }
+  .response-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border-bottom: 1px solid var(--glass-border);
+  }
+  .response-toolbar-left { display: flex; align-items: center; gap: 8px; }
+  .resp-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-dim); }
+  .resp-status {
+    font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 50px;
+  }
+  .resp-status.ok { background: rgba(52,211,153,0.15); color: var(--success); }
+  .resp-status.err { background: rgba(248,113,113,0.15); color: var(--error); }
+  .response-actions { display: flex; gap: 6px; }
+  .resp-action-btn {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--text-dim); transition: all var(--transition);
+  }
+  .resp-action-btn:hover { background: var(--glass-hover); color: var(--text-primary); border-color: var(--glass-hover); }
+  .response-body { padding: 14px; max-height: 320px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--glass-border) transparent; }
+  .json-tree { font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace; font-size: 12px; line-height: 1.7; color: var(--text-secondary); }
+  .json-key { color: var(--accent); }
+  .json-str { color: var(--accent3); }
+  .json-num { color: var(--accent2); }
+  .json-bool { color: var(--warning); }
+  .json-null { color: var(--text-dim); }
+  .json-node { cursor: pointer; }
+  .json-collapsible { margin-left: 16px; }
+  .json-collapsed > .json-collapsible { display: none; }
+  .json-toggle { display: inline-flex; align-items: center; margin-right: 3px; color: var(--text-dim); transition: transform 0.15s; }
+  .json-collapsed .json-toggle { transform: rotate(-90deg); }
+  .response-empty { text-align: center; padding: 30px 20px; color: var(--text-dim); font-size: 13px; }
+
+  /* === ENDPOINT LIST === */
+  .endpoint-list { display: flex; flex-direction: column; gap: 8px; }
+  .endpoint-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border-radius: var(--radius-sm);
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    cursor: pointer; transition: all var(--transition);
+  }
+  .endpoint-item:hover { border-color: var(--accent); background: var(--glass-hover); }
+  .method-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px; min-width: 44px; text-align: center; }
+  .method-get { background: rgba(52,211,153,0.15); color: var(--success); }
+  .method-post { background: rgba(56,189,248,0.15); color: var(--accent2); }
+  .endpoint-path { font-family: monospace; font-size: 12px; color: var(--text-secondary); flex: 1; }
+  .endpoint-desc { font-size: 11px; color: var(--text-dim); }
+
+  /* === LOCKED OVERLAY === */
+  .locked-msg {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    padding: 32px 20px; text-align: center;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm); color: var(--text-secondary); font-size: 13px;
+  }
+  .locked-msg svg { color: var(--text-dim); }
+
+  /* === SECTION HEADER === */
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .section-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+  .section-count { font-size: 12px; color: var(--text-dim); }
+
+  /* === TOAST === */
+  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    display: flex; align-items: center; gap: 9px; padding: 11px 16px;
+    background: var(--glass-strong); border: 1px solid var(--glass-border);
+    border-radius: 12px; font-size: 13px; color: var(--text-primary);
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    animation: toastIn 0.25s ease, toastOut 0.25s ease 2.8s forwards;
+  }
+  .toast.t-success { border-color: rgba(52,211,153,0.35); }
+  .toast.t-error { border-color: rgba(248,113,113,0.35); }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes toastOut { to { opacity: 0; transform: translateX(20px); } }
+
+  /* === SCROLLBAR === */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 99px; }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 600px) {
+    main { padding: 20px 14px 32px; }
+    header { padding: 0 14px; }
+    .search-input { width: 150px; }
+    .search-input:focus { width: 180px; }
+    .modal { padding: 20px 16px; }
+    .api-grid { grid-template-columns: 1fr; }
+    .verify-row { flex-direction: column; }
+    .verify-btn { width: 100%; justify-content: center; }
+  }
+
+  /* ===== DOCS DRAWER ===== */
+  .docs-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .docs-overlay.open { opacity: 1; pointer-events: all; }
+  .docs-drawer {
+    position: absolute; top: 0; right: 0; bottom: 0;
+    width: min(420px, 100vw);
+    background: var(--surface);
+    border-left: 1px solid var(--glass-border);
+    display: flex; flex-direction: column;
+    transform: translateX(100%); transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+  }
+  .docs-overlay.open .docs-drawer { transform: translateX(0); }
+  .docs-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px; border-bottom: 1px solid var(--glass-border);
+    background: var(--glass-bg); flex-shrink: 0;
+  }
+  .docs-title { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; color: var(--text-primary); }
+  .docs-close {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .docs-close:hover { background: rgba(248,113,113,0.1); color: var(--error); border-color: var(--error); }
+  .docs-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 28px; }
+  .docs-section { display: flex; flex-direction: column; gap: 12px; }
+  .docs-section-title { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
+  .docs-text { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin: 0; }
+  .docs-text code { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 4px; padding: 1px 5px; font-size: 11px; color: var(--accent); }
+  .docs-endpoint { display: flex; align-items: center; gap: 10px; }
+  .docs-method { font-size: 10px; font-weight: 800; padding: 3px 7px; border-radius: 5px; letter-spacing: 0.05em; }
+  .docs-method.get { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+  .docs-method.post { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+  .docs-path { font-family: monospace; font-size: 13px; color: var(--text-primary); font-weight: 600; }
+  .docs-params { display: flex; flex-direction: column; gap: 6px; }
+  .docs-param { font-size: 12px; color: var(--text-secondary); display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .param-name { font-family: monospace; color: var(--text-primary); font-weight: 600; }
+  .param-req { font-size: 10px; background: rgba(167,139,250,0.15); color: var(--accent); border: 1px solid rgba(167,139,250,0.3); border-radius: 4px; padding: 1px 5px; }
+  .param-opt { font-size: 10px; background: var(--glass-bg); color: var(--text-dim); border: 1px solid var(--glass-border); border-radius: 4px; padding: 1px 5px; }
+  .docs-code {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: 10px; padding: 12px 14px;
+    font-family: monospace; font-size: 11px; color: var(--text-secondary);
+    white-space: pre-wrap; word-break: break-all; line-height: 1.7;
+  }
+  .docs-response {
+    background: rgba(52,211,153,0.03); border: 1px solid rgba(52,211,153,0.15);
+    border-radius: 10px; padding: 12px 14px;
+    font-family: monospace; font-size: 11px; color: var(--text-secondary);
+    white-space: pre-wrap; line-height: 1.7;
+  }
+  .docs-divider { height: 1px; background: var(--glass-border); margin: 4px 0; }
+
+</style>
 </head>
 <body>
-    <!-- Ambient -->
-    <div class="ambient ambient-1"></div>
-    <div class="ambient ambient-2"></div>
+<div class="bg-layer">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+<div class="app">
 
-    <div class="app">
-        <!-- ─── SIDEBAR ─── -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-logo">
-                <a class="logo-mark" href="#">
-                    <div class="logo-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                    </div>
-                    <div>
-                        <div class="logo-text">ZENTRIX</div>
-                        <div class="logo-version">v1.0 · STABLE</div>
-                    </div>
-                </a>
-            </div>
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <svg class="logo-icon" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="30" height="30" rx="8" fill="url(#lg)"/>
+        <path d="M8 10h14M8 15h10M8 20h12" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="23" cy="20" r="3" fill="#a78bfa"/>
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="30" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#7c3aed"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs>
+      </svg>
+      Zentrix <span>API</span>
+    </div>
+    <div class="header-right">
+<button class="theme-btn" id="themeBtn" title="Toggle theme">
+        <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="theme-btn" id="docsBtn" title="Documentation" onclick="openDocs()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </header>
 
-            <nav class="sidebar-nav">
-                <div class="nav-group">
-                    <div class="nav-group-label">Overview</div>
-                    <a class="nav-item active" href="#hero" onclick="scrollTo('hero')">
-                        <span class="nav-dot"></span>
-                        Introduction
-                    </a>
-                    <a class="nav-item" href="#getting-started" onclick="scrollTo('getting-started')">
-                        <span class="nav-dot"></span>
-                        Getting Started
-                    </a>
-                </div>
+  <!-- MAIN -->
+  <main>
 
-                <div class="nav-group">
-                    <div class="nav-group-label">API Reference</div>
-                    <a class="nav-item" href="#endpoints" onclick="scrollTo('endpoints')">
-                        <span class="nav-dot"></span>
-                        Endpoints
-                        <span class="method-pill">GET</span>
-                    </a>
-                    <a class="nav-item" href="#playground" onclick="scrollTo('playground')">
-                        <span class="nav-dot"></span>
-                        Playground
-                    </a>
-                    <a class="nav-item" href="#response-codes" onclick="scrollTo('response-codes')">
-                        <span class="nav-dot"></span>
-                        Response Codes
-                    </a>
-                </div>
-
-                <div class="nav-group">
-                    <div class="nav-group-label">Integration</div>
-                    <a class="nav-item" href="#examples" onclick="scrollTo('examples')">
-                        <span class="nav-dot"></span>
-                        Code Examples
-                    </a>
-                </div>
-            </nav>
-
-            <div class="sidebar-footer">
-                <div class="status-indicator">
-                    <div class="status-dot"></div>
-                    <span class="status-text">All systems operational</span>
-                </div>
-            </div>
-        </aside>
-
-        <!-- ─── MOBILE TOP NAV ─── -->
-        <nav class="topnav" id="topnav">
-            <div class="topnav-logo">ZENTRIX</div>
-            <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">
-                <span></span><span></span><span></span>
-            </button>
-        </nav>
-
-        <!-- Mobile sidebar overlay -->
-        <div class="mobile-sidebar" id="mobile-sidebar">
-            <div class="nav-group">
-                <div class="nav-group-label">Overview</div>
-                <a class="nav-item" href="#hero" onclick="mobileNav('hero')"><span class="nav-dot"></span>Introduction</a>
-                <a class="nav-item" href="#getting-started" onclick="mobileNav('getting-started')"><span class="nav-dot"></span>Getting Started</a>
-            </div>
-            <div class="nav-group">
-                <div class="nav-group-label">API Reference</div>
-                <a class="nav-item" href="#endpoints" onclick="mobileNav('endpoints')"><span class="nav-dot"></span>Endpoints <span class="method-pill">GET</span></a>
-                <a class="nav-item" href="#playground" onclick="mobileNav('playground')"><span class="nav-dot"></span>Playground</a>
-                <a class="nav-item" href="#response-codes" onclick="mobileNav('response-codes')"><span class="nav-dot"></span>Response Codes</a>
-            </div>
-            <div class="nav-group">
-                <div class="nav-group-label">Integration</div>
-                <a class="nav-item" href="#examples" onclick="mobileNav('examples')"><span class="nav-dot"></span>Code Examples</a>
-            </div>
-        </div>
-
-        <!-- ─── MAIN CONTENT ─── -->
-        <main class="content" id="content">
-
-            <!-- HERO -->
-            <section id="hero">
-                <div class="hero">
-                    <div class="hero-eyebrow">
-                        <span class="eyebrow-dot"></span>
-                        API Documentation — v1.0
-                    </div>
-                    <h1><em>Zentrix</em> API</h1>
-                    <p class="hero-sub">
-                        Powerful movie & series downloads via clean HTTP requests.
-                        Built for developers who want speed, reliability, and zero friction.
-                    </p>
-                    <div class="hero-ctas">
-                        <a href="#getting-started" class="btn btn-primary">
-                            Get Started
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                        </a>
-                        <a href="#playground" class="btn btn-ghost">
-                            Try it Live
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        </a>
-                    </div>
-
-                    <div class="stats-strip">
-                        <div class="stat-item">
-                            <div class="stat-value"><span>99.9%</span></div>
-                            <div class="stat-label">Uptime SLA</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value"><span>&lt;200ms</span></div>
-                            <div class="stat-label">Avg. Response Time</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value"><span>4K+</span></div>
-                            <div class="stat-label">Titles Available</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value"><span>100</span></div>
-                            <div class="stat-label">Req/min Rate Limit</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- GETTING STARTED -->
-            <section class="section fade-in" id="getting-started">
-                <span class="section-tag">Quick Start</span>
-                <h2>Getting Started</h2>
-                <p class="section-desc">Everything you need to integrate with Zentrix API in under 5 minutes.</p>
-
-                <div class="info-grid">
-                    <div class="info-card">
-                        <div class="info-label">Base URL</div>
-                        <div class="info-value">https://zentrix-api.onrender.com/v1</div>
-                    </div>
-                    <div class="info-card">
-                        <div class="info-label">Protocol</div>
-                        <div class="info-value">HTTPS Only</div>
-                    </div>
-                    <div class="info-card">
-                        <div class="info-label">Authentication</div>
-                        <div class="info-value">X-API-Key</div>
-                        <div class="info-note">Pass your key in every request header as <code>X-API-Key: your_key</code></div>
-                    </div>
-                    <div class="info-card">
-                        <div class="info-label">Response Format</div>
-                        <div class="info-value">application/json</div>
-                    </div>
-                    <div class="info-card">
-                        <div class="info-label">Rate Limit</div>
-                        <div class="info-value">100 req / min</div>
-                        <div class="info-note">Per API key. Exceeding returns <code>429</code></div>
-                    </div>
-                    <div class="info-card">
-                        <div class="info-label">Versioning</div>
-                        <div class="info-value">/v1/ prefix</div>
-                        <div class="info-note">Breaking changes will increment the version path</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ENDPOINTS -->
-            <section class="section fade-in" id="endpoints">
-                <span class="section-tag">API Reference</span>
-                <h2>Endpoints</h2>
-                <p class="section-desc">Currently available endpoint for searching and retrieving download links.</p>
-
-                <div class="endpoint-card">
-                    <div class="endpoint-head">
-                        <span class="method-badge">GET</span>
-                        <span class="endpoint-path">/api/download</span>
-                    </div>
-                    <div class="endpoint-body">
-                        <p class="endpoint-desc">
-                            Search for a movie or series and retrieve download links with full metadata.
-                            Supports quality selection, series episode targeting, and subtitle retrieval.
-                        </p>
-
-                        <div class="table-title">Query Parameters</div>
-                        <div class="params-wrap">
-                            <table class="params-table">
-                                <thead>
-                                    <tr>
-                                        <th>Parameter</th>
-                                        <th>Type</th>
-                                        <th>Status</th>
-                                        <th>Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><span class="p-name">query</span><span class="p-type">string</span></td>
-                                        <td><span class="badge badge-req">required</span></td>
-                                        <td></td>
-                                        <td>Movie or series name to search</td>
-                                    </tr>
-                                    <tr>
-                                        <td><span class="p-name">type</span><span class="p-type">string</span></td>
-                                        <td><span class="badge badge-opt">optional</span></td>
-                                        <td>Default: auto-detect</td>
-                                        <td><code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">movie</code> or <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">series</code></td>
-                                    </tr>
-                                    <tr>
-                                        <td><span class="p-name">season</span><span class="p-type">integer</span></td>
-                                        <td><span class="badge badge-cond">conditional</span></td>
-                                        <td></td>
-                                        <td>Season number — required when type is <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">series</code></td>
-                                    </tr>
-                                    <tr>
-                                        <td><span class="p-name">episode</span><span class="p-type">integer</span></td>
-                                        <td><span class="badge badge-cond">conditional</span></td>
-                                        <td></td>
-                                        <td>Episode number — required when type is <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">series</code></td>
-                                    </tr>
-                                    <tr>
-                                        <td><span class="p-name">quality</span><span class="p-type">string</span></td>
-                                        <td><span class="badge badge-opt">optional</span></td>
-                                        <td>Default: best</td>
-                                        <td>Preferred quality: <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">360</code> · <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">480</code> · <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">720</code> · <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">1080</code></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Response example with tabs -->
-                        <div class="table-title" style="margin-bottom:12px">Response Example</div>
-                        <div class="response-tabs">
-                            <button class="resp-tab active ok" onclick="switchRespTab(this, 'resp-ok')">200 OK</button>
-                            <button class="resp-tab err" onclick="switchRespTab(this, 'resp-404')">404 Not Found</button>
-                            <button class="resp-tab err" onclick="switchRespTab(this, 'resp-401')">401 Unauthorized</button>
-                        </div>
-
-                        <div class="resp-panel active" id="resp-ok">
-                            <div class="code-block">
-                                <div class="code-head">
-                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green)">● 200 OK</span>
-                                    <button class="copy-btn" onclick="copyBlock(this, 'json-ok')">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                                        Copy
-                                    </button>
-                                </div>
-                                <pre><code class="language-json" id="json-ok">{
-  "status": "success",
-  "data": {
-    "title": "Inception",
-    "year": 2010,
-    "type": "movie",
-    "quality": "1080p",
-    "file_size": "2.4 GB",
-    "download_url": "https://cdn.zentrix.dev/dl/inception-2010-1080p.mp4",
-    "subtitle_url": "https://cdn.zentrix.dev/subs/inception-2010-en.srt"
-  }
-}</code></pre>
-                            </div>
-                        </div>
-
-                        <div class="resp-panel" id="resp-404">
-                            <div class="code-block">
-                                <div class="code-head">
-                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--red)">● 404 Not Found</span>
-                                    <button class="copy-btn" onclick="copyBlock(this, 'json-404')">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                                        Copy
-                                    </button>
-                                </div>
-                                <pre><code class="language-json" id="json-404">{
-  "status": "error",
-  "code": 404,
-  "message": "No results found for the given query.",
-  "query": "xyzunknownmovie"
-}</code></pre>
-                            </div>
-                        </div>
-
-                        <div class="resp-panel" id="resp-401">
-                            <div class="code-block">
-                                <div class="code-head">
-                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--red)">● 401 Unauthorized</span>
-                                    <button class="copy-btn" onclick="copyBlock(this, 'json-401')">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                                        Copy
-                                    </button>
-                                </div>
-                                <pre><code class="language-json" id="json-401">{
-  "status": "error",
-  "code": 401,
-  "message": "Invalid or missing API key. Include your key as X-API-Key header."
-}</code></pre>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- PLAYGROUND -->
-            <section class="section fade-in" id="playground">
-                <span class="section-tag">Interactive</span>
-                <h2>API Playground</h2>
-                <p class="section-desc">Test the endpoint directly from your browser. Enter your API key and parameters below.</p>
-
-                <div class="playground">
-                    <div class="playground-head">
-                        <span class="playground-title">Try /api/download</span>
-                        <span class="playground-badge">LIVE</span>
-                    </div>
-                    <div class="playground-body">
-                        <div class="field-row">
-                            <div class="field" style="grid-column: 1 / -1">
-                                <label>Query <span>*</span></label>
-                                <input type="text" id="pg-query" placeholder="e.g. Inception" />
-                            </div>
-                        </div>
-                        <div class="field-row">
-                            <div class="field">
-                                <label>Type</label>
-                                <select id="pg-type" onchange="toggleSeriesFields()">
-                                    <option value="">Auto-detect</option>
-                                    <option value="movie">movie</option>
-                                    <option value="series">series</option>
-                                </select>
-                            </div>
-                            <div class="field">
-                                <label>Quality</label>
-                                <select id="pg-quality">
-                                    <option value="">Best available</option>
-                                    <option value="1080">1080p</option>
-                                    <option value="720">720p</option>
-                                    <option value="480">480p</option>
-                                    <option value="360">360p</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="series-fields" id="series-fields">
-                            <div class="field">
-                                <label>Season</label>
-                                <input type="number" id="pg-season" placeholder="1" min="1" />
-                            </div>
-                            <div class="field">
-                                <label>Episode</label>
-                                <input type="number" id="pg-episode" placeholder="1" min="1" />
-                            </div>
-                        </div>
-                        <div class="field">
-                            <label>API Key <span>*</span></label>
-                            <input type="password" id="pg-apikey" placeholder="your_api_key_here" />
-                        </div>
-
-                        <div class="playground-actions">
-                            <button class="btn-run" id="pg-run-btn" onclick="runPlayground()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                                Send Request
-                            </button>
-                            <button class="btn-clear" onclick="clearPlayground()">Clear</button>
-                        </div>
-
-                        <div class="pg-result" id="pg-result">
-                            <div class="result-head">
-                                <div class="result-status" id="pg-status"></div>
-                                <div class="result-time" id="pg-time"></div>
-                            </div>
-                            <div class="code-block">
-                                <pre><code class="language-json" id="pg-output"></code></pre>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- RESPONSE CODES -->
-            <section class="section fade-in" id="response-codes">
-                <span class="section-tag">Reference</span>
-                <h2>Response Codes</h2>
-                <p class="section-desc">Standard HTTP response codes returned by the Zentrix API.</p>
-
-                <div class="codes-list">
-                    <div class="code-row">
-                        <span class="code-num ok">200</span>
-                        <div class="code-info">
-                            <div class="code-msg">OK</div>
-                            <div class="code-note">Request successful. Download links and metadata returned.</div>
-                        </div>
-                    </div>
-                    <div class="code-row">
-                        <span class="code-num err">400</span>
-                        <div class="code-info">
-                            <div class="code-msg">Bad Request</div>
-                            <div class="code-note">Missing required parameters or invalid query format.</div>
-                        </div>
-                    </div>
-                    <div class="code-row">
-                        <span class="code-num err">401</span>
-                        <div class="code-info">
-                            <div class="code-msg">Unauthorized</div>
-                            <div class="code-note">Missing or invalid API key in the <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-2)">X-API-Key</code> header.</div>
-                        </div>
-                    </div>
-                    <div class="code-row">
-                        <span class="code-num err">404</span>
-                        <div class="code-info">
-                            <div class="code-msg">Not Found</div>
-                            <div class="code-note">No results found for the given search query.</div>
-                        </div>
-                    </div>
-                    <div class="code-row">
-                        <span class="code-num warn">429</span>
-                        <div class="code-info">
-                            <div class="code-msg">Too Many Requests</div>
-                            <div class="code-note">Rate limit exceeded (100 req/min). Slow down and retry after 60 seconds.</div>
-                        </div>
-                    </div>
-                    <div class="code-row">
-                        <span class="code-num err">500</span>
-                        <div class="code-info">
-                            <div class="code-msg">Internal Server Error</div>
-                            <div class="code-note">Something went wrong on our end. Please try again later.</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- CODE EXAMPLES -->
-            <section class="section fade-in" id="examples">
-                <span class="section-tag">Integration</span>
-                <h2>Code Examples</h2>
-                <p class="section-desc">Ready-to-paste snippets for the most popular languages and tools.</p>
-
-                <div class="code-block">
-                    <div class="code-head">
-                        <div class="lang-tabs">
-                            <button class="lang-tab active" onclick="switchLangTab(this, 'ex-curl')">cURL</button>
-                            <button class="lang-tab" onclick="switchLangTab(this, 'ex-python')">Python</button>
-                            <button class="lang-tab" onclick="switchLangTab(this, 'ex-js')">JavaScript</button>
-                            <button class="lang-tab" onclick="switchLangTab(this, 'ex-node')">Node.js</button>
-                        </div>
-                        <button class="copy-btn" id="ex-copy-btn" onclick="copyActiveExample()">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                            Copy
-                        </button>
-                    </div>
-
-                    <div class="code-panel active" id="ex-curl">
-                        <pre><code class="language-bash"># Movie download
-curl -X GET "https://zentrix-api.onrender.com/v1/api/download?query=Inception&type=movie&quality=1080" \
-  -H "X-API-Key: your_api_key_here" \
-  -H "Accept: application/json"
-
-# Series episode
-curl -X GET "https://zentrix-api.onrender.com/v1/api/download?query=Breaking+Bad&type=series&season=1&episode=1" \
-  -H "X-API-Key: your_api_key_here"</code></pre>
-                    </div>
-
-                    <div class="code-panel" id="ex-python">
-                        <pre><code class="language-python">import requests
-
-BASE_URL = "https://zentrix-api.onrender.com/v1"
-API_KEY = "your_api_key_here"
-
-def download_movie(title: str, quality: str = "1080") -> dict:
-    resp = requests.get(
-        f"{BASE_URL}/api/download",
-        headers={"X-API-Key": API_KEY},
-        params={"query": title, "type": "movie", "quality": quality}
-    )
-    resp.raise_for_status()
-    return resp.json()
-
-def download_episode(title: str, season: int, episode: int) -> dict:
-    resp = requests.get(
-        f"{BASE_URL}/api/download",
-        headers={"X-API-Key": API_KEY},
-        params={"query": title, "type": "series", "season": season, "episode": episode}
-    )
-    resp.raise_for_status()
-    return resp.json()
-
-# Usage
-data = download_movie("Inception", quality="1080")
-print(f"Title: {data['data']['title']}")
-print(f"Download: {data['data']['download_url']}")</code></pre>
-                    </div>
-
-                    <div class="code-panel" id="ex-js">
-                        <pre><code class="language-javascript">const ZENTRIX_BASE = 'https://zentrix-api.onrender.com/v1';
-const API_KEY = 'your_api_key_here';
-
-async function getDownloadLink({ query, type = 'movie', quality = '1080', season, episode } = {}) {
-  const params = new URLSearchParams({ query, type, quality });
-  if (season) params.append('season', season);
-  if (episode) params.append('episode', episode);
-
-  const res = await fetch(`${ZENTRIX_BASE}/api/download?${params}`, {
-    headers: { 'X-API-Key': API_KEY, 'Accept': 'application/json' }
-  });
-
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
-
-// Movie
-getDownloadLink({ query: 'Inception' })
-  .then(({ data }) => console.log(data.download_url))
-  .catch(console.error);
-
-// Episode
-getDownloadLink({ query: 'Breaking Bad', type: 'series', season: 1, episode: 1 })
-  .then(({ data }) => console.log(data.download_url));</code></pre>
-                    </div>
-
-                    <div class="code-panel" id="ex-node">
-                        <pre><code class="language-javascript">// Node.js with axios
-const axios = require('axios');
-
-const zentrix = axios.create({
-  baseURL: 'https://zentrix-api.onrender.com/v1',
-  headers: { 'X-API-Key': process.env.ZENTRIX_API_KEY }
-});
-
-async function search(query, options = {}) {
-  const { data } = await zentrix.get('/api/download', {
-    params: { query, ...options }
-  });
-  return data;
-}
-
-// Async/await usage
-(async () => {
-  try {
-    const result = await search('Inception', { type: 'movie', quality: '1080' });
-    console.log('Download URL:', result.data.download_url);
-    console.log('Subtitle URL:', result.data.subtitle_url);
-  } catch (err) {
-    if (err.response?.status === 429) {
-      console.error('Rate limited — wait 60s and retry');
-    } else {
-      console.error(err.message);
-    }
-  }
-})();</code></pre>
-                    </div>
-                </div>
-            </section>
-
-            <!-- FOOTER -->
-            <footer class="footer">
-                <div>
-                    <div class="footer-brand">ZENTRIX</div>
-                    <div class="footer-copy" style="margin-top:4px">&copy; 2025 Zentrix API. All rights reserved.</div>
-                </div>
-                <div class="footer-links">
-                    <a href="#">Terms</a>
-                    <a href="#">Privacy</a>
-                    <a href="#">Status</a>
-                    <a href="#">Support</a>
-                </div>
-            </footer>
-
-        </main>
+    <div class="hero">
+      <div class="hero-badge">
+        <div class="stat-dot"></div>
+        Live · All systems operational
+      </div>
+      <h1>The <span>Zentrix</span> API Lab</h1>
+      <p>Test, verify, and explore every endpoint in a futuristic glass playground. Bring your key and build something great.</p>
     </div>
 
-    <script>
-        hljs.highlightAll();
+    <div class="stats-bar">
+      <div class="stat-pill"><div class="stat-dot"></div> <strong id="apiCount">12</strong> APIs Available</div>
+      <div class="stat-pill baseurl-pill">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Base URL: <strong id="baseUrlText">api.zentrixtech.name.ng</strong>
+        <button class="baseurl-copy-btn" id="baseUrlCopyBtn" title="Copy base URL" onclick="copyBaseUrl()">
+          <svg id="baseUrlCopyIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+      <div class="stat-pill">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Key-based auth
+      </div>
+    </div>
 
-        // ─── MOBILE MENU ───
-        function toggleMobileMenu() {
-            const btn = document.getElementById('hamburger');
-            const menu = document.getElementById('mobile-sidebar');
-            btn.classList.toggle('open');
-            menu.classList.toggle('open');
-        }
+    <!-- TOKEN INPUT -->
+    <div class="token-row-wrap">
+      <div class="token-label">API Token</div>
+      <div class="token-input-group">
+        <input class="token-inp" id="globalTokenInput" type="password" placeholder="Paste your API key to unlock all endpoints…" autocomplete="off" />
+        <button class="token-eye" id="tokenEyeBtn" title="Show / hide">
+          <svg id="eyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="token-apply" id="applyTokenBtn">Apply</button>
+        <button class="token-clear" id="clearTokenBtn" style="display:none" title="Clear token">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <span class="token-badge" id="tokenBadge" style="display:none">Active</span>
+      </div>
+    </div>
 
-        function mobileNav(id) {
-            document.getElementById('hamburger').classList.remove('open');
-            document.getElementById('mobile-sidebar').classList.remove('open');
-            setTimeout(() => scrollToSection(id), 10);
-        }
+    <div class="cat-bar" id="catBar">
+      <button class="cat-btn active" data-cat="all" onclick="filterCat(this,'all')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        All
+      </button>
+      <button class="cat-btn" data-cat="AI" onclick="filterCat(this,'AI')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 0 2h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1 0-2h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/></svg>
+        AI
+      </button>
+      <button class="cat-btn" data-cat="Media" onclick="filterCat(this,'Media')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        Media
+      </button>
+      <button class="cat-btn" data-cat="Utility" onclick="filterCat(this,'Utility')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        Utility
+      </button>
+      <button class="cat-btn" data-cat="Info" onclick="filterCat(this,'Info')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Info
+      </button>
+      <button class="cat-btn" data-cat="Social" onclick="filterCat(this,'Social')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Social
+      </button>
+    </div>
 
-        // ─── SCROLL SPY ───
-        const sections = ['hero', 'getting-started', 'endpoints', 'playground', 'response-codes', 'examples'];
+    <div class="section-head">
+      <div class="section-title">API Marketplace</div>
+      <div class="section-count" id="filteredCount">Showing 12 APIs</div>
+    </div>
+    <div class="api-grid" id="apiGrid"></div>
 
-        function updateActiveNav() {
-            const content = document.getElementById('content');
-            const scrollY = content.scrollTop;
+  </main>
+</div>
 
-            let current = sections[0];
-            for (const id of sections) {
-                const el = document.getElementById(id);
-                if (el && el.offsetTop - 100 <= scrollY) current = id;
-            }
+<!-- MODAL OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModalDirect()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div id="modalContent"></div>
+  </div>
+</div>
 
-            document.querySelectorAll('.sidebar .nav-item').forEach(item => {
-                item.classList.remove('active');
-                if (item.getAttribute('href') === '#' + current) {
-                    item.classList.add('active');
-                }
-            });
-        }
+<!-- DOCS DRAWER -->
+<div class="docs-overlay" id="docsOverlay" onclick="closeDocs(event)">
+  <div class="docs-drawer" id="docsDrawer">
+    <div class="docs-header">
+      <div class="docs-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        API Documentation
+      </div>
+      <button class="docs-close" onclick="closeDocs()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="docs-body">
 
-        document.getElementById('content').addEventListener('scroll', updateActiveNav);
+      <div class="docs-section">
+        <div class="docs-section-title">Authentication</div>
+        <p class="docs-text">All endpoints (except <code>/health</code>) require an API key. Pass it via header or query param:</p>
+        <div class="docs-code">x-api-key: YOUR_KEY
+<span style="color:var(--text-dim)">-- or --</span>
+?apikey=YOUR_KEY</div>
+      </div>
 
-        // ─── SCROLL TO ───
-        function scrollToSection(id) {
-            const el = document.getElementById(id);
-            if (el) {
-                document.getElementById('content').scrollTo({ top: el.offsetTop - 20, behavior: 'smooth' });
-            }
-        }
+      <div class="docs-section">
+        <div class="docs-section-title">🎬 Movie & TV</div>
 
-        // Override anchor clicks in sidebar
-        document.querySelectorAll('.sidebar .nav-item').forEach(item => {
-            item.addEventListener('click', e => {
-                e.preventDefault();
-                const id = item.getAttribute('href').replace('#', '');
-                scrollToSection(id);
-            });
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/search</div>
+        </div>
+        <p class="docs-text">Search for movies, TV shows, and anime.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">q</span><span class="param-req">required</span> — Search query</div>
+          <div class="docs-param"><span class="param-name">type</span><span class="param-opt">optional</span> — <code>movie</code> | <code>tv</code> | <code>anime</code> | <code>all</code> (default: all)</div>
+          <div class="docs-param"><span class="param-name">page</span><span class="param-opt">optional</span> — Page number (default: 1)</div>
+        </div>
+        <div class="docs-code">GET /api/search?q=Avengers&type=movie&apikey=KEY</div>
+        <div class="docs-response">{
+  "success": true,
+  "results": [
+    {
+      "subjectId": "tt0848228",
+      "title": "The Avengers",
+      "subjectType": "MOVIE",
+      "detailPath": "/movie/tt0848228",
+      "releaseDate": "2012-05-04",
+      "poster": "https://...",
+      "genre": ["Action", "Adventure"],
+      "imdbRatingValue": 8.0
+    }
+  ],
+  "page": 1,
+  "hasMore": true
+}</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/details</div>
+        </div>
+        <p class="docs-text">Get full details for a movie or show including cast, trailer, and episode list.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">detailPath</span><span class="param-req">required</span> — From search results (e.g. <code>/movie/tt0848228</code>)</div>
+        </div>
+        <div class="docs-code">GET /api/details?detailPath=/movie/tt0848228&apikey=KEY</div>
+        <div class="docs-response">{
+  "success": true,
+  "title": "The Avengers",
+  "rating": 8.0,
+  "genre": ["Action"],
+  "cast": [...],
+  "totalSeasons": null,
+  "episodeList": [],
+  "trailer": { "embed_url": "https://youtube.com/embed/..." }
+}</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/sources</div>
+        </div>
+        <p class="docs-text">Get stream URLs and subtitles for a movie or TV episode.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">id</span><span class="param-req">required</span> — Subject ID from search</div>
+          <div class="docs-param"><span class="param-name">detailPath</span><span class="param-req">required</span> — Detail path from search</div>
+          <div class="docs-param"><span class="param-name">season</span><span class="param-opt">optional</span> — Season number (0 for movies)</div>
+          <div class="docs-param"><span class="param-name">episode</span><span class="param-opt">optional</span> — Episode number (0 for movies)</div>
+        </div>
+        <div class="docs-code">GET /api/sources?id=tt0848228&detailPath=/movie/tt0848228&season=0&episode=0&apikey=KEY</div>
+        <div class="docs-response">{
+  "success": true,
+  "streams": [
+    {
+      "quality": "1080p",
+      "stream_url": "https://api.zentrixtech.name.ng/zentrix/stream?token=...",
+      "player_url": "https://api.zentrixtech.name.ng/zentrix/player?token=...",
+      "download_url": "https://api.zentrixtech.name.ng/zentrix/download?token=..."
+    }
+  ],
+  "subtitles": [{ "language": "en", "languageName": "English", "url": "..." }]
+}</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/trailer</div>
+        </div>
+        <p class="docs-text">Get a YouTube trailer for any movie or show by title.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">title</span><span class="param-req">required</span> — Movie or show title</div>
+          <div class="docs-param"><span class="param-name">year</span><span class="param-opt">optional</span> — Release year</div>
+        </div>
+        <div class="docs-code">GET /api/trailer?title=Inception&year=2010&apikey=KEY</div>
+        <div class="docs-response">{
+  "success": true,
+  "youtube_id": "YoHD9XEInc0",
+  "embed_url": "https://www.youtube.com/embed/YoHD9XEInc0",
+  "thumbnail": "https://..."
+}</div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">🎌 Anime</div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/anime/search</div>
+        </div>
+        <p class="docs-text">Search for anime titles.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">q</span><span class="param-req">required</span> — Anime title</div>
+          <div class="docs-param"><span class="param-name">page</span><span class="param-opt">optional</span> — Page number</div>
+        </div>
+        <div class="docs-code">GET /api/anime/search?q=Naruto&apikey=KEY</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/anime/episodes</div>
+        </div>
+        <p class="docs-text">Get episode list and season breakdown for an anime.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">detailPath</span><span class="param-req">required</span> — From anime search results</div>
+        </div>
+        <div class="docs-code">GET /api/anime/episodes?detailPath=/anime/tt123&apikey=KEY</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/anime/stream</div>
+        </div>
+        <p class="docs-text">Get stream URLs for a specific anime episode.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">id</span><span class="param-req">required</span> — Subject ID</div>
+          <div class="docs-param"><span class="param-name">detailPath</span><span class="param-req">required</span> — Detail path</div>
+          <div class="docs-param"><span class="param-name">season</span><span class="param-req">required</span> — Season number</div>
+          <div class="docs-param"><span class="param-name">episode</span><span class="param-req">required</span> — Episode number</div>
+        </div>
+        <div class="docs-code">GET /api/anime/stream?id=tt123&detailPath=/anime/tt123&season=1&episode=1&apikey=KEY</div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">🖼️ AI Image</div>
+        <p class="docs-text">All image endpoints return a hosted URL on <code>files.zentrixtech.name.ng</code>.</p>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/image/generate</div>
+        </div>
+        <p class="docs-text">Generate an image from a text prompt.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">prompt</span><span class="param-req">required</span> — Description of the image</div>
+        </div>
+        <div class="docs-code">GET /api/image/generate?prompt=a+cat+in+space&apikey=KEY</div>
+        <div class="docs-response">{
+  "success": true,
+  "image": "https://files.zentrixtech.name.ng/xxx.webp"
+}</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/image/transform</div>
+        </div>
+        <p class="docs-text">Transform an image with AI. Returns a <code>task_id</code> — poll <code>/api/image/transform/result</code> to get the output.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">image</span><span class="param-req">required</span> — Source image URL</div>
+          <div class="docs-param"><span class="param-name">prompt</span><span class="param-opt">optional</span> — Transformation instruction</div>
+        </div>
+        <div class="docs-code">GET /api/image/transform?image=https://...&prompt=change+background+to+space&apikey=KEY
+
+<span style="color:var(--text-dim)">-- then poll --</span>
+GET /api/image/transform/result?task_id=abc&fp=xyz&apikey=KEY</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/image/blend</div>
+        </div>
+        <p class="docs-text">Blend up to 4 images together.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">image1</span><span class="param-req">required</span> — First image URL</div>
+          <div class="docs-param"><span class="param-name">image2–4</span><span class="param-opt">optional</span> — Additional images</div>
+          <div class="docs-param"><span class="param-name">prompt</span><span class="param-opt">optional</span> — Blending instruction</div>
+        </div>
+        <div class="docs-code">GET /api/image/blend?image1=https://...&image2=https://...&apikey=KEY</div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">⚡ Proxy</div>
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/zentrix/stream</div>
+        </div>
+        <p class="docs-text">Proxy a video stream. Supports range requests for seeking. Use the <code>stream_url</code> from sources directly — no need to call this manually.</p>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/zentrix/player</div>
+        </div>
+        <p class="docs-text">Opens an in-browser HTML5 video player for a stream token. Use the <code>player_url</code> from sources in an iframe or browser tab.</p>
+        <div class="docs-code">&lt;iframe src="https://api.zentrixtech.name.ng/zentrix/player?token=TOKEN"&gt;&lt;/iframe&gt;</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===================== DATA =====================
+const API_BASE_URL = "PLACEHOLDER_BACKEND_URL";
+const BASE_URL = API_BASE_URL;
+
+const APIS = [
+  {
+    id: 'health',
+    name: 'Health Check',
+    category: 'System',
+    badge: 'free',
+    desc: 'Check if the Zentrix API is online. Returns version and status. No API key required.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/health', desc: 'Get API status and version' },
+    ],
+    fields: [],
+    endpoint: '/health',
+    method: 'GET',
+  },
+  {
+    id: 'search',
+    name: 'Search',
+    category: 'Movies & TV',
+    badge: 'auth',
+    desc: 'Search for movies, TV shows, and anime. Returns poster, rating, genre, release date and more.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/search', desc: 'Search movies, TV shows, anime' },
+    ],
+    fields: [
+      { name: 'q', label: 'Search Query', placeholder: 'Avengers', type: 'text' },
+      { name: 'type', label: 'Type', type: 'select', options: ['all', 'movie', 'tv', 'anime'] },
+      { name: 'page', label: 'Page', placeholder: '1', type: 'text' },
+    ],
+    endpoint: '/api/search',
+    method: 'GET',
+  },
+  {
+    id: 'details',
+    name: 'Details',
+    category: 'Movies & TV',
+    badge: 'auth',
+    desc: 'Get full details for a movie or show: cast, trailer, episode list, seasons, ratings.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/details', desc: 'Get full movie/show details' },
+    ],
+    fields: [
+      { name: 'q', label: 'Title', placeholder: 'Naruto', type: 'text' },
+      { name: 'type', label: 'Type', type: 'select', options: ['all', 'movie', 'tv', 'anime'] },
+    ],
+    endpoint: '/api/details',
+    method: 'GET',
+  },
+  {
+    id: 'sources',
+    name: 'Stream Sources',
+    category: 'Movies & TV',
+    badge: 'auth',
+    desc: 'Get stream URLs and subtitles for a movie or TV episode. Returns multiple resolutions with proxy URLs.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/sources', desc: 'Get stream URLs + subtitles' },
+    ],
+    fields: [
+      { name: 'q', label: 'Title', placeholder: 'Naruto', type: 'text' },
+      { name: 'type', label: 'Type', type: 'select', options: ['all', 'movie', 'tv', 'anime'] },
+      { name: 'season', label: 'Season (0 for movies)', placeholder: '0', type: 'text' },
+      { name: 'episode', label: 'Episode (0 for movies)', placeholder: '0', type: 'text' },
+    ],
+    endpoint: '/api/sources',
+    method: 'GET',
+  },
+  {
+    id: 'trailer',
+    name: 'Trailer',
+    category: 'Movies & TV',
+    badge: 'auth',
+    desc: 'Fetch a YouTube trailer for any movie or show by title. Returns embed URL and thumbnail.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/trailer', desc: 'Get YouTube trailer URL' },
+    ],
+    fields: [
+      { name: 'title', label: 'Title', placeholder: 'Inception', type: 'text' },
+      { name: 'year', label: 'Year (optional)', placeholder: '2010', type: 'text' },
+    ],
+    endpoint: '/api/trailer',
+    method: 'GET',
+  },
+  {
+    id: 'anime-search',
+    name: 'Anime Search',
+    category: 'Anime',
+    badge: 'auth',
+    desc: 'Search for anime titles. Returns poster, type, rating, and detail path for streaming.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/anime/search', desc: 'Search anime titles' },
+    ],
+    fields: [
+      { name: 'q', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
+      { name: 'page', label: 'Page', placeholder: '1', type: 'text' },
+    ],
+    endpoint: '/api/anime/search',
+    method: 'GET',
+  },
+  {
+    id: 'anime-episodes',
+    name: 'Anime Episodes',
+    category: 'Anime',
+    badge: 'auth',
+    desc: 'Get episode list and season breakdown for an anime series using its detail path.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/anime/episodes', desc: 'Get episode list for anime' },
+    ],
+    fields: [
+      { name: 'q', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
+    ],
+    endpoint: '/api/anime/episodes',
+    method: 'GET',
+  },
+  {
+    id: 'anime-stream',
+    name: 'Anime Stream',
+    category: 'Anime',
+    badge: 'auth',
+    desc: 'Get stream URLs and subtitles for a specific anime episode by season and episode number.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/anime/stream', desc: 'Get stream URLs for anime episode' },
+    ],
+    fields: [
+      { name: 'q', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
+      { name: 'season', label: 'Season', placeholder: '1', type: 'text' },
+      { name: 'episode', label: 'Episode', placeholder: '1', type: 'text' },
+    ],
+    endpoint: '/api/anime/stream',
+    method: 'GET',
+  },
+  {
+    id: 'encode',
+    name: 'Encode URL',
+    category: 'Proxy',
+    badge: 'auth',
+    desc: 'Encode a CDN URL into a Zentrix proxy token. Returns stream, player, and download URLs.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/zentrix/encode', desc: 'Encode CDN URL to proxy token' },
+    ],
+    fields: [
+      { name: 'url', label: 'CDN URL', placeholder: 'https://cdn.example.com/video.mp4', type: 'url' },
+    ],
+    endpoint: '/zentrix/encode',
+    method: 'GET',
+  },
+  {
+    id: 'image-generate',
+    name: 'Image Generate',
+    category: 'AI Image',
+    badge: 'auth',
+    desc: 'Generate an AI image from a text prompt. Returns a hosted image URL on Zentrix CDN.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/image/generate', desc: 'Text to image' }],
+    fields: [
+      { name: 'prompt', label: 'Prompt', placeholder: 'a cat wearing sunglasses', type: 'text' },
+    ],
+    endpoint: '/api/image/generate',
+    method: 'GET',
+  },
+  {
+    id: 'image-edit',
+    name: 'Image Edit',
+    category: 'AI Image',
+    badge: 'auth',
+    desc: 'Edit an existing image using a text instruction. Provide an image URL and describe the change.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/image/edit', desc: 'Edit image with prompt' }],
+    fields: [
+      { name: 'url', label: 'Image URL', placeholder: 'https://files.zentrixtech.name.ng/xxx.webp', type: 'url' },
+      { name: 'prompt', label: 'Edit Instruction', placeholder: 'make it look like a painting', type: 'text' },
+    ],
+    endpoint: '/api/image/edit',
+    method: 'GET',
+  },
+  {
+    id: 'image-transform',
+    name: 'Image Transform',
+    category: 'AI Image',
+    badge: 'auth',
+    desc: 'Transform an image using AI (img2img). Returns a task_id — use Image Transform Result to get the output.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/image/transform', desc: 'Start image transform job' }],
+    fields: [
+      { name: 'image', label: 'Image URL', placeholder: 'https://files.zentrixtech.name.ng/xxx.webp', type: 'url' },
+      { name: 'prompt', label: 'Instruction', placeholder: 'change background to space', type: 'text' },
+    ],
+    endpoint: '/api/image/transform',
+    method: 'GET',
+  },
+  {
+    id: 'image-transform-result',
+    name: 'Transform Result',
+    category: 'AI Image',
+    badge: 'auth',
+    desc: 'Poll the result of an image transform job using the task_id and fp from Image Transform.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/image/transform/result', desc: 'Get transform result' }],
+    fields: [
+      { name: 'task_id', label: 'Task ID', placeholder: 'from transform response', type: 'text' },
+      { name: 'fp', label: 'Fingerprint (fp)', placeholder: 'from transform response', type: 'text' },
+    ],
+    endpoint: '/api/image/transform/result',
+    method: 'GET',
+  },
+  {
+    id: 'image-blend',
+    name: 'Image Blend',
+    category: 'AI Image',
+    badge: 'auth',
+    desc: 'Blend up to 4 images together using AI. Add an optional prompt to guide the blending.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/image/blend', desc: 'Blend multiple images' }],
+    fields: [
+      { name: 'image1', label: 'Image 1 URL', placeholder: 'https://...', type: 'url' },
+      { name: 'image2', label: 'Image 2 URL (optional)', placeholder: 'https://...', type: 'url' },
+      { name: 'image3', label: 'Image 3 URL (optional)', placeholder: 'https://...', type: 'url' },
+      { name: 'image4', label: 'Image 4 URL (optional)', placeholder: 'https://...', type: 'url' },
+      { name: 'prompt', label: 'Blending Instruction (optional)', placeholder: 'merge into one scene', type: 'text' },
+    ],
+    endpoint: '/api/image/blend',
+    method: 'GET',
+  },
+];
+
+// ===================== MERGE ADMIN APIS =====================
+(function mergeAdminApis() {
+  try {
+    const adminData = localStorage.getItem('zentrix_admin_apis');
+    if (!adminData) return;
+    const adminApis = JSON.parse(adminData);
+    adminApis.forEach(a => {
+      if (a.status === 'disabled' || a.visibility === 'hidden') return;
+      if (!APIS.find(x => x.id === a.id)) {
+        APIS.push({
+          id: a.id,
+          name: a.name,
+          category: a.category || 'Utility',
+          badge: a.auth === 'key' ? 'auth' : 'free',
+          desc: a.desc || '',
+          icon: a.icon || `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+          endpoints: a.endpoints || [{ method: a.method || 'GET', path: a.endpoint || '/', desc: a.desc || '' }],
+          fields: a.fields || [],
+          endpoint: a.endpoint || '/',
+          method: a.method || 'GET',
+          _adminPosted: true,
         });
+      }
+    });
+  } catch(e) {}
+})();
 
-        // ─── FADE IN OBSERVER ───
-        const observer = new IntersectionObserver(entries => {
-            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-        }, { threshold: 0.08 });
-        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+// ===================== LIVE SYNC (instant, no reload) =====================
+function applyAdminApis() {
+  try {
+    const raw = localStorage.getItem('zentrix_admin_apis');
+    if (!raw) return;
+    const adminApis = JSON.parse(raw);
+    const validIds = new Set(
+      adminApis.filter(a => a.status !== 'disabled' && a.visibility !== 'hidden').map(a => a.id)
+    );
+    // Remove stale admin entries
+    for (let i = APIS.length - 1; i >= 0; i--) {
+      if (APIS[i]._adminPosted && !validIds.has(APIS[i].id)) APIS.splice(i, 1);
+    }
+    // Add / update
+    adminApis.forEach(a => {
+      if (a.status === 'disabled' || a.visibility === 'hidden') return;
+      const mapped = {
+        id: a.id, name: a.name,
+        category: a.category || 'Utility',
+        badge: a.auth === 'key' ? 'auth' : 'free',
+        desc: a.desc || '',
+        icon: a.icon || '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+        endpoints: a.endpoints || [{ method: a.method || 'GET', path: a.endpoint || '/', desc: a.desc || '' }],
+        fields: a.fields || [],
+        endpoint: a.endpoint || '/',
+        method: a.method || 'GET',
+        _adminPosted: true,
+      };
+      const idx = APIS.findIndex(x => x.id === a.id);
+      if (idx >= 0) APIS[idx] = mapped; else APIS.unshift(mapped);
+    });
+  } catch(e) {}
+}
 
-        // ─── RESPONSE TAB ───
-        function switchRespTab(btn, panelId) {
-            document.querySelectorAll('.resp-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.resp-panel').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById(panelId).classList.add('active');
-        }
+window.addEventListener('storage', e => {
+  if (e.key === 'zentrix_admin_apis') {
+    applyAdminApis();
+    renderGrid();
+    syncCatBar();
+    // subtle flash to show the update landed
+    const g = document.getElementById('apiGrid');
+    if (g) { g.style.transition = 'opacity .35s'; g.style.opacity = '.4'; setTimeout(() => g.style.opacity = '1', 80); }
+  }
+});
 
-        // ─── LANG TABS ───
-        function switchLangTab(btn, panelId) {
-            document.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.code-panel').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById(panelId).classList.add('active');
-        }
+// ===================== STATE =====================
+let verifiedKeys = {}; // { apiId: key }
+let currentApi = null;
+let activeCategory = 'all';
+let searchQuery = '';
 
-        // ─── COPY ───
-        function copyBlock(btn, id) {
-            const text = document.getElementById(id).textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                btn.classList.add('copied');
-                btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
-                setTimeout(() => {
-                    btn.classList.remove('copied');
-                    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
-                }, 2000);
-            });
-        }
+// ===================== RENDER GRID =====================
+function renderGrid() {
+  const grid = document.getElementById('apiGrid');
+  const filtered = APIS.filter(a =>
+    (activeCategory === 'all' || a.category === activeCategory) &&
+    (searchQuery === '' || a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.category.toLowerCase().includes(searchQuery.toLowerCase()) || a.desc.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+  document.getElementById('filteredCount').textContent = `Showing ${filtered.length} API${filtered.length !== 1 ? 's' : ''}`;
+  grid.innerHTML = filtered.map(api => `
+    <div class="api-card" onclick="openApi('${api.id}')">
+      <div class="card-meta" style="margin-bottom:8px;">
+        <div class="card-name">${api.name}</div>
+        <div class="card-cat">${api.category}</div>
+      </div>
+      <div class="card-desc">${api.desc}</div>
+      <div class="card-footer">
+        <span class="card-badge badge-${api.badge}">${api.badge === 'free' ? 'Free' : api.badge === 'auth' ? 'Auth Required' : 'Premium'}</span>
+        <button class="card-try">
+          Try it
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
 
-        function copyActiveExample() {
-            const active = document.querySelector('.code-panel.active code');
-            if (!active) return;
-            navigator.clipboard.writeText(active.textContent).then(() => {
-                const btn = document.getElementById('ex-copy-btn');
-                btn.classList.add('copied');
-                btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
-                setTimeout(() => {
-                    btn.classList.remove('copied');
-                    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
-                }, 2000);
-            });
-        }
+function filterCat(btn, cat) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeCategory = cat;
+  renderGrid();
+}
+window.filterCat = filterCat;
 
-        // ─── SERIES FIELDS ───
-        function toggleSeriesFields() {
-            const type = document.getElementById('pg-type').value;
-            const fields = document.getElementById('series-fields');
-            fields.classList.toggle('show', type === 'series');
-        }
+// Inject new categories from admin APIs
+(function syncCatBar() {
+  const bar = document.getElementById('catBar');
+  if (!bar) return;
+  const existing = new Set([...bar.querySelectorAll('.cat-btn')].map(b => b.dataset.cat));
+  APIS.forEach(a => {
+    if (!a._adminPosted) return;
+    if (existing.has(a.category)) return;
+    existing.add(a.category);
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn';
+    btn.dataset.cat = a.category;
+    btn.onclick = () => filterCat(btn, a.category);
+    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>${a.category}`;
+    bar.appendChild(btn);
+  });
+})();
 
-        // ─── PLAYGROUND ───
-        async function runPlayground() {
-            const query = document.getElementById('pg-query').value.trim();
-            const apiKey = document.getElementById('pg-apikey').value.trim();
-            const type = document.getElementById('pg-type').value;
-            const quality = document.getElementById('pg-quality').value;
-            const season = document.getElementById('pg-season').value;
-            const episode = document.getElementById('pg-episode').value;
+// ===================== SEARCH (removed) =====================
 
-            if (!query) { alert('Query is required.'); return; }
-            if (!apiKey) { alert('API key is required.'); return; }
+// ===================== MODAL =====================
+function openApi(id) {
+  currentApi = APIS.find(a => a.id === id);
+  if (!currentApi) return;
+  renderModal();
+  document.getElementById('overlay').classList.add('open');
+}
+window.openApi = openApi;
 
-            const resultEl = document.getElementById('pg-result');
-            const statusEl = document.getElementById('pg-status');
-            const timeEl = document.getElementById('pg-time');
-            const outputEl = document.getElementById('pg-output');
-            const btn = document.getElementById('pg-run-btn');
+function closeModal(e) {
+  if (e.target === document.getElementById('overlay')) closeModalDirect();
+}
+window.closeModal = closeModal;
 
-            resultEl.classList.add('show');
-            btn.disabled = true;
-            statusEl.className = 'result-status loading';
-            statusEl.innerHTML = `<div class="spinner"></div> Sending...`;
-            timeEl.textContent = '';
-            outputEl.textContent = '';
+function closeModalDirect() {
+  document.getElementById('overlay').classList.remove('open');
+  currentApi = null;
+}
+window.closeModalDirect = closeModalDirect;
 
-            const params = new URLSearchParams({ query });
-            if (type) params.append('type', type);
-            if (quality) params.append('quality', quality);
-            if (season) params.append('season', season);
-            if (episode) params.append('episode', episode);
+function renderModal() {
+  const api = currentApi;
+  const isVerified = !!(verifiedKeys[api.id] || globalToken);
+  // If we have a global token, register it for this API
+  if (globalToken && !verifiedKeys[api.id]) verifiedKeys[api.id] = globalToken;
 
-            const start = Date.now();
-            try {
-                const res = await fetch(`https://zentrix-api.onrender.com/v1/api/download?${params}`, {
-                    headers: { 'X-API-Key': apiKey, 'Accept': 'application/json' }
-                });
-                const elapsed = Date.now() - start;
-                let json;
-                try { json = await res.json(); } catch { json = { error: 'Non-JSON response' }; }
+  const needsKey = api.badge !== 'free';
+  // Default to playground tab if verified, endpoints tab if not
+  const defaultTab = (needsKey && !isVerified) ? 'endpoints' : 'playground';
 
-                timeEl.textContent = `${elapsed}ms`;
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">${api.name}</div>
+        <div class="modal-subtitle">${BASE_URL}${api.endpoint} &middot; <span style="color:${api.badge==='free'?'var(--success)':api.badge==='auth'?'var(--accent)':'var(--warning)'}">${api.badge}</span></div>
+      </div>
+    </div>
+    <div class="modal-desc">${api.desc}</div>
 
-                if (res.ok) {
-                    statusEl.className = 'result-status ok';
-                    statusEl.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span> ${res.status} OK`;
-                } else {
-                    statusEl.className = 'result-status error';
-                    statusEl.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span> ${res.status} ${res.statusText}`;
-                }
+    <div class="modal-tabs">
+      <button class="tab-btn ${defaultTab==='endpoints'?'active':''}" id="tabBtnEndpoints" onclick="switchTab(this,'endpoints')" ${needsKey && !isVerified ? '' : ''}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        Endpoints
+        ${needsKey && !isVerified ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-left:4px;opacity:0.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : ''}
+      </button>
+      <button class="tab-btn ${defaultTab==='playground'?'active':''}" id="tabBtnPlayground" onclick="switchTab(this,'playground')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><polygon points="5 3 19 12 5 21 5 3"/></svg>Playground</button>
+    </div>
 
-                outputEl.textContent = JSON.stringify(json, null, 2);
-                hljs.highlightElement(outputEl);
+    <div class="tab-content ${defaultTab==='endpoints'?'active':''}" id="tab-endpoints">
+      ${needsKey && !isVerified ? `
+        <div class="locked-msg">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div>Enter your API token on the home page to view endpoints</div>
+        </div>
+      ` : `
+        <div class="endpoint-list">
+          ${api.endpoints.map(ep => `
+            <div class="endpoint-item" onclick="loadEndpointToPlayground('${ep.method}','${ep.path}')">
+              <span class="method-badge method-${ep.method.toLowerCase()}">${ep.method}</span>
+              <span class="endpoint-path">${ep.path}</span>
+              <span class="endpoint-desc">${ep.desc}</span>
+            </div>
+          `).join('')}
+        </div>
+      `}
+    </div>
 
-            } catch (err) {
-                const elapsed = Date.now() - start;
-                timeEl.textContent = `${elapsed}ms`;
-                statusEl.className = 'result-status error';
-                statusEl.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span> Network Error`;
-                outputEl.textContent = JSON.stringify({ error: err.message, note: 'This playground connects to a live endpoint. Make sure your API key is valid and the server is running.' }, null, 2);
-                hljs.highlightElement(outputEl);
-            } finally {
-                btn.disabled = false;
-            }
-        }
+    <div class="tab-content ${defaultTab==='playground'?'active':''}" id="tab-playground">
+      ${needsKey && !isVerified ? `
+        <div class="field-group">
+          <div class="field-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            API Key
+          </div>
+          <div class="verify-row">
+            <div class="field-group">
+              <div class="input-wrap">
+                <input class="glass-input" type="password" id="apiKeyInput" placeholder="Enter your Zentrix API key..." value="" />
+                <button class="input-action" onclick="toggleKeyVis()" title="Show/hide key">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+            <button class="verify-btn" onclick="verifyKey()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Verify
+            </button>
+          </div>
+          <div class="verify-status hidden" id="verifyStatus">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Key verified — playground unlocked
+          </div>
+        </div>
+        <div class="locked-msg" style="margin-top:12px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div>Verify your key above, or paste your token on the home page to unlock all APIs at once</div>
+        </div>
+      ` : `
+        <div id="playgroundBody">
+          ${api.smartSearch ? `
+            <div class="field-group" id="smartSearchGroup">
+              <div class="field-label">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Search Title
+              </div>
+              <div style="display:flex;gap:8px;">
+                <input class="glass-input" type="text" id="smartSearchInput" placeholder="Type a title and search…" style="flex:1;" />
+                <button onclick="doSmartSearch()" style="padding:0 16px;height:42px;border-radius:var(--radius-sm);background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--text-primary);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Search</button>
+              </div>
+              <div id="smartSearchResults" style="margin-top:8px;display:none;max-height:220px;overflow-y:auto;border-radius:var(--radius-sm);border:1px solid var(--glass-border);background:var(--glass-bg);"></div>
+              <div id="smartSearchSelected" style="display:none;margin-top:8px;padding:10px 12px;border-radius:var(--radius-sm);background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);font-size:13px;color:var(--accent);"></div>
+            </div>
+          ` : ''}
+          ${api.fields.filter(f => !f.hidden).map(f => `
+            <div class="field-group">
+              <div class="field-label">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/></svg>
+                ${f.label}
+              </div>
+              ${f.type === 'select' ? `
+                <select class="glass-input" id="field_${f.name}">
+                  ${f.options.map(o => `<option value="${o}">${o}</option>`).join('')}
+                </select>
+              ` : `
+                <input class="glass-input" type="${f.type||'text'}" id="field_${f.name}" placeholder="${f.placeholder||''}" />
+              `}
+            </div>
+          `).join('')}
+          ${api.fields.filter(f => f.hidden).map(f => `<input type="hidden" id="field_${f.name}" />`).join('')}
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <button class="run-btn" id="runBtn" onclick="runPlayground()" style="margin-top:0;flex:1;">
+              <span class="btn-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </span>
+              <svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+              <span class="btn-label">Run Request</span>
+            </button>
+            <button id="copyRespBtn" onclick="copyResponse()" disabled style="
+              display:flex;align-items:center;gap:6px;padding:0 18px;height:46px;
+              border-radius:var(--radius-sm);background:var(--glass-bg);
+              border:1px solid var(--glass-border);color:var(--text-secondary);
+              font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+              white-space:nowrap;transition:all var(--transition);flex-shrink:0;opacity:0.35;
+            ">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span id="copyBtnLabel">Copy</span>
+            </button>
+          </div>
+          <div class="response-panel" id="responsePanel" style="display:none">
+            <div class="response-toolbar">
+              <div class="response-toolbar-left">
+                <span class="resp-label">Response</span>
+                <span class="resp-status ok" id="respStatus">200 OK</span>
+                <span style="font-size:11px;color:var(--text-dim)" id="respTime"></span>
+              </div>
+              <div class="response-actions">
+                <button class="resp-action-btn" title="Copy" onclick="copyResponse()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+                <button class="resp-action-btn" title="Download" onclick="downloadResponse()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="response-body" id="responseBody"></div>
+          </div>
+        </div>
+      `}
+    </div>
+  `;
+}
 
-        function clearPlayground() {
-            document.getElementById('pg-query').value = '';
-            document.getElementById('pg-apikey').value = '';
-            document.getElementById('pg-type').value = '';
-            document.getElementById('pg-quality').value = '';
-            document.getElementById('pg-season').value = '';
-            document.getElementById('pg-episode').value = '';
-            document.getElementById('pg-result').classList.remove('show');
-            document.getElementById('series-fields').classList.remove('show');
-        }
+function switchTab(btn, tab) {
+  btn.closest('.modal').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+window.switchTab = switchTab;
 
-        // Keyboard shortcut: Enter to run playground
-        document.getElementById('pg-query').addEventListener('keydown', e => {
-            if (e.key === 'Enter') runPlayground();
-        });
-    </script>
+function loadEndpointToPlayground(method, path) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-btn')[1].classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-playground').classList.add('active');
+}
+window.loadEndpointToPlayground = loadEndpointToPlayground;
+
+// ===================== VERIFY =====================
+function toggleKeyVis() {
+  const inp = document.getElementById('apiKeyInput');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+window.toggleKeyVis = toggleKeyVis;
+
+async function verifyKey() {
+  const inp = document.getElementById('apiKeyInput');
+  const key = inp.value.trim();
+  if (!key) { showToast('Enter an API key first', 'error'); return; }
+  const status = document.getElementById('verifyStatus');
+  status.className = 'verify-status hidden';
+  try {
+    const res = await fetch(`${BASE_URL}/health`, { headers: { 'x-api-key': key } });
+    if (res.status === 401) { showToast('Invalid API key', 'error'); return; }
+  } catch(e) { showToast('Could not reach API server', 'error'); return; }
+  globalToken = key;
+  localStorage.setItem('zentrix_global_token', key);
+  APIS.forEach(a => { verifiedKeys[a.id] = key; });
+  updateTokenUI();
+  showToast('Key verified — all APIs unlocked', 'success');
+  setTimeout(() => renderModal(), 400);
+}
+window.verifyKey = verifyKey;
+
+// ===================== SMART SEARCH =====================
+async function doSmartSearch() {
+  const api = currentApi;
+  if (!api || !api.smartSearch) return;
+  const q = document.getElementById('smartSearchInput').value.trim();
+  if (!q) { showToast('Enter a title to search', 'error'); return; }
+
+  const resultsEl = document.getElementById('smartSearchResults');
+  resultsEl.style.display = 'block';
+  resultsEl.innerHTML = '<div style="padding:12px;color:var(--text-secondary);font-size:13px;">Searching…</div>';
+
+  const key = verifiedKeys[api.id] || globalToken;
+  const type = api.smartSearchType || 'all';
+  const searchEndpoint = type === 'anime' ? '/api/anime/search' : '/api/search';
+  const params = type === 'anime' ? `q=${encodeURIComponent(q)}&apikey=${key}` : `q=${encodeURIComponent(q)}&type=all&apikey=${key}`;
+
+  try {
+    const res = await fetch(`${BASE_URL}${searchEndpoint}?${params}`, { headers: key ? { 'x-api-key': key } : {} });
+    const data = await res.json();
+    const results = data.results || [];
+    if (!results.length) {
+      resultsEl.innerHTML = '<div style="padding:12px;color:var(--text-secondary);font-size:13px;">No results found</div>';
+      return;
+    }
+    resultsEl.innerHTML = results.slice(0, 8).map((r, i) => `
+      <div onclick="selectSmartResult(${i})" data-idx="${i}" style="
+        display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;
+        border-bottom:1px solid var(--glass-border);transition:background 0.15s;
+      " onmouseover="this.style.background='var(--glass-hover)'" onmouseout="this.style.background=''">
+        ${r.poster || r.cover ? `<img src="${r.poster || (typeof r.cover === 'string' ? r.cover : r.cover?.url)}" style="width:32px;height:44px;object-fit:cover;border-radius:4px;flex-shrink:0;" onerror="this.style.display='none'" />` : ''}
+        <div style="min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.title}</div>
+          <div style="font-size:11px;color:var(--text-secondary);">${r.releaseDate ? r.releaseDate.slice(0,4) : ''} ${r.imdbRatingValue ? '⭐ ' + r.imdbRatingValue : ''} ${r.genre ? '· ' + (Array.isArray(r.genre) ? r.genre[0] : r.genre.split(',')[0]) : ''}</div>
+        </div>
+      </div>
+    `).join('');
+    // Store results for selection
+    window._smartResults = results;
+  } catch(e) {
+    resultsEl.innerHTML = '<div style="padding:12px;color:var(--error);font-size:13px;">Search failed: ' + e.message + '</div>';
+  }
+}
+window.doSmartSearch = doSmartSearch;
+
+function selectSmartResult(idx) {
+  const r = window._smartResults[idx];
+  if (!r) return;
+  // Fill hidden fields
+  const idEl = document.getElementById('field_id');
+  const dpEl = document.getElementById('field_detailPath');
+  if (idEl) idEl.value = r.subjectId || r.id || '';
+  if (dpEl) dpEl.value = r.detailPath || '';
+  // Show selected
+  const sel = document.getElementById('smartSearchSelected');
+  sel.style.display = 'block';
+  sel.innerHTML = `✓ Selected: <strong>${r.title}</strong> · ID: ${r.subjectId || r.id || 'n/a'}`;
+  // Hide results
+  document.getElementById('smartSearchResults').style.display = 'none';
+}
+window.selectSmartResult = selectSmartResult;
+
+// Allow Enter key in smart search
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('smartSearchInput') === document.activeElement) {
+    doSmartSearch();
+  }
+});
+
+// ===================== PLAYGROUND =====================
+let lastResponse = null;
+
+async function runPlayground() {
+  const api = currentApi;
+  if (!api) return;
+  const btn = document.getElementById('runBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+
+  const params = {};
+  api.fields.forEach(f => {
+    const el = document.getElementById('field_' + f.name);
+    if (el) params[f.name] = el.value.trim();
+  });
+
+  const t0 = Date.now();
+  try {
+    const isGet = api.method === 'GET';
+    let url = `${BASE_URL}${api.endpoint}`;
+    let opts = { method: api.method, headers: {} };
+    const key = verifiedKeys[api.id];
+    if (key) opts.headers['x-api-key'] = key;
+    if (isGet) {
+      const qs = Object.entries(params).filter(([,v])=>v).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join('&');
+      if (qs) url += '?' + qs;
+    } else {
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(params);
+    }
+    const res = await fetch(url, opts);
+    const elapsed = Date.now() - t0;
+    let data;
+    try { data = await res.json(); } catch { data = { error: 'Non-JSON response from server' }; }
+    lastResponse = data;
+    showResponse(data, res.status, elapsed);
+  } catch (err) {
+    lastResponse = { error: err.message, note: 'Check your connection or the API key' };
+    showResponse(lastResponse, 0, Date.now() - t0);
+  }
+
+  btn.classList.remove('loading'); btn.disabled = false;
+}
+window.runPlayground = runPlayground;
+
+function showResponse(data, status, elapsed) {
+  const panel = document.getElementById('responsePanel');
+  const body = document.getElementById('responseBody');
+  const st = document.getElementById('respStatus');
+  const rt = document.getElementById('respTime');
+  panel.style.display = 'block';
+  st.textContent = status ? `${status} ${status < 300 ? 'OK' : 'Error'}` : 'Error';
+  st.className = 'resp-status ' + (status >= 200 && status < 300 ? 'ok' : 'err');
+  rt.textContent = `${elapsed}ms`;
+  body.innerHTML = `<div class="json-tree">${renderJSON(data, 0)}</div>`;
+  const cb = document.getElementById('copyRespBtn');
+  if (cb) { cb.disabled = false; cb.style.opacity = '1'; cb.style.cursor = 'pointer'; document.getElementById('copyBtnLabel').textContent = 'Copy'; }
+}
+
+function renderJSON(obj, depth) {
+  if (obj === null) return `<span class="json-null">null</span>`;
+  if (typeof obj === 'boolean') return `<span class="json-bool">${obj}</span>`;
+  if (typeof obj === 'number') return `<span class="json-num">${obj}</span>`;
+  if (typeof obj === 'string') return `<span class="json-str">"${escHtml(obj)}"</span>`;
+  if (Array.isArray(obj)) {
+    if (!obj.length) return `<span style="color:var(--text-dim)">[]</span>`;
+    const inner = obj.map((v,i) => `<div style="padding-left:${(depth+1)*14}px">${renderJSON(v, depth+1)}${i<obj.length-1?',':''}</div>`).join('');
+    return `<span class="json-node" onclick="this.parentElement.classList.toggle('json-collapsed')"><span class="json-toggle"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span><span style="color:var(--text-dim)">[${obj.length}]</span></span><div class="json-collapsible">${inner}</div>`;
+  }
+  if (typeof obj === 'object') {
+    const entries = Object.entries(obj);
+    if (!entries.length) return `<span style="color:var(--text-dim)">{}</span>`;
+    const inner = entries.map(([k,v],i) => `<div style="padding-left:${(depth+1)*14}px"><span class="json-key">"${escHtml(k)}"</span><span style="color:var(--text-dim)">: </span>${renderJSON(v, depth+1)}${i<entries.length-1?',':''}</div>`).join('');
+    return `<span class="json-node" onclick="this.parentElement.classList.toggle('json-collapsed')"><span class="json-toggle"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span><span style="color:var(--text-dim)">{${entries.length}}</span></span><div class="json-collapsible">${inner}</div>`;
+  }
+  return String(obj);
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function copyResponse() {
+  if (!lastResponse) return;
+  navigator.clipboard.writeText(JSON.stringify(lastResponse, null, 2)).then(() => {
+    showToast('Copied to clipboard', 'success');
+    const lbl = document.getElementById('copyBtnLabel');
+    const btn = document.getElementById('copyRespBtn');
+    if (lbl && btn) {
+      lbl.textContent = 'Copied!';
+      btn.style.color = 'var(--success)';
+      btn.style.borderColor = 'rgba(52,211,153,0.35)';
+      setTimeout(() => { lbl.textContent = 'Copy'; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+    }
+  });
+}
+window.copyResponse = copyResponse;
+
+function downloadResponse() {
+  if (!lastResponse) return;
+  const blob = new Blob([JSON.stringify(lastResponse, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `zentrix-response-${Date.now()}.json`; a.click();
+  showToast('Downloaded', 'success');
+}
+window.downloadResponse = downloadResponse;
+
+// ===================== THEME =====================
+let isDark = true;
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.classList.toggle('light', !isDark);
+  const icon = document.getElementById('themeIcon');
+  icon.innerHTML = isDark
+    ? `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`
+    : `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
+}
+document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+
+// ===================== TOAST =====================
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  const iconSvg = type === 'success'
+    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+    : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+  t.className = `toast t-${type}`;
+  t.innerHTML = `${iconSvg} ${msg}`;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+// ===================== UTILS =====================
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ===================== BASE URL COPY =====================
+function copyBaseUrl() {
+  const url = document.getElementById('baseUrlText').textContent;
+  navigator.clipboard.writeText('https://' + url).then(() => {
+    showToast('Base URL copied', 'success');
+    const btn = document.getElementById('baseUrlCopyBtn');
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<svg id="baseUrlCopyIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+    }, 2000);
+  });
+}
+window.copyBaseUrl = copyBaseUrl;
+
+// ===================== GLOBAL TOKEN =====================
+let globalToken = localStorage.getItem('zentrix_global_token') || '';
+
+function updateTokenUI() {
+  const inp = document.getElementById('globalTokenInput');
+  const clearBtn = document.getElementById('clearTokenBtn');
+  const badge = document.getElementById('tokenBadge');
+  if (globalToken) {
+    inp.value = globalToken;
+    clearBtn.style.display = 'flex';
+    badge.style.display = 'inline-flex';
+    APIS.forEach(a => { if (a.badge !== 'free') verifiedKeys[a.id] = globalToken; });
+  } else {
+    inp.value = '';
+    clearBtn.style.display = 'none';
+    badge.style.display = 'none';
+  }
+}
+
+document.getElementById('applyTokenBtn').addEventListener('click', () => {
+  const val = document.getElementById('globalTokenInput').value.trim();
+  if (!val) { showToast('Paste a token first', 'error'); return; }
+  globalToken = val;
+  localStorage.setItem('zentrix_global_token', val);
+  APIS.forEach(a => { verifiedKeys[a.id] = val; });
+  updateTokenUI();
+  if (currentApi) renderModal();
+  showToast('Token applied — all APIs unlocked', 'success');
+});
+
+document.getElementById('globalTokenInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('applyTokenBtn').click();
+});
+
+document.getElementById('clearTokenBtn').addEventListener('click', () => {
+  globalToken = '';
+  localStorage.removeItem('zentrix_global_token');
+  verifiedKeys = {};
+  updateTokenUI();
+  showToast('Token cleared', 'error');
+});
+
+document.getElementById('tokenEyeBtn').addEventListener('click', () => {
+  const inp = document.getElementById('globalTokenInput');
+  const showing = inp.type === 'text';
+  inp.type = showing ? 'password' : 'text';
+  document.getElementById('eyeIcon').innerHTML = showing
+    ? `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`
+    : `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+});
+
+// ===================== INIT =====================
+document.getElementById('apiCount').textContent = APIS.length;
+renderGrid();
+updateTokenUI();
+
+// Spin keyframe
+const style = document.createElement('style');
+style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+document.head.appendChild(style);
+
+function openDocs() {
+  document.getElementById('docsOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDocs(e) {
+  if (e && e.target !== document.getElementById('docsOverlay')) return;
+  document.getElementById('docsOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+window.openDocs = openDocs;
+window.closeDocs = closeDocs;
+
+</script>
 </body>
 </html>
