@@ -203,7 +203,7 @@ async def track_requests(request: Request, call_next):
 
 # -- Auth middleware -------------------------------------------------------------
 _AUTH_REQUIRED_PREFIXES = ("/api/",)
-_AUTH_REQUIRED_EXACT = {"/zentrix/stream", "/zentrix/download", "/zentrix/encode"}
+_AUTH_REQUIRED_EXACT = {"/zentrix/encode"}
 _OPEN_PATHS = {"/health", "/zentrix/player"}
 
 
