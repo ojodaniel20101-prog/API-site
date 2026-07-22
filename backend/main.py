@@ -132,6 +132,8 @@ def make_token(url: str) -> str:
 
 def decode_token(token: str) -> str | None:
     try:
+        # Unquote in case the token was double-encoded or contains URL-encoded chars
+        token = urllib.parse.unquote(token).strip()
         missing_padding = len(token) % 4
         if missing_padding:
             token += "=" * (4 - missing_padding)
@@ -367,12 +369,13 @@ async def get_sources(
         # Wrap through septorch proxy to bypass CDN 403
         proxied_url = f"https://gzmovieboxapi.septorch.tech/api/proxy?url={urllib.parse.quote(url, safe='')}&apikey=Godszeal"
         token = make_token(proxied_url)
+        safe_token = urllib.parse.quote(token)
         streams.append({
             "resolution": dl.resolution,
             "quality": f"{dl.resolution}p",
-            "stream_url": build_url(f"/zentrix/stream?token={token}", request),
+            "stream_url": build_url(f"/zentrix/stream?token={safe_token}", request),
             "download_url": build_url(
-                f"/zentrix/download?token={token}&filename=video_{dl.resolution}p.mp4", request
+                f"/zentrix/download?token={safe_token}&filename=video_{dl.resolution}p.mp4", request
             ),
         })
 
@@ -571,12 +574,13 @@ async def encode_url(
 ):
     """Encode a CDN URL to a proxy token."""
     token = make_token(url)
+    safe_token = urllib.parse.quote(token)
     return {
         "success": True,
         "creator": "ZENTRIX TECH",
         "token": token,
-        "stream_url": build_url(f"/zentrix/stream?token={token}", request),
-        "download_url": build_url(f"/zentrix/download?token={token}", request),
+        "stream_url": build_url(f"/zentrix/stream?token={safe_token}", request),
+        "download_url": build_url(f"/zentrix/download?token={safe_token}", request),
     }
 
 
@@ -708,14 +712,16 @@ def _build_anime_stream_response(
     video_url, source_type = ah_extract(anime_id, ep_number, ep_id)
     token = make_token(video_url)
     filename = f"{title}_Episode_{ep_number}.mp4" if title else f"Episode_{ep_number}.mp4"
+    safe_token = urllib.parse.quote(token)
+    safe_filename = urllib.parse.quote(filename)
     return {
         "success": True,
         "creator": "ZENTRIX TECH",
         "title": title,
         "episode": ep_number,
         "source_type": source_type,
-        "stream_url": build_url(f"/zentrix/stream?token={token}", request),
-        "download_url": build_url(f"/zentrix/download?token={token}&filename={filename}", request),
+        "stream_url": build_url(f"/zentrix/stream?token={safe_token}", request),
+        "download_url": build_url(f"/zentrix/download?token={safe_token}&filename={safe_filename}", request),
     }
 
 
