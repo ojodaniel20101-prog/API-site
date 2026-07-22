@@ -692,6 +692,30 @@
       </button>
     </div>
 
+    <!-- ANIME SECTION -->
+    <div class="section-head" style="margin-top:8px;">
+      <div class="section-title">🍥 Anime</div>
+      <div class="section-count" id="animeStatus">Search AnimeHeaven</div>
+    </div>
+    <div class="anime-panel" id="animePanel" style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="field-group" style="flex:1;min-width:200px;margin-bottom:0;">
+          <div class="field-label">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Search Anime
+          </div>
+          <input class="glass-input" type="text" id="animeSearchInput" placeholder="e.g. One Piece, Attack on Titan..." />
+        </div>
+        <button class="run-btn" id="animeSearchBtn" onclick="searchAnime()" style="width:auto;padding:11px 22px;margin-top:0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Search
+        </button>
+      </div>
+      <div id="animeResults" style="display:none;flex-direction:column;gap:10px;"></div>
+      <div id="animeEpisodes" style="display:none;flex-direction:column;gap:10px;"></div>
+      <div id="animePlayer" style="display:none;"></div>
+    </div>
+
     <div class="section-head">
       <div class="section-title">API Marketplace</div>
       <div class="section-count" id="filteredCount">Showing 12 APIs</div>
@@ -1822,6 +1846,140 @@ function closeDocs(e) {
 }
 window.openDocs = openDocs;
 window.closeDocs = closeDocs;
+
+
+// ===================== ANIME SECTION =====================
+let _currentAnime = { id: '', title: '' };
+
+async function searchAnime() {
+  const q = document.getElementById('animeSearchInput').value.trim();
+  if (!q) { showToast('Enter an anime title', 'error'); return; }
+  const btn = document.getElementById('animeSearchBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+  document.getElementById('animeEpisodes').style.display = 'none';
+  document.getElementById('animePlayer').style.display = 'none';
+  try {
+    const key = globalToken;
+    const headers = key ? {'x-api-key': key} : {};
+    const res = await fetch(`${BASE_URL}/api/anime/search?q=${encodeURIComponent(q)}`, { headers });
+    const data = await res.json();
+    const container = document.getElementById('animeResults');
+    container.style.display = 'flex';
+    if (!data.success || !data.results || !data.results.length) {
+      container.innerHTML = `<div style="padding:16px;color:var(--text-secondary);font-size:13px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);">No results found for "${escHtml(q)}"</div>`;
+      btn.classList.remove('loading'); btn.disabled = false;
+      return;
+    }
+    container.innerHTML = `<div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">Found ${data.results.length} result(s)</div>` + data.results.map((r, i) => `
+      <div onclick="loadAnimeEpisodes('${escHtml(r.id)}','${escHtml(r.url)}','${escHtml(r.title)}')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--glass-border)'">
+        <div style="width:36px;height:36px;border-radius:10px;background:var(--glass-strong);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div style="min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.title)}</div>
+          <div style="font-size:11px;color:var(--text-dim);font-family:monospace;">${escHtml(r.id)}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    showToast('Anime search failed: ' + e.message, 'error');
+  }
+  btn.classList.remove('loading'); btn.disabled = false;
+}
+
+async function loadAnimeEpisodes(id, url, title) {
+  _currentAnime = { id, title };
+  document.getElementById('animeResults').style.display = 'none';
+  document.getElementById('animePlayer').style.display = 'none';
+  const container = document.getElementById('animeEpisodes');
+  container.style.display = 'flex';
+  container.innerHTML = '<div style="padding:16px;color:var(--text-secondary);font-size:13px;">Loading episodes...</div>';
+  try {
+    const key = globalToken;
+    const headers = key ? {'x-api-key': key} : {};
+    const res = await fetch(`${BASE_URL}/api/anime/episodes?id=${encodeURIComponent(id)}&url=${encodeURIComponent(url)}`, { headers });
+    const data = await res.json();
+    if (!data.success || !data.episodes || !data.episodes.length) {
+      container.innerHTML = `<div style="padding:16px;color:var(--text-secondary);font-size:13px;">No episodes found.</div>`;
+      return;
+    }
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${escHtml(title)}</div>
+        <div style="font-size:11px;color:var(--text-dim);">${data.episodes.length} episode(s)</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;max-height:320px;overflow-y:auto;padding:4px;">
+        ${data.episodes.map(ep => `
+          <div style="display:flex;flex-direction:column;gap:6px;padding:10px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);text-align:center;cursor:pointer;transition:all var(--transition);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--glass-border)'">
+            <div style="font-size:12px;font-weight:600;color:var(--text-primary);">EP ${escHtml(ep.number)}</div>
+            <div style="display:flex;gap:6px;justify-content:center;">
+              <button onclick="playAnimeEpisode('${escHtml(ep.number)}','${escHtml(ep.ep_id)}')" style="padding:5px 10px;border-radius:6px;background:var(--glass-strong);border:1px solid var(--glass-border);color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">▶ Stream</button>
+              <button onclick="downloadAnimeEpisode('${escHtml(ep.number)}','${escHtml(ep.ep_id)}')" style="padding:5px 10px;border-radius:6px;background:var(--glass-strong);border:1px solid var(--glass-border);color:var(--text-secondary);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">⬇ DL</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } catch (e) {
+    container.innerHTML = `<div style="padding:16px;color:var(--error);font-size:13px;">Failed to load episodes: ${escHtml(e.message)}</div>`;
+  }
+}
+
+async function playAnimeEpisode(epNumber, epId) {
+  const player = document.getElementById('animePlayer');
+  player.style.display = 'block';
+  player.innerHTML = '<div style="padding:16px;color:var(--text-secondary);font-size:13px;">Extracting stream...</div>';
+  try {
+    const key = globalToken;
+    const headers = key ? {'x-api-key': key} : {};
+    const res = await fetch(`${BASE_URL}/api/anime/stream?id=${encodeURIComponent(_currentAnime.id)}&ep_number=${encodeURIComponent(epNumber)}&ep_id=${encodeURIComponent(epId)}&title=${encodeURIComponent(_currentAnime.title)}`, { headers });
+    const data = await res.json();
+    if (!data.success || !data.stream_url) {
+      player.innerHTML = `<div style="padding:16px;color:var(--error);font-size:13px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);">${escHtml(data.error || 'Stream not available')}</div>`;
+      return;
+    }
+    player.innerHTML = `
+      <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);overflow:hidden;">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${escHtml(_currentAnime.title)} — Episode ${escHtml(epNumber)}</div>
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;">${escHtml(data.source_type || 'mp4')}</div>
+        </div>
+        <video controls autoplay style="width:100%;display:block;background:#000;" src="${data.stream_url}">
+          Your browser does not support the video tag.
+        </video>
+        <div style="padding:10px 14px;display:flex;gap:10px;">
+          <a href="${data.stream_url}" target="_blank" style="font-size:12px;color:var(--accent);text-decoration:none;font-weight:600;">Open stream ↗</a>
+          <a href="${data.download_url}" style="font-size:12px;color:var(--text-secondary);text-decoration:none;font-weight:600;">Download ↓</a>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    player.innerHTML = `<div style="padding:16px;color:var(--error);font-size:13px;">Stream failed: ${escHtml(e.message)}</div>`;
+  }
+}
+
+async function downloadAnimeEpisode(epNumber, epId) {
+  try {
+    const key = globalToken;
+    const headers = key ? {'x-api-key': key} : {};
+    const res = await fetch(`${BASE_URL}/api/anime/download?id=${encodeURIComponent(_currentAnime.id)}&ep_number=${encodeURIComponent(epNumber)}&ep_id=${encodeURIComponent(epId)}&title=${encodeURIComponent(_currentAnime.title)}`, { headers });
+    const data = await res.json();
+    if (!data.success || !data.download_url) {
+      showToast(data.error || 'Download not available', 'error');
+      return;
+    }
+    window.open(data.download_url, '_blank');
+    showToast('Download started', 'success');
+  } catch (e) {
+    showToast('Download failed: ' + e.message, 'error');
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.activeElement === document.getElementById('animeSearchInput')) {
+    searchAnime();
+  }
+});
 
 </script>
 </body>

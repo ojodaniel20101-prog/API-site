@@ -13,7 +13,8 @@ Endpoints:
   GET  /api/trailer                  -> Get YouTube trailer
   GET  /api/anime/search             -> Search anime
   GET  /api/anime/episodes           -> Get episode list
-  GET  /api/anime/stream             -> Get anime stream URLs
+  GET  /api/anime/stream             -> Get anime stream URL
+  GET  /api/anime/download           -> Get anime download URL
   GET  /api/image/generate           -> Text-to-image generation
   GET  /api/image/edit               -> Edit image with AI prompt
   GET  /api/image/transform          -> Transform image (img2img)
@@ -53,6 +54,14 @@ from zentrix_proxy import (
 
 # -- Import hakuna search (uses gzmovieboxapi.septorch.tech) ----------------------
 from hakuna_v5 import hakuna_search as _hakuna_search
+
+# -- Import AnimeHeaven scraper -------------------------------------------------
+from animeheaven import (
+    search_anime as ah_search,
+    get_episode_list as ah_episodes,
+    extract_video_source as ah_extract,
+    AnimeHeavenError,
+)
 
 def zentrix_search(query: str, page: int = 1, subject_type: str = "ALL", per_page: int = 24):
     """Wrapper around hakuna_search that returns zentrix_proxy-compatible format."""
@@ -582,110 +591,96 @@ if __name__ == "__main__":
 @app.get("/api/anime/search")
 async def anime_search(
     q: str = Query(..., description="Anime title to search"),
-    page: int = Query(1, ge=1),
 ):
-    """Search anime — returns only anime/tv_series results."""
+    """Search anime on AnimeHeaven."""
     try:
-        result = zentrix_search(query=q, page=page, subject_type="ALL", per_page=24)
+        results = ah_search(q)
+    except AnimeHeavenError as e:
+        return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
 
-    items = result.get("items", [])
-    serialized = []
-    for item in items:
-        serialized.append({
-            "subjectId": item.get("subjectId", ""),
-            "title": item.get("title", ""),
-            "subjectType": item.get("subjectType", ""),
-            "detailPath": item.get("detailPath", ""),
-            "releaseDate": item.get("releaseDate", ""),
-            "imdbRatingValue": item.get("imdbRatingValue", 0),
-            "hasResource": item.get("hasResource", False),
-            "poster": item.get("cover", ""),
-            "genre": item.get("genre", []),
-            "duration": item.get("duration", 0),
-        })
-
-    pager = result.get("pager", {})
     return {
         "success": True,
         "creator": "ZENTRIX TECH",
-        "results": serialized,
-        "page": pager.get("page", page),
-        "hasMore": pager.get("hasMore", False),
+        "results": results,
     }
 
 
 @app.get("/api/anime/episodes")
 async def anime_episodes(
-    q: str = Query(..., description="Anime title"),
+    id: str = Query(..., description="Anime ID from /api/anime/search"),
+    url: str = Query(..., description="Anime URL from /api/anime/search"),
 ):
-    """Get episode list for an anime series by title."""
+    """Get episode list for an anime."""
     try:
-        result = zentrix_search(query=q, page=1, subject_type="ALL", per_page=5)
+        episodes = ah_episodes(url, id)
+    except AnimeHeavenError as e:
+        return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
-    items = result.get("items", [])
-    if not items:
-        return JSONResponse(status_code=404, content={"success": False, "error": f"No results found for '{q}'"})
-    detail_path = items[0].get("detailPath", "")
-    try:
-        data = zentrix_details(detail_path=detail_path)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Failed to fetch episodes: {str(e)}"})
 
-    raw = data.get("raw", {})
-    subject = raw.get("subject", {})
-    resource = raw.get("resource", {})
-    seasons = resource.get("seasons", [])
     return {
         "success": True,
         "creator": "ZENTRIX TECH",
-        "title": subject.get("title", ""),
-        "totalSeasons": len(seasons),
-        "seasons": seasons,
-        "poster": subject.get("cover", ""),
-        "description": subject.get("description", ""),
+        "episodes": episodes,
+    }
+
+
+def _build_anime_stream_response(
+    request: Request,
+    anime_id: str,
+    ep_number: str,
+    ep_id: str,
+    title: str = "",
+) -> dict:
+    """Shared extraction logic for stream and download endpoints."""
+    video_url, source_type = ah_extract(anime_id, ep_number, ep_id)
+    token = make_token(video_url)
+    filename = f"{title}_Episode_{ep_number}.mp4" if title else f"Episode_{ep_number}.mp4"
+    return {
+        "success": True,
+        "creator": "ZENTRIX TECH",
+        "title": title,
+        "episode": ep_number,
+        "source_type": source_type,
+        "stream_url": build_url(f"/zentrix/stream?token={token}", request),
+        "download_url": build_url(f"/zentrix/download?token={token}&filename={filename}", request),
     }
 
 
 @app.get("/api/anime/stream")
 async def anime_stream(
     request: Request,
-    q: str = Query(..., description="Anime title"),
-    season: int = Query(1, ge=1),
-    episode: int = Query(1, ge=1),
+    id: str = Query(..., description="Anime ID"),
+    ep_number: str = Query(..., description="Episode number"),
+    ep_id: str = Query("", description="Episode hash ID (optional, speeds up extraction)"),
+    title: str = Query("", description="Anime title (optional, for filename)"),
 ):
-    """Get stream URLs for an anime episode by title."""
-    import urllib.parse
+    """Get stream URL for an anime episode (token-proxied for in-browser playback)."""
     try:
-        result = zentrix_search(query=q, page=1, subject_type="ALL", per_page=5)
+        return _build_anime_stream_response(request, id, ep_number, ep_id, title)
+    except AnimeHeavenError as e:
+        return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
-    items = result.get("items", [])
-    if not items:
-        return JSONResponse(status_code=404, content={"success": False, "error": f"No results found for '{q}'"})
-    subject_id = items[0].get("subjectId", "")
-    detail_path = items[0].get("detailPath", "")
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Stream extraction failed: {str(e)}"})
+
+
+@app.get("/api/anime/download")
+async def anime_download(
+    request: Request,
+    id: str = Query(..., description="Anime ID"),
+    ep_number: str = Query(..., description="Episode number"),
+    ep_id: str = Query("", description="Episode hash ID (optional, speeds up extraction)"),
+    title: str = Query("", description="Anime title (optional, for filename)"),
+):
+    """Get download URL for an anime episode (token-proxied)."""
     try:
-        downloads, captions = zentrix_media(subject_id=subject_id, detail_path=detail_path, season=season, episode=episode)
+        return _build_anime_stream_response(request, id, ep_number, ep_id, title)
+    except AnimeHeavenError as e:
+        return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
-
-    streams = []
-    for dl in downloads:
-        url = dl.url
-        proxied_url = f"https://gzmovieboxapi.septorch.tech/api/proxy?url={urllib.parse.quote(url, safe='')}&apikey=Godszeal"
-        token = make_token(proxied_url)
-        streams.append({
-            "resolution": dl.resolution,
-            "quality": f"{dl.resolution}p",
-            "stream_url": build_url(f"/zentrix/stream?token={token}", request),
-            "download_url": build_url(f"/zentrix/download?token={token}&filename=ep{episode}_{dl.resolution}p.mp4", request),
-        })
-
-    subtitles = [{"language": cap.lan, "languageName": cap.lanName, "url": cap.url} for cap in captions]
-    return {"success": True, "creator": "ZENTRIX TECH", "title": items[0].get("title", ""), "streams": streams, "subtitles": subtitles}
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Download extraction failed: {str(e)}"})
 
 
 
