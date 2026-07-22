@@ -639,6 +639,20 @@ async def anime_search(
     except Exception as e:
         return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
 
+    # Sort results using tiered priority
+    lower_q = q.lower().strip()
+    
+    def get_priority(r):
+        title = r.get("title", "").lower().strip()
+        if title == lower_q:
+            return 0  # Exact match
+        if title.startswith(lower_q):
+            return 1  # Starts with
+        return 2      # Everything else
+
+    # stable sort to maintain original order for same-priority items
+    results.sort(key=get_priority)
+
     return {
         "success": True,
         "creator": "ZENTRIX TECH",
