@@ -21,7 +21,6 @@ Endpoints:
   GET  /api/image/blend              -> Blend up to 4 images
   GET  /zentrix/stream               -> Proxy video stream
   GET  /zentrix/download             -> Proxy video download
-  GET  /zentrix/player               -> In-browser video player
   GET  /zentrix/encode               -> Encode CDN URL to token
 
 Auth:  x-api-key header or ?apikey= query param
@@ -204,7 +203,7 @@ async def track_requests(request: Request, call_next):
 # -- Auth middleware -------------------------------------------------------------
 _AUTH_REQUIRED_PREFIXES = ("/api/",)
 _AUTH_REQUIRED_EXACT = {"/zentrix/encode"}
-_OPEN_PATHS = {"/health", "/zentrix/player"}
+_OPEN_PATHS = {"/health"}
 
 
 @app.middleware("http")
@@ -357,7 +356,6 @@ async def get_sources(
             "resolution": dl.resolution,
             "quality": f"{dl.resolution}p",
             "stream_url": build_url(f"/zentrix/stream?token={token}", request),
-            "player_url": build_url(f"/zentrix/player?token={token}", request),
             "download_url": build_url(
                 f"/zentrix/download?token={token}&filename=video_{dl.resolution}p.mp4", request
             ),
@@ -563,7 +561,6 @@ async def encode_url(
         "creator": "ZENTRIX TECH",
         "token": token,
         "stream_url": build_url(f"/zentrix/stream?token={token}", request),
-        "player_url": build_url(f"/zentrix/player?token={token}", request),
         "download_url": build_url(f"/zentrix/download?token={token}", request),
     }
 
@@ -684,7 +681,6 @@ async def anime_stream(
             "resolution": dl.resolution,
             "quality": f"{dl.resolution}p",
             "stream_url": build_url(f"/zentrix/stream?token={token}", request),
-            "player_url": build_url(f"/zentrix/player?token={token}", request),
             "download_url": build_url(f"/zentrix/download?token={token}&filename=ep{episode}_{dl.resolution}p.mp4", request),
         })
 
