@@ -588,6 +588,45 @@ if __name__ == "__main__":
 # ANIME ENDPOINTS
 # ================================================================================
 
+def _resolve_anime_by_title(title: str) -> tuple[str, str]:
+    """
+    Search for anime by title and return (id, url) for the best match.
+    Prioritizes:
+    1. Exact (case-insensitive) title matches
+    2. Titles that start with the query
+    3. Fallback to the first search result
+    """
+    search_results = ah_search(title)
+    if not search_results:
+        raise AnimeHeavenError(f"No anime found for title '{title}'")
+
+    best_match = None
+    lower_title = title.lower().strip()
+
+    # 1. Try exact match
+    for r in search_results:
+        if r.get("title", "").lower().strip() == lower_title:
+            best_match = r
+            break
+
+    # 2. Try starts-with match
+    if not best_match:
+        for r in search_results:
+            if r.get("title", "").lower().strip().startswith(lower_title):
+                best_match = r
+                break
+
+    # 3. Fallback to first result
+    if not best_match:
+        best_match = search_results[0]
+
+    anime_id = best_match.get("id")
+    anime_url = best_match.get("url")
+    if not anime_id or not anime_url:
+        raise AnimeHeavenError(f"Could not resolve id/url for title '{title}'")
+    
+    return anime_id, anime_url
+
 @app.get("/api/anime/search")
 async def anime_search(
     q: str = Query(..., description="Anime title to search"),
@@ -618,14 +657,7 @@ async def anime_episodes(
         if not title:
             return JSONResponse(status_code=400, content={"success": False, "error": "Either id/url or title must be provided."})
         try:
-            search_results = ah_search(title)
-            if not search_results:
-                return JSONResponse(status_code=404, content={"success": False, "error": f"No anime found for title '{title}'"})
-            # Pick the top/best match
-            id = search_results[0].get("id")
-            url = search_results[0].get("url")
-            if not id or not url:
-                return JSONResponse(status_code=404, content={"success": False, "error": f"Could not resolve id/url for title '{title}'"})
+            id, url = _resolve_anime_by_title(title)
         except AnimeHeavenError as e:
             return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
         except Exception as e:
@@ -681,13 +713,7 @@ async def anime_stream(
         if not title:
             return JSONResponse(status_code=400, content={"success": False, "error": "Either id/url or title must be provided."})
         try:
-            search_results = ah_search(title)
-            if not search_results:
-                return JSONResponse(status_code=404, content={"success": False, "error": f"No anime found for title \'{title}\'"})
-            id = search_results[0].get("id")
-            url = search_results[0].get("url")
-            if not id or not url:
-                return JSONResponse(status_code=404, content={"success": False, "error": f"Could not resolve id/url for title \'{title}\'"})
+            id, url = _resolve_anime_by_title(title)
         except AnimeHeavenError as e:
             return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
         except Exception as e:
@@ -715,13 +741,7 @@ async def anime_download(
         if not title:
             return JSONResponse(status_code=400, content={"success": False, "error": "Either id/url or title must be provided."})
         try:
-            search_results = ah_search(title)
-            if not search_results:
-                return JSONResponse(status_code=404, content={"success": False, "error": f"No anime found for title \'{title}\'"})
-            id = search_results[0].get("id")
-            url = search_results[0].get("url")
-            if not id or not url:
-                return JSONResponse(status_code=404, content={"success": False, "error": f"Could not resolve id/url for title \'{title}\'"})
+            id, url = _resolve_anime_by_title(title)
         except AnimeHeavenError as e:
             return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
         except Exception as e:
