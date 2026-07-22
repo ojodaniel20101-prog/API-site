@@ -470,6 +470,88 @@ async def get_details(
 # PROXY ENDPOINTS
 # ================================================================================
 
+async def _proxy_video_base(
+    cdn_url: str, 
+    request: Request, 
+    is_download: bool = False, 
+    filename: str = "video.mp4"
+):
+    """Internal helper to proxy video content from various CDNs."""
+    cdn_headers = dict(CDN_HEADERS)
+
+    # 1. Handle Range requests for streaming
+    range_header = request.headers.get("range")
+    if range_header:
+        cdn_headers["Range"] = range_header
+
+    # 2. Domain-specific header overrides
+    if "aoneroom.com" in cdn_url:
+        cdn_headers.update({"Referer": "https://aoneroom.com/", "Origin": "https://aoneroom.com/"})
+    elif "hakunaymatata.com" in cdn_url or "hakunamatata.com" in cdn_url:
+        cdn_headers.update({"Referer": "https://www.hakunaymatata.com/", "Origin": "https://www.hakunaymatata.com/"})
+    elif "animeheaven.me" in cdn_url:
+        cdn_headers.update({"Referer": "https://animeheaven.me/", "Origin": "https://animeheaven.me/"})
+    elif "septorch.tech" in cdn_url:
+        cdn_headers.update({"Referer": "https://gzmovieboxapi.septorch.tech/", "Origin": "https://gzmovieboxapi.septorch.tech/"})
+
+    # 3. Perform request via zentrix_proxy session (supports auth/cookies)
+    import asyncio
+    loop = asyncio.get_event_loop()
+    zx = _zx_session()
+    zx._ensure_auth()
+    
+    try:
+        resp_sync = await loop.run_in_executor(
+            None, 
+            lambda: zx.session.get(cdn_url, headers=cdn_headers, stream=True, timeout=120, allow_redirects=True)
+        )
+        
+        # If 403, try resetting session once
+        if resp_sync.status_code == 403:
+            zentrix_reset_session()
+            zx = _zx_session()
+            zx._ensure_auth()
+            resp_sync = await loop.run_in_executor(
+                None,
+                lambda: zx.session.get(cdn_url, headers=cdn_headers, stream=True, timeout=120, allow_redirects=True)
+            )
+            
+        if resp_sync.status_code >= 400:
+            return JSONResponse(
+                status_code=resp_sync.status_code,
+                content={"success": False, "error": f"Upstream error: {resp_sync.status_code}"}
+            )
+            
+    except Exception as e:
+        logger.error(f"Proxy error for {cdn_url}: {e}")
+        return JSONResponse(status_code=502, content={"success": False, "error": "Upstream connection failed"})
+
+    # 4. Prepare response headers
+    response_headers = {
+        "Accept-Ranges": "bytes",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges",
+        "Content-Type": resp_sync.headers.get("content-type", "video/mp4"),
+    }
+
+    if is_download:
+        response_headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    # Pass through relevant upstream headers
+    for h in ("content-length", "content-range", "accept-ranges", "etag", "last-modified", "cache-control"):
+        if h in resp_sync.headers:
+            response_headers[h] = resp_sync.headers[h]
+
+    async def byte_generator():
+        try:
+            for chunk in resp_sync.iter_content(chunk_size=65536):
+                yield chunk
+        finally:
+            resp_sync.close()
+
+    return StreamingResponse(byte_generator(), status_code=resp_sync.status_code, headers=response_headers)
+
+
 @app.get("/zentrix/stream")
 async def proxy_stream(
     request: Request,
@@ -479,64 +561,13 @@ async def proxy_stream(
     cdn_url = decode_token(token)
     if cdn_url is None:
         return JSONResponse(status_code=400, content={"success": False, "error": "Invalid token"})
-
-    cdn_headers = dict(CDN_HEADERS)
-
-    range_header = request.headers.get("range")
-    if range_header:
-        cdn_headers["Range"] = range_header
-
-    # Set correct referer based on CDN domain
-    if "aoneroom.com" in cdn_url:
-        cdn_headers.update({"Referer": "https://aoneroom.com/", "Origin": "https://aoneroom.com/"})
-    elif "hakunaymatata.com" in cdn_url or "hakunamatata.com" in cdn_url:
-        cdn_headers.update({"Referer": "https://www.hakunaymatata.com/", "Origin": "https://www.hakunaymatata.com/"})
-
-    import asyncio
-    loop = asyncio.get_event_loop()
-    zx = _zx_session()
-    zx._ensure_auth()
-    # Strip expired params and re-fetch fresh URL if needed
-    resp_sync = await loop.run_in_executor(
-        None, 
-        lambda: zx.session.get(cdn_url, headers=cdn_headers, stream=True, timeout=60, allow_redirects=True)
-    )
-    # If 403, try resetting session and retry once
-    if resp_sync.status_code == 403:
-        from zentrix_proxy import zentrix_reset_session
-        zentrix_reset_session()
-        zx = _zx_session()
-        zx._ensure_auth()
-        resp_sync = await loop.run_in_executor(
-            None,
-            lambda: zx.session.get(cdn_url, headers=cdn_headers, stream=True, timeout=60, allow_redirects=True)
-        )
-    resp = resp_sync
-    client = None
-
-    response_headers = {
-        "Accept-Ranges": "bytes",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges",
-        "Content-Type": resp.headers.get("content-type", "video/mp4"),
-    }
-
-    for h in ("content-length", "content-range", "accept-ranges", "etag", "last-modified", "cache-control"):
-        if h in resp.headers:
-            response_headers[h] = resp.headers[h]
-
-    async def byte_generator():
-        try:
-            for chunk in resp.iter_content(chunk_size=65536):
-                yield chunk
-        finally:
-            resp.close()
-
-    return StreamingResponse(byte_generator(), status_code=resp.status_code, headers=response_headers)
+    
+    return await _proxy_video_base(cdn_url, request, is_download=False)
 
 
 @app.get("/zentrix/download")
 async def proxy_download(
+    request: Request,
     token: str = Query(..., description="Base64-encoded CDN URL"),
     filename: str = Query("video.mp4", description="Download filename"),
 ):
@@ -544,27 +575,8 @@ async def proxy_download(
     cdn_url = decode_token(token)
     if cdn_url is None:
         return JSONResponse(status_code=400, content={"success": False, "error": "Invalid token"})
-
-    client = httpx.AsyncClient(timeout=120, follow_redirects=True)
-    req = client.build_request("GET", cdn_url, headers=CDN_HEADERS)
-    resp = await client.send(req, stream=True)
-
-    response_headers = {
-        "Content-Disposition": f'attachment; filename="{filename}"',
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": resp.headers.get("content-type", "video/mp4"),
-    }
-    if "content-length" in resp.headers:
-        response_headers["Content-Length"] = resp.headers["content-length"]
-
-    async def byte_generator():
-        try:
-            for chunk in resp.iter_content(chunk_size=65536):
-                yield chunk
-        finally:
-            resp.close()
-
-    return StreamingResponse(byte_generator(), status_code=resp.status_code, headers=response_headers)
+    
+    return await _proxy_video_base(cdn_url, request, is_download=True, filename=filename)
 
 
 @app.get("/zentrix/encode")
