@@ -733,6 +733,16 @@ async def anime_stream(
         except Exception as e:
             return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
 
+    # If ep_id is missing, resolve it from the episode list
+    if not ep_id:
+        try:
+            episodes = ah_episodes(url, id)
+            target_ep = next((ep for ep in episodes if ep.get("number") == ep_number), None)
+            if target_ep and target_ep.get("ep_id"):
+                ep_id = target_ep["ep_id"]
+        except Exception as e:
+            logger.warning(f"Failed to auto-resolve ep_id for {id} ep {ep_number}: {e}")
+
     try:
         return _build_anime_stream_response(request, id, ep_number, ep_id, title)
     except AnimeHeavenError as e:
@@ -760,6 +770,16 @@ async def anime_download(
             return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
         except Exception as e:
             return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
+
+    # If ep_id is missing, resolve it from the episode list
+    if not ep_id:
+        try:
+            episodes = ah_episodes(url, id)
+            target_ep = next((ep for ep in episodes if ep.get("number") == ep_number), None)
+            if target_ep and target_ep.get("ep_id"):
+                ep_id = target_ep["ep_id"]
+        except Exception as e:
+            logger.warning(f"Failed to auto-resolve ep_id for {id} ep {ep_number}: {e}")
 
     try:
         return _build_anime_stream_response(request, id, ep_number, ep_id, title)
