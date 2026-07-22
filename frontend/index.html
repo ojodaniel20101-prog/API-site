@@ -895,12 +895,12 @@
         <p class="docs-text">Get stream URLs for a specific anime episode.</p>
         <div class="docs-params">
           <div class="docs-param"><span class="param-name">title</span><span class="param-req">required</span> — Anime title</div>
-          <div class="docs-param"><span class="param-name">episode</span><span class="param-req">required</span> — Episode number</div>
+          <div class="docs-param"><span class="param-name">ep_number</span><span class="param-req">required</span> — Episode number</div>
           <div class="docs-param"><span class="param-name">id</span><span class="param-opt">optional</span> — Anime ID from search results</div>
           <div class="docs-param"><span class="param-name">url</span><span class="param-opt">optional</span> — Anime URL from search results</div>
           <div class="docs-param"><span class="param-name">ep_id</span><span class="param-opt">optional</span> — Episode hash ID (speeds up extraction)</div>
         </div>
-        <div class="docs-code">GET /api/anime/stream?title=Naruto&episode=1&apikey=KEY</div>
+        <div class="docs-code">GET /api/anime/stream?title=Naruto&ep_number=1&apikey=KEY</div>
       </div>
 
       <div class="docs-section">
@@ -1115,7 +1115,7 @@ const APIS = [
     ],
     fields: [
       { name: 'title', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
-      { name: 'episode', label: 'Episode', placeholder: '1', type: 'text' },
+      { name: 'ep_number', label: 'Episode', placeholder: '1', type: 'text' },
       { name: 'id', label: 'Anime ID (optional)', placeholder: 'from search results', type: 'text' },
       { name: 'url', label: 'Anime URL (optional)', placeholder: 'from search results', type: 'text' },
     ],
@@ -1877,7 +1877,7 @@ async function searchAnime() {
       return;
     }
     container.innerHTML = `<div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">Found ${data.results.length} result(s)</div>` + data.results.map((r, i) => `
-      <div onclick="loadAnimeEpisodes('${escHtml(r.id)}','${escHtml(r.url)}','${escHtml(r.title)}')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--glass-border)'">
+      <div onclick="loadAnimeEpisodes('${escHtml(r.title)}','${escHtml(r.id)}','${escHtml(r.url)}')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--glass-border)'">
         <div style="width:36px;height:36px;border-radius:10px;background:var(--glass-strong);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         </div>
