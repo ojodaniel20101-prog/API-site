@@ -604,6 +604,81 @@ async def encode_url(
 # ENTRY POINT
 # ================================================================================
 
+
+# ================================================================================
+# PREXZY PROXY IMPLEMENTATION
+# ================================================================================
+
+PREXZY_BASE_URL = "https://prexzyapis.com"
+
+async def _proxy_to_prexzy(category: str, endpoint: str, params: dict, request: Request):
+    """Generic proxy to Prexzy API with Zentrix response wrapping."""
+    url = f"{PREXZY_BASE_URL}/{category}/{endpoint}"
+    
+    # Remove apikey from params if present
+    proxy_params = {k: v for k, v in params.items() if k != "apikey"}
+    
+    try:
+        async with httpx.AsyncClient(timeout=90.0) as client:
+            # Handle both GET and POST if needed, but Prexzy docs show GET mostly
+            response = await client.get(url, params=proxy_params)
+            
+            if response.status_code >= 500:
+                return JSONResponse(
+                    status_code=502,
+                    content={"success": False, "error": "Upstream API error"}
+                )
+            
+            try:
+                data = response.json()
+            except:
+                # If not JSON, maybe it's a direct file/image
+                if "image" in response.headers.get("content-type", ""):
+                    return StreamingResponse(
+                        response.iter_bytes(), 
+                        media_type=response.headers["content-type"]
+                    )
+                data = {"raw": response.text}
+
+            return {
+                "success": True,
+                "creator": "ZENTRIX TECH",
+                "data": data,
+                "timestamp": int(_time.time())
+            }
+            
+    except httpx.TimeoutException:
+        return JSONResponse(status_code=504, content={"success": False, "error": "Upstream timeout"})
+    except Exception as e:
+        logger.error(f"Prexzy proxy error: {e}")
+        return JSONResponse(status_code=502, content={"success": False, "error": "Failed to connect to upstream"})
+
+@app.get("/api/downloader/{endpoint}")
+async def proxy_downloader(endpoint: str, request: Request):
+    """Proxy for Downloader category."""
+    return await _proxy_to_prexzy("download", endpoint, dict(request.query_params), request)
+
+@app.get("/api/ai/{endpoint}")
+async def proxy_ai_extended(endpoint: str, request: Request):
+    """Proxy for AI category (extends existing AI routes)."""
+    # If endpoint matches existing hardcoded ones, they take precedence due to route order
+    return await _proxy_to_prexzy("ai", endpoint, dict(request.query_params), request)
+
+@app.get("/api/anime/{category}/{endpoint}")
+async def proxy_anime_extended(category: str, endpoint: str, request: Request):
+    """Proxy for Anime category."""
+    return await _proxy_to_prexzy(f"anime/{category}", endpoint, dict(request.query_params), request)
+
+@app.get("/api/search/{service}")
+async def proxy_search_extended(service: str, request: Request):
+    """Proxy for Search category."""
+    return await _proxy_to_prexzy("search", service, dict(request.query_params), request)
+
+# Catch-all for other categories if needed
+@app.get("/api/v2/{category}/{endpoint}")
+async def proxy_v2(category: str, endpoint: str, request: Request):
+    return await _proxy_to_prexzy(category, endpoint, dict(request.query_params), request)
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", "8001"))
