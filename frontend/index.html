@@ -3,301 +3,578 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zentrix API — Powering Your Innovation</title>
+    <title>Zentrix APIs — Free, Unlimited, No API Key Required</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0a0b1e;
-            color: #ffffff;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .glass-hover:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: #e2e8f0;
         }
         .gradient-text {
-            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        .gradient-bg {
-            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+        .gradient-button {
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            transition: all 0.3s ease;
         }
-        .neon-border {
-            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+        .gradient-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
         }
-        .api-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .glass {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        .glass-hover:hover {
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(148, 163, 184, 0.2);
+            transform: translateY(-2px);
+        }
+        .endpoint-card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .endpoint-card:hover {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.1);
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-get {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        .badge-post {
+            background: rgba(249, 115, 22, 0.1);
+            color: #f97316;
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+        .code-block {
+            background: #0f172a;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            color: #cbd5e1;
+        }
+        .code-block .keyword { color: #f472b6; }
+        .code-block .string { color: #86efac; }
+        .code-block .number { color: #fbbf24; }
+        .code-block .function { color: #60a5fa; }
+        .tab-button {
+            padding: 10px 20px;
+            border-bottom: 2px solid transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
-<body class="min-h-screen overflow-x-hidden">
-    <!-- Background Orbs -->
-    <div class="fixed inset-0 pointer-events-none z-0">
-        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px]"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px]"></div>
-    </div>
-
+<body class="min-h-screen">
     <!-- Navigation -->
-    <nav class="sticky top-0 z-50 glass border-b border-white/5 px-6 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center">
-                <i class="fas fa-bolt text-white"></i>
+    <nav class="sticky top-0 z-50 glass border-b border-slate-700/50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 gradient-button rounded-lg flex items-center justify-center">
+                    <i class="fas fa-bolt text-white text-sm"></i>
+                </div>
+                <span class="text-xl font-bold tracking-tight">Zentrix <span class="gradient-text">APIs</span></span>
             </div>
-            <span class="text-xl font-bold tracking-tight">ZENTRIX <span class="gradient-text">API</span></span>
-        </div>
-        <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
-            <a href="#" class="hover:text-white transition-colors">Stats</a>
-            <a href="#" class="hover:text-white transition-colors">Docs</a>
-            <a href="#" class="hover:text-white transition-colors">Explore</a>
-            <a href="#" class="hover:text-white transition-colors">Contact</a>
-        </div>
-        <div class="flex items-center gap-4">
-            <button class="p-2 text-gray-400 hover:text-white"><i class="fas fa-moon"></i></button>
-            <a href="#" class="gradient-bg px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">Get Started</a>
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+                <a href="#" class="text-slate-400 hover:text-white transition-colors">Docs</a>
+                <a href="#" class="text-slate-400 hover:text-white transition-colors">Stats</a>
+                <a href="#" class="text-slate-400 hover:text-white transition-colors">Contact</a>
+            </div>
+            <button class="gradient-button px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity">Get Started</button>
         </div>
     </nav>
 
-    <!-- Hero -->
-    <header class="relative z-10 pt-20 pb-16 px-6 text-center max-w-4xl mx-auto">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full glass border border-white/10 text-[10px] font-bold tracking-widest text-blue-400 uppercase mb-6">
-            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            v2.0 — New Endpoints Available
-        </div>
-        <h1 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
-            Build Faster with <br>
-            <span class="gradient-text">Zentrix API</span>
-        </h1>
-        <p class="text-lg text-gray-400 mb-10 leading-relaxed">
-            Powerful, reliable APIs for AI, media downloads, search, and more. 
-            Maintain zero URL leakage while scaling your applications.
-        </p>
-        <div class="flex flex-wrap justify-center gap-4">
-            <a href="#explore" class="gradient-bg px-8 py-4 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg shadow-blue-500/20">Explore APIs</a>
-            <a href="#" class="glass px-8 py-4 rounded-xl font-bold hover:bg-white/5 transition-colors border border-white/10">Documentation</a>
-        </div>
-        
-        <!-- Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16">
-            <div class="glass p-6 rounded-2xl">
-                <div class="text-2xl font-bold mb-1">207+</div>
-                <div class="text-xs text-gray-500 uppercase tracking-wider">Endpoints</div>
+    <!-- Hero Section -->
+    <header class="relative pt-20 pb-16 px-6 text-center">
+        <div class="max-w-4xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-slate-700/50 text-xs font-bold tracking-widest text-blue-400 uppercase mb-8">
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                v2.0 — New endpoints available
             </div>
-            <div class="glass p-6 rounded-2xl">
-                <div class="text-2xl font-bold mb-1">1.5M+</div>
-                <div class="text-xs text-gray-500 uppercase tracking-wider">Requests</div>
+            <h1 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
+                Build Faster with <br>
+                <span class="gradient-text">Zentrix APIs</span>
+            </h1>
+            <p class="text-lg text-slate-400 mb-10 leading-relaxed">
+                Powerful, reliable APIs for AI, media downloads, search, and more. Currently serving <span class="font-semibold text-white">639+</span> active endpoints.
+            </p>
+            <div class="flex flex-wrap justify-center gap-4 mb-16">
+                <a href="#explore" class="gradient-button px-8 py-4 rounded-xl font-bold text-white hover:scale-105 transition-transform shadow-lg shadow-blue-500/20">Explore APIs →</a>
+                <a href="#" class="glass px-8 py-4 rounded-xl font-bold text-white hover:bg-slate-700/30 transition-colors border border-slate-700/50">Documentation</a>
             </div>
-            <div class="glass p-6 rounded-2xl">
-                <div class="text-2xl font-bold mb-1">99.9%</div>
-                <div class="text-xs text-gray-500 uppercase tracking-wider">Uptime</div>
-            </div>
-            <div class="glass p-6 rounded-2xl">
-                <div class="text-2xl font-bold mb-1">Free</div>
-                <div class="text-xs text-gray-500 uppercase tracking-wider">Access</div>
+            
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="glass p-6 rounded-2xl border border-slate-700/50">
+                    <div class="text-3xl font-bold mb-1">639+</div>
+                    <div class="text-xs text-slate-500 uppercase tracking-wider">Endpoints</div>
+                </div>
+                <div class="glass p-6 rounded-2xl border border-slate-700/50">
+                    <div class="text-3xl font-bold mb-1">1.1M+</div>
+                    <div class="text-xs text-slate-500 uppercase tracking-wider">Requests Served</div>
+                </div>
+                <div class="glass p-6 rounded-2xl border border-slate-700/50">
+                    <div class="text-3xl font-bold mb-1">99.9%</div>
+                    <div class="text-xs text-slate-500 uppercase tracking-wider">Uptime</div>
+                </div>
+                <div class="glass p-6 rounded-2xl border border-slate-700/50">
+                    <div class="text-3xl font-bold mb-1">Free</div>
+                    <div class="text-xs text-slate-500 uppercase tracking-wider">No API Key</div>
+                </div>
             </div>
         </div>
     </header>
 
     <!-- API Explorer -->
-    <section id="explore" class="relative z-10 py-20 px-6 max-w-7xl mx-auto">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-            <div>
-                <h2 class="text-3xl font-bold mb-2">Browse by Category</h2>
-                <p class="text-gray-500">Choose from hundreds of free endpoints</p>
+    <section id="explore" class="relative py-20 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+                <div>
+                    <h2 class="text-3xl font-bold mb-2">Browse by Category</h2>
+                    <p class="text-slate-400">Choose from hundreds of free endpoints</p>
+                </div>
+                <div class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+                    <button onclick="filterCategory('all')" class="cat-btn active px-4 py-2 rounded-lg glass border border-blue-500/50 text-blue-400 text-sm font-medium transition-all">All</button>
+                    <button onclick="filterCategory('downloader')" class="cat-btn px-4 py-2 rounded-lg glass border border-slate-700/50 text-slate-400 text-sm font-medium hover:border-slate-600/50 transition-all">Downloader</button>
+                    <button onclick="filterCategory('ai')" class="cat-btn px-4 py-2 rounded-lg glass border border-slate-700/50 text-slate-400 text-sm font-medium hover:border-slate-600/50 transition-all">AI</button>
+                    <button onclick="filterCategory('anime')" class="cat-btn px-4 py-2 rounded-lg glass border border-slate-700/50 text-slate-400 text-sm font-medium hover:border-slate-600/50 transition-all">Anime</button>
+                    <button onclick="filterCategory('search')" class="cat-btn px-4 py-2 rounded-lg glass border border-slate-700/50 text-slate-400 text-sm font-medium hover:border-slate-600/50 transition-all">Search</button>
+                </div>
             </div>
-            <div class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-                <button onclick="filterCategory('all')" class="cat-btn active px-4 py-2 rounded-lg glass text-sm font-medium border-blue-500/50 text-blue-400">All</button>
-                <button onclick="filterCategory('downloader')" class="cat-btn px-4 py-2 rounded-lg glass text-sm font-medium hover:bg-white/5 transition-colors">Downloader</button>
-                <button onclick="filterCategory('ai')" class="cat-btn px-4 py-2 rounded-lg glass text-sm font-medium hover:bg-white/5 transition-colors">AI</button>
-                <button onclick="filterCategory('anime')" class="cat-btn px-4 py-2 rounded-lg glass text-sm font-medium hover:bg-white/5 transition-colors">Anime</button>
-                <button onclick="filterCategory('search')" class="cat-btn px-4 py-2 rounded-lg glass text-sm font-medium hover:bg-white/5 transition-colors">Search</button>
-            </div>
-        </div>
 
-        <div id="api-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Cards will be injected here -->
+            <div id="api-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cards injected by JavaScript -->
+            </div>
         </div>
     </section>
 
-    <!-- Modal / Playground -->
-    <div id="playground-modal" class="fixed inset-0 z-[100] hidden">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closePlayground()"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl glass rounded-3xl p-8 border border-white/10 shadow-2xl">
-            <button onclick="closePlayground()" class="absolute top-6 right-6 text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+    <!-- Endpoint Tester Modal -->
+    <div id="tester-modal" class="fixed inset-0 z-[100] hidden modal-overlay">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl glass rounded-2xl border border-slate-700/50 p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal()" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
             
             <div class="flex items-center gap-4 mb-8">
-                <div id="modal-icon" class="w-12 h-12 gradient-bg rounded-xl flex items-center justify-center text-xl"></div>
+                <div id="modal-icon" class="w-12 h-12 gradient-button rounded-xl flex items-center justify-center text-xl text-white"></div>
                 <div>
                     <h3 id="modal-title" class="text-2xl font-bold"></h3>
-                    <p id="modal-desc" class="text-gray-500 text-sm"></p>
+                    <p id="modal-desc" class="text-slate-400 text-sm mt-1"></p>
                 </div>
             </div>
 
-            <div class="space-y-6">
-                <div class="flex items-center gap-2 bg-black/40 rounded-xl p-4 font-mono text-sm border border-white/5">
-                    <span class="text-green-400 font-bold">GET</span>
-                    <span id="modal-path" class="text-gray-400 truncate"></span>
-                </div>
-
-                <div id="params-container" class="space-y-4">
-                    <!-- Params injected here -->
-                </div>
-
-                <button onclick="runTest()" id="run-btn" class="w-full gradient-bg py-4 rounded-xl font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-                    <i class="fas fa-play"></i> Run Request
+            <!-- Endpoint Info -->
+            <div class="flex items-center gap-2 bg-slate-900/50 rounded-xl p-4 font-mono text-sm border border-slate-700/50 mb-6">
+                <span id="modal-method" class="font-bold text-green-400">GET</span>
+                <span id="modal-path" class="text-slate-300 truncate"></span>
+                <button onclick="copyEndpoint()" class="ml-auto text-slate-500 hover:text-white transition-colors">
+                    <i class="fas fa-copy"></i>
                 </button>
+            </div>
 
+            <!-- Parameters -->
+            <div id="params-container" class="space-y-4 mb-6">
+                <!-- Params injected here -->
+            </div>
+
+            <!-- Send Request Button -->
+            <button onclick="sendRequest()" class="w-full gradient-button py-3 rounded-xl font-bold text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2 mb-6">
+                <i class="fas fa-play text-sm"></i> Try Request
+            </button>
+
+            <!-- Response Tabs -->
+            <div class="border-b border-slate-700/50 mb-6">
+                <button class="tab-button active" onclick="switchTab('response')">Response</button>
+                <button class="tab-button" onclick="switchTab('code')">Code Examples</button>
+            </div>
+
+            <!-- Response Tab -->
+            <div id="response-tab" class="space-y-4">
                 <div id="result-container" class="hidden">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-bold text-gray-500 uppercase">Response Body</span>
-                        <span id="resp-status" class="text-xs font-bold px-2 py-0.5 rounded"></span>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-slate-500 uppercase">Response Body</span>
+                        <span id="resp-status" class="text-xs font-bold px-2 py-1 rounded bg-green-500/20 text-green-400"></span>
                     </div>
-                    <pre id="json-output" class="bg-black/60 rounded-xl p-4 font-mono text-xs text-blue-300 overflow-x-auto max-h-60 border border-white/5"></pre>
+                    <pre id="json-output" class="code-block max-h-64"></pre>
+                </div>
+                <div id="loading-container" class="hidden text-center py-8">
+                    <div class="inline-block">
+                        <i class="fas fa-spinner fa-spin text-2xl text-blue-400 mb-3"></i>
+                        <p class="text-slate-400">Sending request...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code Tab -->
+            <div id="code-tab" class="hidden space-y-6">
+                <div>
+                    <h4 class="text-sm font-bold text-slate-300 mb-3">JavaScript</h4>
+                    <pre id="code-js" class="code-block"></pre>
+                    <button onclick="copyCode('js')" class="mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-slate-300 mb-3">Python</h4>
+                    <pre id="code-py" class="code-block"></pre>
+                    <button onclick="copyCode('py')" class="mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-slate-300 mb-3">cURL</h4>
+                    <pre id="code-curl" class="code-block"></pre>
+                    <button onclick="copyCode('curl')" class="mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer class="relative z-10 py-12 px-6 border-t border-white/5 text-center text-gray-500 text-sm">
+    <!-- Footer -->
+    <footer class="relative py-12 px-6 border-t border-slate-700/50 text-center text-slate-500 text-sm">
         <div class="flex items-center justify-center gap-2 mb-4">
-            <div class="w-6 h-6 gradient-bg rounded flex items-center justify-center">
-                <i class="fas fa-bolt text-white text-[10px]"></i>
+            <div class="w-6 h-6 gradient-button rounded flex items-center justify-center">
+                <i class="fas fa-bolt text-white text-xs"></i>
             </div>
-            <span class="font-bold text-white tracking-tight">ZENTRIX <span class="text-blue-400">API</span></span>
+            <span class="font-bold text-white tracking-tight">Zentrix <span class="text-blue-400">APIs</span></span>
         </div>
         <p>© 2026 Zentrix Tech. All rights reserved.</p>
     </footer>
 
     <script>
-        const APIS = [{"id": "api_1", "name": "AI Art Image Generator", "desc": "Proxy endpoint for AI Art Image Generator", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aiart", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_2", "name": "AI Art Video Generator", "desc": "Proxy endpoint for AI Art Video Generator", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aiart-video", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_3", "name": "AI Art Video Status", "desc": "Proxy endpoint for AI Art Video Status", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aiart-video-status", "params": [{"name": "task_id", "placeholder": "Enter task_id..."}, {"name": "device_id", "placeholder": "Enter device_id..."}], "badge": "free"}, {"id": "api_4", "name": "AI Chat Assistant", "desc": "Proxy endpoint for AI Chat Assistant", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aichat", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_5", "name": "AI Dream Interpreter", "desc": "Proxy endpoint for AI Dream Interpreter", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/dream", "params": [{"name": "dream", "placeholder": "Enter dream..."}], "badge": "free"}, {"id": "api_6", "name": "AI Image Upscaler", "desc": "Proxy endpoint for AI Image Upscaler", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/upscale", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_7", "name": "AI Writer Chat", "desc": "Proxy endpoint for AI Writer Chat", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aiwriter-chat", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_8", "name": "AI Writer Image", "desc": "Proxy endpoint for AI Writer Image", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aiwriter-image", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_9", "name": "AI Writer Models", "desc": "Proxy endpoint for AI Writer Models", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aiwriter-models", "params": [], "badge": "free"}, {"id": "api_10", "name": "AI4Chat", "desc": "Proxy endpoint for AI4Chat", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/ai4chat", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_11", "name": "AiApp AI", "desc": "Proxy endpoint for AiApp AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aiapk", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_12", "name": "AiApp Chat", "desc": "Proxy endpoint for AiApp Chat", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aiappchat", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_13", "name": "AiApp Image Generator", "desc": "Proxy endpoint for AiApp Image Generator", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aiappgen", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_14", "name": "AiChatPro", "desc": "Proxy endpoint for AiChatPro", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aichatpro", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_15", "name": "AiMelody", "desc": "Proxy endpoint for AiMelody", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aimelody", "params": [{"name": "mode", "placeholder": "Enter mode..."}], "badge": "free"}, {"id": "api_16", "name": "AiServ AI", "desc": "Proxy endpoint for AiServ AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aiserv", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_17", "name": "AIW3 Chat", "desc": "Proxy endpoint for AIW3 Chat", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aiw3", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_18", "name": "AnimeKill AI", "desc": "Proxy endpoint for AnimeKill AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/animekill", "params": [{"name": "image", "placeholder": "Enter image..."}], "badge": "free"}, {"id": "api_19", "name": "AskGPT5 AI", "desc": "Proxy endpoint for AskGPT5 AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/askgpt5", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_20", "name": "Aura Companion", "desc": "Proxy endpoint for Aura Companion", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/aura", "params": [{"name": "mode", "placeholder": "Enter mode..."}, {"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_21", "name": "Banana AI Image Editor", "desc": "Proxy endpoint for Banana AI Image Editor", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/img2img", "params": [{"name": "imageUrl", "placeholder": "Enter imageUrl..."}], "badge": "free"}, {"id": "api_22", "name": "Blackbox AI", "desc": "Proxy endpoint for Blackbox AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/blackbox", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_23", "name": "Borli AI Chat", "desc": "Proxy endpoint for Borli AI Chat", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/borli", "params": [{"name": "action", "placeholder": "Enter action..."}], "badge": "free"}, {"id": "api_24", "name": "Cartoona AI", "desc": "Proxy endpoint for Cartoona AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/cartoon", "params": [{"name": "imageurl", "placeholder": "Enter imageurl..."}], "badge": "free"}, {"id": "api_25", "name": "Chat AI", "desc": "Proxy endpoint for Chat AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/ch", "params": [{"name": "q", "placeholder": "Enter q..."}], "badge": "free"}, {"id": "api_26", "name": "Chat Everywhere", "desc": "Proxy endpoint for Chat Everywhere", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/chateverywhere", "params": [{"name": "text", "placeholder": "Enter text..."}], "badge": "free"}, {"id": "api_27", "name": "Chat Everywhere Reset", "desc": "Proxy endpoint for Chat Everywhere Reset", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/chateverywhere-reset", "params": [], "badge": "free"}, {"id": "api_28", "name": "ChatArt AI", "desc": "Proxy endpoint for ChatArt AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/charart", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_29", "name": "ChatBot App", "desc": "Proxy endpoint for ChatBot App", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/chatbot", "params": [{"name": "text", "placeholder": "Enter text..."}], "badge": "free"}, {"id": "api_30", "name": "ChatEvo AI", "desc": "Proxy endpoint for ChatEvo AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/chatevo", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_31", "name": "Chatex AI", "desc": "Proxy endpoint for Chatex AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/chatex", "params": [{"name": "text", "placeholder": "Enter text..."}], "badge": "free"}, {"id": "api_32", "name": "ChatGPT (Free)", "desc": "Proxy endpoint for ChatGPT (Free)", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/chatgpt", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_33", "name": "ChatMusic - Check Status", "desc": "Proxy endpoint for ChatMusic - Check Status", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/chatmusic-status", "params": [{"name": "state", "placeholder": "Enter state..."}, {"name": "id", "placeholder": "Enter id..."}], "badge": "free"}, {"id": "api_34", "name": "ChatMusic - Create Music", "desc": "Proxy endpoint for ChatMusic - Create Music", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/chatmusic-create", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_35", "name": "ChatMusic - Generate Lyrics", "desc": "Proxy endpoint for ChatMusic - Generate Lyrics", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/chatmusic-lyrics", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_36", "name": "ChatUp AI", "desc": "Proxy endpoint for ChatUp AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/chatup", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_37", "name": "Convert Code", "desc": "Proxy endpoint for Convert Code", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/convertcode", "params": [{"name": "code", "placeholder": "Enter code..."}, {"name": "target", "placeholder": "Enter target..."}], "badge": "free"}, {"id": "api_38", "name": "Copilot Think Deeper", "desc": "Proxy endpoint for Copilot Think Deeper", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/copilot-think", "params": [{"name": "text", "placeholder": "Enter text..."}], "badge": "free"}, {"id": "api_39", "name": "DALL-E 3 XL", "desc": "Proxy endpoint for DALL-E 3 XL", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/dalle", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_40", "name": "DeepAI Image Editor", "desc": "Proxy endpoint for DeepAI Image Editor", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/deepai", "params": [{"name": "image", "placeholder": "Enter image..."}, {"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_41", "name": "DeepQuery AI", "desc": "Proxy endpoint for DeepQuery AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/deepquery", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_42", "name": "DeepSeek Chat", "desc": "Proxy endpoint for DeepSeek Chat", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/deepseekchat", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_43", "name": "DeepSeek Reasoner", "desc": "Proxy endpoint for DeepSeek Reasoner", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/deepseekreasoner", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_44", "name": "Detect Bugs", "desc": "Proxy endpoint for Detect Bugs", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/detectbugs", "params": [{"name": "code", "placeholder": "Enter code..."}], "badge": "free"}, {"id": "api_45", "name": "Dola AI", "desc": "Proxy endpoint for Dola AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/dola", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_46", "name": "Dolphin AI Code Advanced", "desc": "Proxy endpoint for Dolphin AI Code Advanced", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/code-advanced", "params": [{"name": "text", "placeholder": "Enter text..."}], "badge": "free"}, {"id": "api_47", "name": "Dolphin AI Code Beginner", "desc": "Proxy endpoint for Dolphin AI Code Beginner", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/code-beginner", "params": [{"name": "text", "placeholder": "Enter text..."}], "badge": "free"}, {"id": "api_48", "name": "Dolphin AI Creative", "desc": "Proxy endpoint for Dolphin AI Creative", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/creative", "params": [{"name": "text", "placeholder": "Enter text..."}], "badge": "free"}, {"id": "api_49", "name": "Dolphin AI Logical", "desc": "Proxy endpoint for Dolphin AI Logical", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/logical", "params": [{"name": "text", "placeholder": "Enter text..."}], "badge": "free"}, {"id": "api_50", "name": "Dolphin AI Summarize", "desc": "Proxy endpoint for Dolphin AI Summarize", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/summarize", "params": [{"name": "text", "placeholder": "Enter text..."}], "badge": "free"}, {"id": "api_51", "name": "Easemate Chat", "desc": "Proxy endpoint for Easemate Chat", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/easemate-chat", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_52", "name": "Easemate Generate", "desc": "Proxy endpoint for Easemate Generate", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/easemate-generate", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_53", "name": "Explain Code", "desc": "Proxy endpoint for Explain Code", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/explaincode", "params": [{"name": "code", "placeholder": "Enter code..."}], "badge": "free"}, {"id": "api_54", "name": "Flipped Chat", "desc": "Proxy endpoint for Flipped Chat", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/flippedchat", "params": [{"name": "action", "placeholder": "Enter action..."}], "badge": "free"}, {"id": "api_55", "name": "Gemini 2.5 Flash Lite", "desc": "Proxy endpoint for Gemini 2.5 Flash Lite", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/gemini25", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_56", "name": "Gemma 3 27B IT", "desc": "Proxy endpoint for Gemma 3 27B IT", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/gemma27", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_57", "name": "Gemma 3 27B IT (Free)", "desc": "Proxy endpoint for Gemma 3 27B IT (Free)", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/gemma27free", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_58", "name": "GenImage AI", "desc": "Proxy endpoint for GenImage AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/genimage", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_59", "name": "Get History", "desc": "Proxy endpoint for Get History", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/history", "params": [], "badge": "free"}, {"id": "api_60", "name": "GLM 4.7", "desc": "Proxy endpoint for GLM 4.7", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/glm-4-7", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_61", "name": "Google Gemini", "desc": "Proxy endpoint for Google Gemini", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/gemini", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_62", "name": "GPT-5", "desc": "Proxy endpoint for GPT-5", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/gpt-5", "params": [{"name": "text", "placeholder": "Enter text..."}], "badge": "free"}, {"id": "api_63", "name": "GptAnon", "desc": "Proxy endpoint for GptAnon", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/gptanon", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_64", "name": "Grok AI Chat", "desc": "Proxy endpoint for Grok AI Chat", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/grok", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_65", "name": "HomePlanner Chat", "desc": "Proxy endpoint for HomePlanner Chat", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/homeplanner-chat", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_66", "name": "HomePlanner Image Gen", "desc": "Proxy endpoint for HomePlanner Image Gen", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/homeplanner-image", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_67", "name": "HomePlanner Text-to-Speech", "desc": "Proxy endpoint for HomePlanner Text-to-Speech", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/homeplanner-tts", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_68", "name": "HomePlanner Web Search", "desc": "Proxy endpoint for HomePlanner Web Search", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/homeplanner-search", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_69", "name": "HomePlanner YouTube Summary", "desc": "Proxy endpoint for HomePlanner YouTube Summary", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/homeplanner-yt", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_70", "name": "Kat Coder Pro v2", "desc": "Proxy endpoint for Kat Coder Pro v2", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/kat-coder-pro-v2", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_71", "name": "Live3D AI Image Generator", "desc": "Proxy endpoint for Live3D AI Image Generator", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/3d", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_72", "name": "Microsoft Copilot", "desc": "Proxy endpoint for Microsoft Copilot", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/copilot", "params": [{"name": "text", "placeholder": "Enter text..."}], "badge": "free"}, {"id": "api_73", "name": "Mistral AI", "desc": "Proxy endpoint for Mistral AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/mistral", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_74", "name": "MSA Tutor", "desc": "Proxy endpoint for MSA Tutor", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/msa", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_75", "name": "MyDreams AI Image Generator", "desc": "Proxy endpoint for MyDreams AI Image Generator", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/mydreams", "params": [], "badge": "free"}, {"id": "api_76", "name": "NanoBanana AI Image", "desc": "Proxy endpoint for NanoBanana AI Image", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/txt2img", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_77", "name": "Olabiba AI", "desc": "Proxy endpoint for Olabiba AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/olabiba", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_78", "name": "PhotoGPT AI", "desc": "Proxy endpoint for PhotoGPT AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/photogpt", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_79", "name": "PhotonexAI", "desc": "Proxy endpoint for PhotonexAI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/photonex", "params": [{"name": "image", "placeholder": "Enter image..."}], "badge": "free"}, {"id": "api_80", "name": "Prompt to Code", "desc": "Proxy endpoint for Prompt to Code", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/prompttocode", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}, {"name": "language", "placeholder": "Enter language..."}], "badge": "free"}, {"id": "api_81", "name": "Proton Lumo AI", "desc": "Proxy endpoint for Proton Lumo AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/lumo", "params": [{"name": "q", "placeholder": "Enter q..."}], "badge": "free"}, {"id": "api_82", "name": "Quillbot AI", "desc": "Proxy endpoint for Quillbot AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/quillbot", "params": [{"name": "mode", "placeholder": "Enter mode..."}, {"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_83", "name": "Qwen AI Chat", "desc": "Proxy endpoint for Qwen AI Chat", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/qwen", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_84", "name": "Qwen3 Coder Next FP8", "desc": "Proxy endpoint for Qwen3 Coder Next FP8", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/qwen3-coder-next-fp8", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_85", "name": "Qwen3.5 397B A17B", "desc": "Proxy endpoint for Qwen3.5 397B A17B", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/qwen3-5-397b-a17b", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_86", "name": "Qwen3.6 35B A3B", "desc": "Proxy endpoint for Qwen3.6 35B A3B", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/qwen3-6-35b-a3b", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_87", "name": "Reset Conversation", "desc": "Proxy endpoint for Reset Conversation", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/reset", "params": [], "badge": "free"}, {"id": "api_88", "name": "SantriAI", "desc": "Proxy endpoint for SantriAI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/santria", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_89", "name": "Sora Watermark Remover", "desc": "Proxy endpoint for Sora Watermark Remover", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/soraremover", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_90", "name": "Story AI Advanced", "desc": "Proxy endpoint for Story AI Advanced", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/advanced", "params": [{"name": "text", "placeholder": "Enter text..."}], "badge": "free"}, {"id": "api_91", "name": "Story AI Quick", "desc": "Proxy endpoint for Story AI Quick", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/quick", "params": [{"name": "text", "placeholder": "Enter text..."}], "badge": "free"}, {"id": "api_92", "name": "SurfSense AI", "desc": "Proxy endpoint for SurfSense AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/surfsense", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_93", "name": "UnlimAI Image Editor", "desc": "Proxy endpoint for UnlimAI Image Editor", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/unlimai", "params": [{"name": "image", "placeholder": "Enter image..."}], "badge": "free"}, {"id": "api_94", "name": "UseAI", "desc": "Proxy endpoint for UseAI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/useai", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_95", "name": "Vivideo AI", "desc": "Proxy endpoint for Vivideo AI", "category": "artificial intelligence", "method": "GET", "path": "/api/ai/ai/video", "params": [{"name": "prompt", "placeholder": "Enter prompt..."}], "badge": "free"}, {"id": "api_96", "name": "Anime By Genre", "desc": "Proxy endpoint for Anime By Genre", "category": "anime", "method": "GET", "path": "/api/anime/anime/animekill-bygenre", "params": [{"name": "genre", "placeholder": "Enter genre..."}], "badge": "free"}, {"id": "api_97", "name": "Anime Comments", "desc": "Proxy endpoint for Anime Comments", "category": "anime", "method": "GET", "path": "/api/anime/anime/animekill-comments", "params": [{"name": "anime_id", "placeholder": "Enter anime_id..."}], "badge": "free"}, {"id": "api_98", "name": "Anime Detail", "desc": "Proxy endpoint for Anime Detail", "category": "anime", "method": "GET", "path": "/api/anime/anime/animekill-detail", "params": [{"name": "anime_id", "placeholder": "Enter anime_id..."}], "badge": "free"}, {"id": "api_99", "name": "Anime Detail", "desc": "Proxy endpoint for Anime Detail", "category": "anime", "method": "GET", "path": "/api/anime/anime/animedetail", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_100", "name": "Anime Download", "desc": "Proxy endpoint for Anime Download", "category": "anime", "method": "GET", "path": "/api/anime/anime/animedownload", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_101", "name": "Anime Episodes", "desc": "Proxy endpoint for Anime Episodes", "category": "anime", "method": "GET", "path": "/api/anime/anime/animekill-episodes", "params": [{"name": "anime_id", "placeholder": "Enter anime_id..."}], "badge": "free"}, {"id": "api_102", "name": "Anime Genres", "desc": "Proxy endpoint for Anime Genres", "category": "anime", "method": "GET", "path": "/api/anime/anime/animekill-genres", "params": [], "badge": "free"}, {"id": "api_103", "name": "Anime Home", "desc": "Proxy endpoint for Anime Home", "category": "anime", "method": "GET", "path": "/api/anime/anime/animekill-home", "params": [], "badge": "free"}, {"id": "api_104", "name": "Anime Home Static", "desc": "Proxy endpoint for Anime Home Static", "category": "anime", "method": "GET", "path": "/api/anime/anime/animekill-homestatic", "params": [], "badge": "free"}, {"id": "api_105", "name": "Anime Schedule", "desc": "Proxy endpoint for Anime Schedule", "category": "anime", "method": "GET", "path": "/api/anime/anime/animekill-schedule", "params": [], "badge": "free"}, {"id": "api_106", "name": "Anime Stream URL", "desc": "Proxy endpoint for Anime Stream URL", "category": "anime", "method": "GET", "path": "/api/anime/anime/animekill-stream", "params": [{"name": "anime_id", "placeholder": "Enter anime_id..."}, {"name": "ep_num", "placeholder": "Enter ep_num..."}], "badge": "free"}, {"id": "api_107", "name": "Awoo", "desc": "Proxy endpoint for Awoo", "category": "anime", "method": "GET", "path": "/api/anime/anime/awoo", "params": [], "badge": "free"}, {"id": "api_108", "name": "Bite", "desc": "Proxy endpoint for Bite", "category": "anime", "method": "GET", "path": "/api/anime/anime/bite", "params": [], "badge": "free"}, {"id": "api_109", "name": "Blush", "desc": "Proxy endpoint for Blush", "category": "anime", "method": "GET", "path": "/api/anime/anime/blush", "params": [], "badge": "free"}, {"id": "api_110", "name": "Bonk", "desc": "Proxy endpoint for Bonk", "category": "anime", "method": "GET", "path": "/api/anime/anime/bonk", "params": [], "badge": "free"}, {"id": "api_111", "name": "Bully", "desc": "Proxy endpoint for Bully", "category": "anime", "method": "GET", "path": "/api/anime/anime/bully", "params": [], "badge": "free"}, {"id": "api_112", "name": "Cringe", "desc": "Proxy endpoint for Cringe", "category": "anime", "method": "GET", "path": "/api/anime/anime/cringe", "params": [], "badge": "free"}, {"id": "api_113", "name": "Cry", "desc": "Proxy endpoint for Cry", "category": "anime", "method": "GET", "path": "/api/anime/anime/cry", "params": [], "badge": "free"}, {"id": "api_114", "name": "Cuddle", "desc": "Proxy endpoint for Cuddle", "category": "anime", "method": "GET", "path": "/api/anime/anime/cuddle", "params": [], "badge": "free"}, {"id": "api_115", "name": "Dance", "desc": "Proxy endpoint for Dance", "category": "anime", "method": "GET", "path": "/api/anime/anime/dance", "params": [], "badge": "free"}, {"id": "api_116", "name": "Glomp", "desc": "Proxy endpoint for Glomp", "category": "anime", "method": "GET", "path": "/api/anime/anime/glomp", "params": [], "badge": "free"}, {"id": "api_117", "name": "Handhold", "desc": "Proxy endpoint for Handhold", "category": "anime", "method": "GET", "path": "/api/anime/anime/handhold", "params": [], "badge": "free"}, {"id": "api_118", "name": "Happy", "desc": "Proxy endpoint for Happy", "category": "anime", "method": "GET", "path": "/api/anime/anime/happy", "params": [], "badge": "free"}, {"id": "api_119", "name": "Highfive", "desc": "Proxy endpoint for Highfive", "category": "anime", "method": "GET", "path": "/api/anime/anime/highfive", "params": [], "badge": "free"}, {"id": "api_120", "name": "Hug", "desc": "Proxy endpoint for Hug", "category": "anime", "method": "GET", "path": "/api/anime/anime/hug", "params": [], "badge": "free"}, {"id": "api_121", "name": "Kill", "desc": "Proxy endpoint for Kill", "category": "anime", "method": "GET", "path": "/api/anime/anime/kill", "params": [], "badge": "free"}, {"id": "api_122", "name": "Manga Chapter", "desc": "Proxy endpoint for Manga Chapter", "category": "anime", "method": "GET", "path": "/api/anime/anime/manga-chapter", "params": [{"name": "chapter_id", "placeholder": "Enter chapter_id..."}], "badge": "free"}, {"id": "api_123", "name": "Manga Chapter", "desc": "Proxy endpoint for Manga Chapter", "category": "anime", "method": "GET", "path": "/api/anime/anime/manga-chapter", "params": [{"name": "id", "placeholder": "Enter id..."}], "badge": "free"}, {"id": "api_124", "name": "Manga Comments", "desc": "Proxy endpoint for Manga Comments", "category": "anime", "method": "GET", "path": "/api/anime/anime/manga-comments", "params": [{"name": "content_id", "placeholder": "Enter content_id..."}], "badge": "free"}, {"id": "api_125", "name": "Manga Detail", "desc": "Proxy endpoint for Manga Detail", "category": "anime", "method": "GET", "path": "/api/anime/anime/manga-detail", "params": [{"name": "id", "placeholder": "Enter id..."}], "badge": "free"}, {"id": "api_126", "name": "Manga Detail", "desc": "Proxy endpoint for Manga Detail", "category": "anime", "method": "GET", "path": "/api/anime/anime/manga-detail", "params": [{"name": "id", "placeholder": "Enter id..."}], "badge": "free"}, {"id": "api_127", "name": "Manga Episodes", "desc": "Proxy endpoint for Manga Episodes", "category": "anime", "method": "GET", "path": "/api/anime/anime/manga-episodes", "params": [{"name": "id", "placeholder": "Enter id..."}], "badge": "free"}, {"id": "api_128", "name": "Manga Home", "desc": "Proxy endpoint for Manga Home", "category": "anime", "method": "GET", "path": "/api/anime/anime/manga-home", "params": [], "badge": "free"}, {"id": "api_129", "name": "Manga Home", "desc": "Proxy endpoint for Manga Home", "category": "anime", "method": "GET", "path": "/api/anime/anime/manga-home", "params": [], "badge": "free"}, {"id": "api_130", "name": "Manga Rank Filters", "desc": "Proxy endpoint for Manga Rank Filters", "category": "anime", "method": "GET", "path": "/api/anime/anime/manga-rank-filters", "params": [], "badge": "free"}, {"id": "api_131", "name": "Manga Rank Tags", "desc": "Proxy endpoint for Manga Rank Tags", "category": "anime", "method": "GET", "path": "/api/anime/anime/manga-rank-tags", "params": [], "badge": "free"}, {"id": "api_132", "name": "Manga Search", "desc": "Proxy endpoint for Manga Search", "category": "anime", "method": "GET", "path": "/api/anime/anime/manga-search", "params": [{"name": "query", "placeholder": "Enter query..."}], "badge": "free"}, {"id": "api_133", "name": "Manga Search", "desc": "Proxy endpoint for Manga Search", "category": "anime", "method": "GET", "path": "/api/anime/anime/manga-search", "params": [{"name": "word", "placeholder": "Enter word..."}], "badge": "free"}, {"id": "api_134", "name": "Manga Series", "desc": "Proxy endpoint for Manga Series", "category": "anime", "method": "GET", "path": "/api/anime/anime/manga-series", "params": [{"name": "id", "placeholder": "Enter id..."}], "badge": "free"}, {"id": "api_135", "name": "Manga Suggestions", "desc": "Proxy endpoint for Manga Suggestions", "category": "anime", "method": "GET", "path": "/api/anime/anime/manga-suggestions", "params": [], "badge": "free"}, {"id": "api_136", "name": "Nom", "desc": "Proxy endpoint for Nom", "category": "anime", "method": "GET", "path": "/api/anime/anime/nom", "params": [], "badge": "free"}, {"id": "api_137", "name": "Pat", "desc": "Proxy endpoint for Pat", "category": "anime", "method": "GET", "path": "/api/anime/anime/pat", "params": [], "badge": "free"}, {"id": "api_138", "name": "Poke", "desc": "Proxy endpoint for Poke", "category": "anime", "method": "GET", "path": "/api/anime/anime/poke", "params": [], "badge": "free"}, {"id": "api_139", "name": "Reactions (Combined)", "desc": "Proxy endpoint for Reactions (Combined)", "category": "anime", "method": "GET", "path": "/api/anime/anime/reactions", "params": [], "badge": "free"}, {"id": "api_140", "name": "Search Anime", "desc": "Proxy endpoint for Search Anime", "category": "anime", "method": "GET", "path": "/api/anime/anime/animekill-search", "params": [{"name": "query", "placeholder": "Enter query..."}], "badge": "free"}, {"id": "api_141", "name": "Search Anime", "desc": "Proxy endpoint for Search Anime", "category": "anime", "method": "GET", "path": "/api/anime/anime/animesearch", "params": [{"name": "query", "placeholder": "Enter query..."}], "badge": "free"}, {"id": "api_142", "name": "Search Webnovel", "desc": "Proxy endpoint for Search Webnovel", "category": "anime", "method": "GET", "path": "/api/anime/anime/webnovel-search", "params": [{"name": "query", "placeholder": "Enter query..."}], "badge": "free"}, {"id": "api_143", "name": "Shinobu", "desc": "Proxy endpoint for Shinobu", "category": "anime", "method": "GET", "path": "/api/anime/anime/shinobu", "params": [], "badge": "free"}, {"id": "api_144", "name": "Slap", "desc": "Proxy endpoint for Slap", "category": "anime", "method": "GET", "path": "/api/anime/anime/slap", "params": [], "badge": "free"}, {"id": "api_145", "name": "Smile", "desc": "Proxy endpoint for Smile", "category": "anime", "method": "GET", "path": "/api/anime/anime/smile", "params": [], "badge": "free"}, {"id": "api_146", "name": "Smug", "desc": "Proxy endpoint for Smug", "category": "anime", "method": "GET", "path": "/api/anime/anime/smug", "params": [], "badge": "free"}, {"id": "api_147", "name": "Wave", "desc": "Proxy endpoint for Wave", "category": "anime", "method": "GET", "path": "/api/anime/anime/wave", "params": [], "badge": "free"}, {"id": "api_148", "name": "Webnovel Chapter", "desc": "Proxy endpoint for Webnovel Chapter", "category": "anime", "method": "GET", "path": "/api/anime/anime/webnovel-chapter", "params": [{"name": "bid", "placeholder": "Enter bid..."}, {"name": "cid", "placeholder": "Enter cid..."}], "badge": "free"}, {"id": "api_149", "name": "Webnovel Detail", "desc": "Proxy endpoint for Webnovel Detail", "category": "anime", "method": "GET", "path": "/api/anime/anime/webnovel-detail", "params": [{"name": "bid", "placeholder": "Enter bid..."}], "badge": "free"}, {"id": "api_150", "name": "Webnovel Hot Searches", "desc": "Proxy endpoint for Webnovel Hot Searches", "category": "anime", "method": "GET", "path": "/api/anime/anime/webnovel-hot", "params": [], "badge": "free"}, {"id": "api_151", "name": "Webnovel Ranking", "desc": "Proxy endpoint for Webnovel Ranking", "category": "anime", "method": "GET", "path": "/api/anime/anime/webnovel-rank", "params": [], "badge": "free"}, {"id": "api_152", "name": "Wink", "desc": "Proxy endpoint for Wink", "category": "anime", "method": "GET", "path": "/api/anime/anime/wink", "params": [], "badge": "free"}, {"id": "api_153", "name": "Yeet", "desc": "Proxy endpoint for Yeet", "category": "anime", "method": "GET", "path": "/api/anime/anime/yeet", "params": [], "badge": "free"}, {"id": "api_154", "name": "AIO Downloader", "desc": "Proxy endpoint for AIO Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/aiov2", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_155", "name": "AIO Video Downloader", "desc": "Proxy endpoint for AIO Video Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/aio", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_156", "name": "Capcut", "desc": "Proxy endpoint for Capcut", "category": "downloader", "method": "GET", "path": "/api/downloader/download/capcut", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_157", "name": "DoodsStream Downloader", "desc": "Proxy endpoint for DoodsStream Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/doods", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_158", "name": "Douyin", "desc": "Proxy endpoint for Douyin", "category": "downloader", "method": "GET", "path": "/api/downloader/download/douyin", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_159", "name": "Facebook Downloader", "desc": "Proxy endpoint for Facebook Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/facebook", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_160", "name": "Facebook Downloader V2", "desc": "Proxy endpoint for Facebook Downloader V2", "category": "downloader", "method": "GET", "path": "/api/downloader/download/facebookv2", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_161", "name": "Instagram Downloader", "desc": "Proxy endpoint for Instagram Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/igv2", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_162", "name": "Instagram Downloader", "desc": "Proxy endpoint for Instagram Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/instagram", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_163", "name": "MediaFire Downloader", "desc": "Proxy endpoint for MediaFire Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/mediafire", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_164", "name": "Pinterest", "desc": "Proxy endpoint for Pinterest", "category": "downloader", "method": "GET", "path": "/api/downloader/download/pinterest", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_165", "name": "Pinterest V2", "desc": "Proxy endpoint for Pinterest V2", "category": "downloader", "method": "GET", "path": "/api/downloader/download/pinterestV2", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_166", "name": "RedNote Downloader", "desc": "Proxy endpoint for RedNote Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/rednote", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_167", "name": "RedNote Media", "desc": "Proxy endpoint for RedNote Media", "category": "downloader", "method": "GET", "path": "/api/downloader/download/rednote-media", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_168", "name": "Sfile", "desc": "Proxy endpoint for Sfile", "category": "downloader", "method": "GET", "path": "/api/downloader/download/sfile", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_169", "name": "Snackvideo", "desc": "Proxy endpoint for Snackvideo", "category": "downloader", "method": "GET", "path": "/api/downloader/download/snackvideo", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_170", "name": "Soundcloud", "desc": "Proxy endpoint for Soundcloud", "category": "downloader", "method": "GET", "path": "/api/downloader/download/soundcloud", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_171", "name": "SoundCloud Downloader", "desc": "Proxy endpoint for SoundCloud Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/scloud", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_172", "name": "Spotify Downloader", "desc": "Proxy endpoint for Spotify Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/spotify", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_173", "name": "Spotify Downloader", "desc": "Proxy endpoint for Spotify Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/spotifyv2", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_174", "name": "Terabox", "desc": "Proxy endpoint for Terabox", "category": "downloader", "method": "GET", "path": "/api/downloader/download/terabox", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_175", "name": "Threads", "desc": "Proxy endpoint for Threads", "category": "downloader", "method": "GET", "path": "/api/downloader/download/threads", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_176", "name": "Threads V2", "desc": "Proxy endpoint for Threads V2", "category": "downloader", "method": "GET", "path": "/api/downloader/download/threadsV2", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_177", "name": "TikTok", "desc": "Proxy endpoint for TikTok", "category": "downloader", "method": "GET", "path": "/api/downloader/download/tiktok", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_178", "name": "TikTok Downloader", "desc": "Proxy endpoint for TikTok Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/tik", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_179", "name": "TikTok Downloader V2", "desc": "Proxy endpoint for TikTok Downloader V2", "category": "downloader", "method": "GET", "path": "/api/downloader/download/tiktokV2", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_180", "name": "TikTok Slide Downloader", "desc": "Proxy endpoint for TikTok Slide Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/tiktokslide", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_181", "name": "TikTok V3", "desc": "Proxy endpoint for TikTok V3", "category": "downloader", "method": "GET", "path": "/api/downloader/download/tiktokV3", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_182", "name": "TikTok Video Downloader", "desc": "Proxy endpoint for TikTok Video Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/tiktokvideo", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_183", "name": "Twitter/X Downloader", "desc": "Proxy endpoint for Twitter/X Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/twitter", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_184", "name": "Videodropper", "desc": "Proxy endpoint for Videodropper", "category": "downloader", "method": "GET", "path": "/api/downloader/download/videodropper", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_185", "name": "Web2Zip", "desc": "Proxy endpoint for Web2Zip", "category": "downloader", "method": "GET", "path": "/api/downloader/download/saveweb2zip", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_186", "name": "YouTube MP3 Downloader", "desc": "Proxy endpoint for YouTube MP3 Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/ytmp3", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_187", "name": "YouTube MP4 Downloader", "desc": "Proxy endpoint for YouTube MP4 Downloader", "category": "downloader", "method": "GET", "path": "/api/downloader/download/ytmp4", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_188", "name": "YouTube Video Info", "desc": "Proxy endpoint for YouTube Video Info", "category": "downloader", "method": "GET", "path": "/api/downloader/download/ytinfo", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}, {"id": "api_189", "name": "Android1", "desc": "Proxy endpoint for Android1", "category": "search", "method": "GET", "path": "/api/search/search/android1", "params": [{"name": "q", "placeholder": "Enter q..."}], "badge": "free"}, {"id": "api_190", "name": "Apple Music Search", "desc": "Proxy endpoint for Apple Music Search", "category": "search", "method": "GET", "path": "/api/search/search/applemusic", "params": [{"name": "q", "placeholder": "Enter q..."}], "badge": "free"}, {"id": "api_191", "name": "Cuaca", "desc": "Proxy endpoint for Cuaca", "category": "search", "method": "GET", "path": "/api/search/search/cuaca", "params": [{"name": "kota", "placeholder": "Enter kota..."}], "badge": "free"}, {"id": "api_192", "name": "GitHub Code", "desc": "Proxy endpoint for GitHub Code", "category": "search", "method": "GET", "path": "/api/search/search/code", "params": [{"name": "query", "placeholder": "Enter query..."}], "badge": "free"}, {"id": "api_193", "name": "GitHub Issues", "desc": "Proxy endpoint for GitHub Issues", "category": "search", "method": "GET", "path": "/api/search/search/issues", "params": [{"name": "query", "placeholder": "Enter query..."}], "badge": "free"}, {"id": "api_194", "name": "GitHub Repositories", "desc": "Proxy endpoint for GitHub Repositories", "category": "search", "method": "GET", "path": "/api/search/search/repos", "params": [{"name": "query", "placeholder": "Enter query..."}], "badge": "free"}, {"id": "api_195", "name": "GitHub Users", "desc": "Proxy endpoint for GitHub Users", "category": "search", "method": "GET", "path": "/api/search/search/users", "params": [{"name": "query", "placeholder": "Enter query..."}], "badge": "free"}, {"id": "api_196", "name": "IMDb Search", "desc": "Proxy endpoint for IMDb Search", "category": "search", "method": "GET", "path": "/api/search/search/imdb", "params": [{"name": "query", "placeholder": "Enter query..."}], "badge": "free"}, {"id": "api_197", "name": "Lyrics", "desc": "Proxy endpoint for Lyrics", "category": "search", "method": "GET", "path": "/api/search/search/lyrics", "params": [{"name": "title", "placeholder": "Enter title..."}], "badge": "free"}, {"id": "api_198", "name": "Nik Parse", "desc": "Proxy endpoint for Nik Parse", "category": "search", "method": "GET", "path": "/api/search/search/nik", "params": [{"name": "q", "placeholder": "Enter q..."}], "badge": "free"}, {"id": "api_199", "name": "Pinterest", "desc": "Proxy endpoint for Pinterest", "category": "search", "method": "GET", "path": "/api/search/search/pinterest", "params": [{"name": "q", "placeholder": "Enter q..."}], "badge": "free"}, {"id": "api_200", "name": "Soundcloud", "desc": "Proxy endpoint for Soundcloud", "category": "search", "method": "GET", "path": "/api/search/search/soundcloud", "params": [{"name": "q", "placeholder": "Enter q..."}], "badge": "free"}, {"id": "api_201", "name": "Telegram Channel Search", "desc": "Proxy endpoint for Telegram Channel Search", "category": "search", "method": "GET", "path": "/api/search/search/telegram", "params": [{"name": "query", "placeholder": "Enter query..."}], "badge": "free"}, {"id": "api_202", "name": "Telegram Group Search", "desc": "Proxy endpoint for Telegram Group Search", "category": "search", "method": "GET", "path": "/api/search/search/tggroup", "params": [{"name": "query", "placeholder": "Enter query..."}], "badge": "free"}, {"id": "api_203", "name": "TikTok", "desc": "Proxy endpoint for TikTok", "category": "search", "method": "GET", "path": "/api/search/search/tiktoksearch", "params": [{"name": "q", "placeholder": "Enter q..."}], "badge": "free"}, {"id": "api_204", "name": "Wallpaper Search", "desc": "Proxy endpoint for Wallpaper Search", "category": "search", "method": "GET", "path": "/api/search/search/wallpaper", "params": [{"name": "query", "placeholder": "Enter query..."}], "badge": "free"}, {"id": "api_205", "name": "WhatsApp Group Search", "desc": "Proxy endpoint for WhatsApp Group Search", "category": "search", "method": "GET", "path": "/api/search/search/wagroup", "params": [{"name": "query", "placeholder": "Enter query..."}], "badge": "free"}, {"id": "api_206", "name": "YouTube", "desc": "Proxy endpoint for YouTube", "category": "search", "method": "GET", "path": "/api/search/search/youtube", "params": [{"name": "q", "placeholder": "Enter q..."}], "badge": "free"}, {"id": "api_207", "name": "YouTube Monetization", "desc": "Proxy endpoint for YouTube Monetization", "category": "search", "method": "GET", "path": "/api/search/search/ytmonet", "params": [{"name": "url", "placeholder": "Enter url..."}], "badge": "free"}];
-        let currentApi = null;
-        const BASE_URL = window.location.origin;
+        // API Endpoints Data
+        const ENDPOINTS = [
+            {
+                id: "ai_chatgpt",
+                name: "ChatGPT",
+                desc: "Chat with OpenAI's ChatGPT model",
+                category: "ai",
+                method: "GET",
+                path: "/ai/chatgpt",
+                params: [{ name: "prompt", type: "string", required: true, placeholder: "Ask anything..." }],
+                icon: "fa-brain"
+            },
+            {
+                id: "ai_gemini",
+                name: "Gemini",
+                desc: "Chat with Google's Gemini AI",
+                category: "ai",
+                method: "GET",
+                path: "/ai/gemini",
+                params: [{ name: "prompt", type: "string", required: true, placeholder: "Your question..." }],
+                icon: "fa-sparkles"
+            },
+            {
+                id: "ai_text2img",
+                name: "Text to Image",
+                desc: "Generate images from text descriptions",
+                category: "ai",
+                method: "GET",
+                path: "/ai/text2img",
+                params: [{ name: "prompt", type: "string", required: true, placeholder: "Describe the image..." }],
+                icon: "fa-image"
+            },
+            {
+                id: "downloader_tiktok",
+                name: "TikTok Downloader",
+                desc: "Download videos from TikTok",
+                category: "downloader",
+                method: "GET",
+                path: "/download/tiktok",
+                params: [{ name: "url", type: "string", required: true, placeholder: "TikTok video URL..." }],
+                icon: "fa-video"
+            },
+            {
+                id: "downloader_ig",
+                name: "Instagram Downloader",
+                desc: "Download posts and reels from Instagram",
+                category: "downloader",
+                method: "GET",
+                path: "/download/ig",
+                params: [{ name: "url", type: "string", required: true, placeholder: "Instagram URL..." }],
+                icon: "fa-camera"
+            },
+            {
+                id: "downloader_youtube",
+                name: "YouTube Downloader",
+                desc: "Download videos from YouTube",
+                category: "downloader",
+                method: "GET",
+                path: "/download/ytmp4",
+                params: [{ name: "url", type: "string", required: true, placeholder: "YouTube URL..." }],
+                icon: "fa-play"
+            },
+            {
+                id: "search_pinterest",
+                name: "Pinterest Search",
+                desc: "Search for images and pins on Pinterest",
+                category: "search",
+                method: "GET",
+                path: "/search/pinterest",
+                params: [{ name: "query", type: "string", required: true, placeholder: "Search term..." }],
+                icon: "fa-magnifying-glass"
+            },
+            {
+                id: "search_google",
+                name: "Google Search",
+                desc: "Search the web with Google",
+                category: "search",
+                method: "GET",
+                path: "/search/google",
+                params: [{ name: "query", type: "string", required: true, placeholder: "Search..." }],
+                icon: "fa-search"
+            },
+            {
+                id: "anime_search",
+                name: "Anime Search",
+                desc: "Search for anime titles",
+                category: "anime",
+                method: "GET",
+                path: "/anime/search",
+                params: [{ name: "q", type: "string", required: true, placeholder: "Anime name..." }],
+                icon: "fa-film"
+            },
+            {
+                id: "tools_shorturl",
+                name: "URL Shortener",
+                desc: "Shorten long URLs",
+                category: "tools",
+                method: "GET",
+                path: "/tools/tinyurl",
+                params: [{ name: "url", type: "string", required: true, placeholder: "Long URL..." }],
+                icon: "fa-link"
+            },
+            {
+                id: "tools_screenshot",
+                name: "Screenshot Website",
+                desc: "Take screenshots of websites",
+                category: "tools",
+                method: "GET",
+                path: "/tools/ssweb",
+                params: [{ name: "url", type: "string", required: true, placeholder: "Website URL..." }],
+                icon: "fa-screenshot"
+            },
+            {
+                id: "textmaker_glitch",
+                name: "Glitch Text",
+                desc: "Generate glitch text effects",
+                category: "tools",
+                method: "GET",
+                path: "/textmaker/glitch",
+                params: [{ name: "text", type: "string", required: true, placeholder: "Your text..." }],
+                icon: "fa-wand-magic-sparkles"
+            }
+        ];
 
-        function renderGrid(filter = 'all') {
-            const grid = document.getElementById('api-grid');
-            grid.innerHTML = '';
-            
-            const filtered = filter === 'all' ? APIS : APIS.filter(a => a.category === filter);
-            
-            filtered.forEach(api => {
-                const card = document.createElement('div');
-                card.className = 'api-card glass glass-hover p-6 rounded-2xl cursor-pointer group';
-                card.onclick = () => openPlayground(api);
-                
+        let currentFilter = "all";
+        let currentEndpoint = null;
+
+        function renderEndpoints() {
+            const grid = document.getElementById("api-grid");
+            grid.innerHTML = "";
+
+            const filtered = currentFilter === "all" 
+                ? ENDPOINTS 
+                : ENDPOINTS.filter(e => e.category === currentFilter);
+
+            filtered.forEach(endpoint => {
+                const card = document.createElement("div");
+                card.className = "endpoint-card";
+                card.onclick = () => openModal(endpoint);
                 card.innerHTML = `
                     <div class="flex items-start justify-between mb-4">
-                        <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-xl text-blue-400 group-hover:gradient-bg group-hover:text-white transition-all">
-                            ${getEmoji(api.category)}
+                        <div class="w-10 h-10 gradient-button rounded-lg flex items-center justify-center text-white">
+                            <i class="fas ${endpoint.icon}"></i>
                         </div>
-                        <span class="text-[10px] font-bold px-2 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-widest">${api.category}</span>
+                        <span class="badge badge-${endpoint.method.toLowerCase()}">${endpoint.method}</span>
                     </div>
-                    <h3 class="font-bold text-lg mb-2 group-hover:text-blue-400 transition-colors">${api.name}</h3>
-                    <p class="text-sm text-gray-500 line-clamp-2 mb-6">${api.desc}</p>
-                    <div class="flex items-center justify-between pt-4 border-t border-white/5">
-                        <div class="flex items-center gap-2 text-[10px] font-bold text-gray-500">
-                            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                            ACTIVE
-                        </div>
-                        <span class="text-xs font-bold text-blue-400 flex items-center gap-1">
-                            Try Now <i class="fas fa-arrow-right text-[10px]"></i>
-                        </span>
-                    </div>
+                    <h3 class="text-lg font-bold mb-1">${endpoint.name}</h3>
+                    <p class="text-sm text-slate-400 mb-4">${endpoint.desc}</p>
+                    <div class="font-mono text-xs text-slate-500 bg-slate-900/50 px-3 py-2 rounded border border-slate-700/50">${endpoint.path}</div>
                 `;
                 grid.appendChild(card);
             });
         }
 
-        function getEmoji(cat) {
-            const emojis = {
-                'downloader': '<i class="fas fa-download"></i>',
-                'ai': '<i class="fas fa-robot"></i>',
-                'anime': '<i class="fas fa-tv"></i>',
-                'search': '<i class="fas fa-search"></i>'
-            };
-            return emojis[cat] || '<i class="fas fa-bolt"></i>';
-        }
-
         function filterCategory(cat) {
-            document.querySelectorAll('.cat-btn').forEach(b => {
-                b.classList.remove('active', 'border-blue-500/50', 'text-blue-400');
+            currentFilter = cat;
+            document.querySelectorAll(".cat-btn").forEach(btn => {
+                btn.classList.remove("active", "border-blue-500/50", "text-blue-400");
+                btn.classList.add("border-slate-700/50", "text-slate-400");
             });
-            event.target.classList.add('active', 'border-blue-500/50', 'text-blue-400');
-            renderGrid(cat);
+            event.target.classList.add("active", "border-blue-500/50", "text-blue-400");
+            event.target.classList.remove("border-slate-700/50", "text-slate-400");
+            renderEndpoints();
         }
 
-        function openPlayground(api) {
-            currentApi = api;
-            document.getElementById('modal-title').innerText = api.name;
-            document.getElementById('modal-desc').innerText = api.desc;
-            document.getElementById('modal-path').innerText = api.path;
-            document.getElementById('modal-icon').innerHTML = getEmoji(api.category);
-            
-            const container = document.getElementById('params-container');
-            container.innerHTML = '';
-            
-            api.params.forEach(p => {
-                const div = document.createElement('div');
+        function openModal(endpoint) {
+            currentEndpoint = endpoint;
+            document.getElementById("modal-title").textContent = endpoint.name;
+            document.getElementById("modal-desc").textContent = endpoint.desc;
+            document.getElementById("modal-icon").innerHTML = `<i class="fas ${endpoint.icon}"></i>`;
+            document.getElementById("modal-method").textContent = endpoint.method;
+            document.getElementById("modal-path").textContent = endpoint.path;
+
+            // Render parameters
+            const paramsContainer = document.getElementById("params-container");
+            paramsContainer.innerHTML = "";
+            endpoint.params.forEach(param => {
+                const div = document.createElement("div");
                 div.innerHTML = `
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">${p.name}</label>
-                    <input type="text" id="param-${p.name}" placeholder="${p.placeholder}" 
-                           class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors">
+                    <label class="text-sm font-medium text-slate-300 block mb-2">${param.name}${param.required ? ' <span class="text-red-400">*</span>' : ''}</label>
+                    <input type="${param.type}" id="param_${param.name}" placeholder="${param.placeholder}" class="w-full bg-slate-900/50 border border-slate-700/50 rounded-lg px-4 py-2 text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 transition-colors">
                 `;
-                container.appendChild(div);
+                paramsContainer.appendChild(div);
             });
-            
-            document.getElementById('result-container').classList.add('hidden');
-            document.getElementById('playground-modal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+
+            // Generate code examples
+            generateCodeExamples();
+
+            document.getElementById("tester-modal").classList.remove("hidden");
+            document.getElementById("result-container").classList.add("hidden");
+            document.getElementById("loading-container").classList.add("hidden");
         }
 
-        function closePlayground() {
-            document.getElementById('playground-modal').classList.add('hidden');
-            document.body.style.overflow = '';
+        function closeModal() {
+            document.getElementById("tester-modal").classList.add("hidden");
         }
 
-        async function runTest() {
-            const btn = document.getElementById('run-btn');
-            btn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> Running...';
-            btn.disabled = true;
+        function switchTab(tab) {
+            document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
+            event.target.classList.add("active");
             
-            const params = {};
-            currentApi.params.forEach(p => {
-                params[p.name] = document.getElementById(`param-${p.name}`).value;
-            });
+            document.getElementById("response-tab").classList.add("hidden");
+            document.getElementById("code-tab").classList.add("hidden");
             
-            const query = new URLSearchParams(params).toString();
-            const url = `${BASE_URL}${currentApi.path}?${query}&apikey=ZENTRIX`;
-            
-            try {
-                const start = Date.now();
-                const res = await fetch(url);
-                const data = await res.json();
-                const elapsed = Date.now() - start;
-                
-                const status = document.getElementById('resp-status');
-                status.innerText = `${res.status} ${res.statusText}`;
-                status.className = `text-xs font-bold px-2 py-0.5 rounded ${res.ok ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`;
-                
-                document.getElementById('json-output').innerText = JSON.stringify(data, null, 2);
-                document.getElementById('result-container').classList.remove('hidden');
-            } catch (e) {
-                alert('Error: ' + e.message);
-            } finally {
-                btn.innerHTML = '<i class="fas fa-play"></i> Run Request';
-                btn.disabled = false;
+            if (tab === "response") {
+                document.getElementById("response-tab").classList.remove("hidden");
+            } else {
+                document.getElementById("code-tab").classList.remove("hidden");
             }
         }
 
-        // Init
-        renderGrid();
+        function generateCodeExamples() {
+            const endpoint = currentEndpoint;
+            const baseUrl = window.location.origin;
+            const params = endpoint.params.map(p => `${p.name}=value`).join("&");
+            const fullUrl = `${baseUrl}${endpoint.path}?${params}`;
+
+            // JavaScript
+            document.getElementById("code-js").textContent = `const response = await fetch('${fullUrl}');
+const data = await response.json();
+console.log(data.result);`;
+
+            // Python
+            document.getElementById("code-py").textContent = `import requests
+
+response = requests.get('${fullUrl}')
+data = response.json()
+print(data['result'])`;
+
+            // cURL
+            document.getElementById("code-curl").textContent = `curl "${fullUrl}"`;
+        }
+
+        function copyCode(lang) {
+            let code = "";
+            if (lang === "js") code = document.getElementById("code-js").textContent;
+            else if (lang === "py") code = document.getElementById("code-py").textContent;
+            else if (lang === "curl") code = document.getElementById("code-curl").textContent;
+            
+            navigator.clipboard.writeText(code);
+            alert("Code copied to clipboard!");
+        }
+
+        function copyEndpoint() {
+            const path = document.getElementById("modal-path").textContent;
+            navigator.clipboard.writeText(path);
+            alert("Endpoint copied to clipboard!");
+        }
+
+        async function sendRequest() {
+            const endpoint = currentEndpoint;
+            const params = new URLSearchParams();
+            
+            endpoint.params.forEach(param => {
+                const value = document.getElementById(`param_${param.name}`).value;
+                if (value) params.append(param.name, value);
+            });
+
+            const url = `${endpoint.path}?${params.toString()}`;
+            
+            document.getElementById("loading-container").classList.remove("hidden");
+            document.getElementById("result-container").classList.add("hidden");
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                document.getElementById("resp-status").textContent = `${response.status} ${response.statusText}`;
+                document.getElementById("resp-status").className = response.ok 
+                    ? "text-xs font-bold px-2 py-1 rounded bg-green-500/20 text-green-400"
+                    : "text-xs font-bold px-2 py-1 rounded bg-red-500/20 text-red-400";
+                document.getElementById("json-output").textContent = JSON.stringify(data, null, 2);
+                
+                document.getElementById("loading-container").classList.add("hidden");
+                document.getElementById("result-container").classList.remove("hidden");
+            } catch (error) {
+                document.getElementById("loading-container").classList.add("hidden");
+                document.getElementById("result-container").classList.remove("hidden");
+                document.getElementById("resp-status").textContent = "Error";
+                document.getElementById("resp-status").className = "text-xs font-bold px-2 py-1 rounded bg-red-500/20 text-red-400";
+                document.getElementById("json-output").textContent = error.message;
+            }
+        }
+
+        // Initialize
+        renderEndpoints();
     </script>
 </body>
 </html>
