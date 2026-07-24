@@ -635,7 +635,7 @@
     </div>
 
     <div class="stats-bar">
-      <div class="stat-pill"><div class="stat-dot"></div> <strong id="apiCount">12</strong> APIs Available</div>
+      <div class="stat-pill"><div class="stat-dot"></div> <strong id="apiCount">16</strong> APIs Available</div>
       <div class="stat-pill baseurl-pill">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         Base URL: <strong id="baseUrlText">api.zentrixtech.name.ng</strong>
@@ -666,35 +666,36 @@
     </div>
 
     <div class="cat-bar" id="catBar">
-      <button class="cat-btn active" data-cat="all" onclick="filterCat(this,'all')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        All
-      </button>
-      <button class="cat-btn" data-cat="AI" onclick="filterCat(this,'AI')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 0 2h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1 0-2h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/></svg>
-        AI
-      </button>
-      <button class="cat-btn" data-cat="Media" onclick="filterCat(this,'Media')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-        Media
-      </button>
-      <button class="cat-btn" data-cat="Utility" onclick="filterCat(this,'Utility')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        Utility
-      </button>
-      <button class="cat-btn" data-cat="Info" onclick="filterCat(this,'Info')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        Info
-      </button>
-      <button class="cat-btn" data-cat="Social" onclick="filterCat(this,'Social')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Social
-      </button>
+      <!-- Categories will be injected dynamically -->
+    </div>
+
+    <!-- ANIME SECTION -->
+    <div class="section-head" style="margin-top:8px;">
+      <div class="section-title">🍥 Anime</div>
+      <div class="section-count" id="animeStatus">Search AnimeHeaven</div>
+    </div>
+    <div class="anime-panel" id="animePanel" style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="field-group" style="flex:1;min-width:200px;margin-bottom:0;">
+          <div class="field-label">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Search Anime
+          </div>
+          <input class="glass-input" type="text" id="animeSearchInput" placeholder="e.g. One Piece, Attack on Titan..." />
+        </div>
+        <button class="run-btn" id="animeSearchBtn" onclick="searchAnime()" style="width:auto;padding:11px 22px;margin-top:0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Search
+        </button>
+      </div>
+      <div id="animeResults" style="display:none;flex-direction:column;gap:10px;"></div>
+      <div id="animeEpisodes" style="display:none;flex-direction:column;gap:10px;"></div>
+      <div id="animePlayer" style="display:none;"></div>
     </div>
 
     <div class="section-head">
       <div class="section-title">API Marketplace</div>
-      <div class="section-count" id="filteredCount">Showing 12 APIs</div>
+      <div class="section-count" id="filteredCount">Showing 16 APIs</div>
     </div>
     <div class="api-grid" id="apiGrid"></div>
 
@@ -856,9 +857,11 @@
         </div>
         <p class="docs-text">Get episode list and season breakdown for an anime.</p>
         <div class="docs-params">
-          <div class="docs-param"><span class="param-name">detailPath</span><span class="param-req">required</span> — From anime search results</div>
+          <div class="docs-param"><span class="param-name">title</span><span class="param-req">required</span> — Anime title to search</div>
+          <div class="docs-param"><span class="param-name">id</span><span class="param-opt">optional</span> — Anime ID from search results</div>
+          <div class="docs-param"><span class="param-name">url</span><span class="param-opt">optional</span> — Anime URL from search results</div>
         </div>
-        <div class="docs-code">GET /api/anime/episodes?detailPath=/anime/tt123&apikey=KEY</div>
+        <div class="docs-code">GET /api/anime/episodes?title=Naruto&apikey=KEY</div>
 
         <div class="docs-divider"></div>
 
@@ -868,12 +871,70 @@
         </div>
         <p class="docs-text">Get stream URLs for a specific anime episode.</p>
         <div class="docs-params">
-          <div class="docs-param"><span class="param-name">id</span><span class="param-req">required</span> — Subject ID</div>
-          <div class="docs-param"><span class="param-name">detailPath</span><span class="param-req">required</span> — Detail path</div>
-          <div class="docs-param"><span class="param-name">season</span><span class="param-req">required</span> — Season number</div>
-          <div class="docs-param"><span class="param-name">episode</span><span class="param-req">required</span> — Episode number</div>
+          <div class="docs-param"><span class="param-name">title</span><span class="param-req">required</span> — Anime title</div>
+          <div class="docs-param"><span class="param-name">ep_number</span><span class="param-req">required</span> — Episode number</div>
+          <div class="docs-param"><span class="param-name">id</span><span class="param-opt">optional</span> — Anime ID from search results</div>
+          <div class="docs-param"><span class="param-name">url</span><span class="param-opt">optional</span> — Anime URL from search results</div>
+          <div class="docs-param"><span class="param-name">ep_id</span><span class="param-opt">optional</span> — Episode hash ID (speeds up extraction)</div>
         </div>
-        <div class="docs-code">GET /api/anime/stream?id=tt123&detailPath=/anime/tt123&season=1&episode=1&apikey=KEY</div>
+        <div class="docs-code">GET /api/anime/stream?title=Naruto&ep_number=1&apikey=KEY</div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">💬 AI Chat</div>
+        <p class="docs-text">Chat with various AI models using the following endpoints.</p>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/ai/chat</div>
+        </div>
+        <p class="docs-text">Multi-model AI chat (ChatGPT, Claude, Gemini, etc.).</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">message</span><span class="param-req">required</span> — User message</div>
+          <div class="docs-param"><span class="param-name">model</span><span class="param-opt">optional</span> — AI model (default: chatgpt)</div>
+          <div class="docs-param"><span class="param-name">sessionId</span><span class="param-opt">optional</span> — Session memory ID</div>
+        </div>
+        <div class="docs-code">GET /api/ai/chat?message=hello&model=chatgpt&apikey=KEY</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/ai/qwen</div>
+        </div>
+        <p class="docs-text">Direct access to Alibaba's Qwen AI.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">message</span><span class="param-req">required</span> — User message</div>
+          <div class="docs-param"><span class="param-name">sessionId</span><span class="param-opt">optional</span> — Session memory ID</div>
+        </div>
+        <div class="docs-code">GET /api/ai/qwen?message=hello&apikey=KEY</div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">🎵 AI Media</div>
+        <p class="docs-text">Generate AI music tracks from text prompts.</p>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/ai/music</div>
+        </div>
+        <p class="docs-text">Start a music generation job. Returns a <code>taskId</code>.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">prompt</span><span class="param-req">required</span> — Music description</div>
+        </div>
+        <div class="docs-code">GET /api/ai/music?prompt=lofi+hip+hop&apikey=KEY</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/ai/music/result</div>
+        </div>
+        <p class="docs-text">Poll for the result of a music generation job.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">taskId</span><span class="param-req">required</span> — Task ID from /api/ai/music</div>
+        </div>
+        <div class="docs-code">GET /api/ai/music/result?taskId=abc&apikey=KEY</div>
       </div>
 
       <div class="docs-section">
@@ -1069,7 +1130,9 @@ const APIS = [
       { method: 'GET', path: '/api/anime/episodes', desc: 'Get episode list for anime' },
     ],
     fields: [
-      { name: 'q', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
+      { name: 'title', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
+      { name: 'id', label: 'Anime ID (optional)', placeholder: 'from search results', type: 'text' },
+      { name: 'url', label: 'Anime URL (optional)', placeholder: 'from search results', type: 'text' },
     ],
     endpoint: '/api/anime/episodes',
     method: 'GET',
@@ -1085,9 +1148,10 @@ const APIS = [
       { method: 'GET', path: '/api/anime/stream', desc: 'Get stream URLs for anime episode' },
     ],
     fields: [
-      { name: 'q', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
-      { name: 'season', label: 'Season', placeholder: '1', type: 'text' },
-      { name: 'episode', label: 'Episode', placeholder: '1', type: 'text' },
+      { name: 'title', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
+      { name: 'ep_number', label: 'Episode', placeholder: '1', type: 'text' },
+      { name: 'id', label: 'Anime ID (optional)', placeholder: 'from search results', type: 'text' },
+      { name: 'url', label: 'Anime URL (optional)', placeholder: 'from search results', type: 'text' },
     ],
     endpoint: '/api/anime/stream',
     method: 'GET',
@@ -1185,6 +1249,65 @@ const APIS = [
     endpoint: '/api/image/blend',
     method: 'GET',
   },
+  {
+    id: 'ai-chat',
+    name: 'AI Chat',
+    category: 'AI Chat',
+    badge: 'auth',
+    desc: 'Chat with multiple AI models (ChatGPT, Claude, Gemini, DeepSeek, etc.). Supports session memory.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/ai/chat', desc: 'Chat with AI models' }],
+    fields: [
+      { name: 'message', label: 'Message', placeholder: 'Hello, how are you?', type: 'text' },
+      { name: 'sessionId', label: 'Session ID', placeholder: 'zentrix_chat', type: 'text' },
+      { name: 'model', label: 'Model', type: 'select', options: ['chatgpt', 'claude', 'gemini', 'grok', 'deepseek', 'qwen', 'kimi', 'perplexity'] },
+    ],
+    endpoint: '/api/ai/chat',
+    method: 'GET',
+  },
+  {
+    id: 'ai-qwen',
+    name: 'Qwen AI',
+    category: 'AI Chat',
+    badge: 'auth',
+    desc: 'Direct access to Alibaba\'s Qwen AI for high-quality conversations and reasoning.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6a6 6 0 1 0 6 6 6 6 0 0 0-6-6zm0 10a4 4 0 1 1 4-4 4 4 0 0 1-4 4z"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/ai/qwen', desc: 'Chat with Qwen AI' }],
+    fields: [
+      { name: 'message', label: 'Message', placeholder: 'Explain quantum physics', type: 'text' },
+      { name: 'sessionId', label: 'Session ID', placeholder: 'zentrix_qwen', type: 'text' },
+    ],
+    endpoint: '/api/ai/qwen',
+    method: 'GET',
+  },
+  {
+    id: 'ai-music',
+    name: 'AI Music',
+    category: 'AI Media',
+    badge: 'auth',
+    desc: 'Generate AI music from text prompts. Returns a task_id to poll for the final audio result.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/ai/music', desc: 'Generate AI music' }],
+    fields: [
+      { name: 'prompt', label: 'Music Prompt', placeholder: 'lofi hip hop beat for studying', type: 'text' },
+    ],
+    endpoint: '/api/ai/music',
+    method: 'GET',
+  },
+  {
+    id: 'ai-music-result',
+    name: 'Music Result',
+    category: 'AI Media',
+    badge: 'auth',
+    desc: 'Poll for the result of an AI music generation job using the taskId.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/ai/music/result', desc: 'Get music result' }],
+    fields: [
+      { name: 'taskId', label: 'Task ID', placeholder: 'from music response', type: 'text' },
+    ],
+    endpoint: '/api/ai/music/result',
+    method: 'GET',
+  },
 ];
 
 // ===================== MERGE ADMIN APIS =====================
@@ -1275,9 +1398,12 @@ function renderGrid() {
   document.getElementById('filteredCount').textContent = `Showing ${filtered.length} API${filtered.length !== 1 ? 's' : ''}`;
   grid.innerHTML = filtered.map(api => `
     <div class="api-card" onclick="openApi('${api.id}')">
-      <div class="card-meta" style="margin-bottom:8px;">
-        <div class="card-name">${api.name}</div>
-        <div class="card-cat">${api.category}</div>
+      <div class="card-top">
+        <div class="card-icon">${api.icon || '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'}</div>
+        <div class="card-meta">
+          <div class="card-name">${api.name}</div>
+          <div class="card-cat">${api.category}</div>
+        </div>
       </div>
       <div class="card-desc">${api.desc}</div>
       <div class="card-footer">
@@ -1290,6 +1416,34 @@ function renderGrid() {
     </div>
   `).join('');
 }
+
+function renderCategories() {
+  const bar = document.getElementById('catBar');
+  if (!bar) return;
+  const categories = ['all', ...new Set(APIS.map(a => a.category))];
+  const icons = {
+    'all': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+    'AI Chat': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    'AI Media': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+    'AI Image': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+    'Media': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
+    'Utility': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+    'Info': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    'Social': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    'Movies & TV': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>',
+    'Anime': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 22a10 10 0 0 1-10-10"/></svg>',
+    'System': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    'Proxy': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'
+  };
+
+  bar.innerHTML = categories.map(cat => `
+    <button class="cat-btn ${cat === activeCategory ? 'active' : ''}" data-cat="${cat}" onclick="filterCat(this,'${cat}')">
+      ${icons[cat] || icons['all']}
+      ${cat.charAt(0).toUpperCase() + cat.slice(1)}
+    </button>
+  `).join('');
+}
+window.renderCategories = renderCategories;
 
 function filterCat(btn, cat) {
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
@@ -1534,6 +1688,37 @@ async function verifyKey() {
 }
 window.verifyKey = verifyKey;
 
+async function syncEndpoints() {
+  try {
+    const res = await fetch(`${BASE_URL}/api/endpoints`);
+    const data = await res.json();
+    if (data.success && data.endpoints) {
+      data.endpoints.forEach(remote => {
+        const local = APIS.find(a => a.endpoint === remote.path);
+        if (!local) {
+          APIS.push({
+            id: remote.path.replace(/\//g, '-'),
+            name: remote.name,
+            category: remote.category,
+            badge: 'auth',
+            desc: remote.desc,
+            endpoints: [{ method: remote.method, path: remote.path, desc: remote.desc }],
+            fields: [{ name: 'q', label: 'Query', placeholder: 'Enter search...', type: 'text' }],
+            endpoint: remote.path,
+            method: remote.method
+          });
+        }
+      });
+      renderCategories();
+      renderGrid();
+      document.getElementById('apiCount').textContent = APIS.length;
+    }
+  } catch (e) {
+    console.warn('Failed to sync endpoints:', e);
+  }
+}
+window.syncEndpoints = syncEndpoints;
+
 // ===================== SMART SEARCH =====================
 async function doSmartSearch() {
   const api = currentApi;
@@ -1633,8 +1818,24 @@ async function runPlayground() {
     }
     const res = await fetch(url, opts);
     const elapsed = Date.now() - t0;
+    const contentType = res.headers.get("content-type");
     let data;
-    try { data = await res.json(); } catch { data = { error: 'Non-JSON response from server' }; }
+    
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      try { 
+        data = await res.json(); 
+      } catch (e) { 
+        data = { error: 'Failed to parse JSON response', details: e.message }; 
+      }
+    } else {
+      const text = await res.text();
+      data = { 
+        error: 'Received non-JSON response', 
+        contentType: contentType,
+        preview: text.substring(0, 500) + (text.length > 500 ? '...' : '')
+      };
+    }
+    
     lastResponse = data;
     showResponse(data, res.status, elapsed);
   } catch (err) {
@@ -1803,8 +2004,11 @@ document.getElementById('tokenEyeBtn').addEventListener('click', () => {
 
 // ===================== INIT =====================
 document.getElementById('apiCount').textContent = APIS.length;
+document.getElementById('filteredCount').textContent = `Showing ${APIS.length} APIs`;
+renderCategories();
 renderGrid();
 updateTokenUI();
+syncEndpoints();
 
 // Spin keyframe
 const style = document.createElement('style');
@@ -1822,6 +2026,167 @@ function closeDocs(e) {
 }
 window.openDocs = openDocs;
 window.closeDocs = closeDocs;
+
+
+// ===================== ANIME SECTION =====================
+let _currentAnime = { id: '', title: '' };
+
+async function searchAnime() {
+  const q = document.getElementById('animeSearchInput').value.trim();
+  if (!q) { showToast('Enter an anime title', 'error'); return; }
+  const btn = document.getElementById('animeSearchBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+  document.getElementById('animeEpisodes').style.display = 'none';
+  document.getElementById('animePlayer').style.display = 'none';
+  try {
+    const key = globalToken;
+    const headers = key ? {'x-api-key': key} : {};
+    const res = await fetch(`${BASE_URL}/api/anime/search?q=${encodeURIComponent(q)}`, { headers });
+    const data = await res.json();
+    const container = document.getElementById('animeResults');
+    container.style.display = 'flex';
+    
+    const results = data.results || (data.result && Array.isArray(data.result) ? data.result : null);
+    const success = data.success || data.status;
+
+    if (!success || !results || !results.length) {
+      container.innerHTML = `<div style="padding:16px;color:var(--text-secondary);font-size:13px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);">No results found for "${escHtml(q)}"</div>`;
+      btn.classList.remove('loading'); btn.disabled = false;
+      return;
+    }
+    container.innerHTML = `<div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">Found ${results.length} result(s)</div>` + results.map((r, i) => `
+      <div onclick="loadAnimeEpisodes('${escHtml(r.title)}','${escHtml(r.id)}','${escHtml(r.url)}')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--glass-border)'">
+        <div style="width:36px;height:36px;border-radius:10px;background:var(--glass-strong);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div style="min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.title)}</div>
+          <div style="font-size:11px;color:var(--text-dim);font-family:monospace;">${escHtml(r.id)}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    showToast('Anime search failed: ' + e.message, 'error');
+  }
+  btn.classList.remove('loading'); btn.disabled = false;
+}
+
+async function loadAnimeEpisodes(title, id = null, url = null) {
+  _currentAnime = { id, url, title };
+  document.getElementById('animeResults').style.display = 'none';
+  document.getElementById('animePlayer').style.display = 'none';
+  const container = document.getElementById('animeEpisodes');
+  container.style.display = 'flex';
+  container.innerHTML = '<div style="padding:16px;color:var(--text-secondary);font-size:13px;">Loading episodes...</div>';
+  try {
+    const key = globalToken;
+    const headers = key ? {'x-api-key': key} : {};
+    let fetchUrl = `${BASE_URL}/api/anime/episodes?title=${encodeURIComponent(title)}`;
+    if (id) fetchUrl += `&id=${encodeURIComponent(id)}`;
+    if (url) fetchUrl += `&url=${encodeURIComponent(url)}`;
+    const res = await fetch(fetchUrl, { headers });
+    const data = await res.json();
+    
+    const episodes = data.episodes || (data.result && Array.isArray(data.result) ? data.result : null);
+    const success = data.success || data.status;
+
+    if (!success || !episodes || !episodes.length) {
+      container.innerHTML = `<div style="padding:16px;color:var(--text-secondary);font-size:13px;">No episodes found.</div>`;
+      return;
+    }
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${escHtml(title)}</div>
+        <div style="font-size:11px;color:var(--text-dim);">${episodes.length} episode(s)</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;max-height:320px;overflow-y:auto;padding:4px;">
+        ${episodes.map(ep => `
+          <div style="display:flex;flex-direction:column;gap:6px;padding:10px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);text-align:center;cursor:pointer;transition:all var(--transition);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--glass-border)'">
+            <div style="font-size:12px;font-weight:600;color:var(--text-primary);">EP ${escHtml(ep.number)}</div>
+            <div style="display:flex;gap:6px;justify-content:center;">
+              <button onclick="playAnimeEpisode('${escHtml(ep.number)}','${escHtml(ep.ep_id)}')" style="padding:5px 10px;border-radius:6px;background:var(--glass-strong);border:1px solid var(--glass-border);color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">▶ Stream</button>
+              <button onclick="downloadAnimeEpisode('${escHtml(ep.number)}','${escHtml(ep.ep_id)}')" style="padding:5px 10px;border-radius:6px;background:var(--glass-strong);border:1px solid var(--glass-border);color:var(--text-secondary);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">⬇ DL</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } catch (e) {
+    container.innerHTML = `<div style="padding:16px;color:var(--error);font-size:13px;">Failed to load episodes: ${escHtml(e.message)}</div>`;
+  }
+}
+
+async function playAnimeEpisode(epNumber, epId) {
+  const player = document.getElementById('animePlayer');
+  player.style.display = 'block';
+  player.innerHTML = '<div style="padding:16px;color:var(--text-secondary);font-size:13px;">Extracting stream...</div>';
+  try {
+    const key = globalToken;
+    const headers = key ? {'x-api-key': key} : {};
+    let fetchUrl = `${BASE_URL}/api/anime/stream?ep_number=${encodeURIComponent(epNumber)}&ep_id=${encodeURIComponent(epId)}&title=${encodeURIComponent(_currentAnime.title)}`;
+    if (_currentAnime.id) fetchUrl += `&id=${encodeURIComponent(_currentAnime.id)}`;
+    if (_currentAnime.url) fetchUrl += `&url=${encodeURIComponent(_currentAnime.url)}`;
+    const res = await fetch(fetchUrl, { headers });
+    const data = await res.json();
+    
+    const stream_url = data.stream_url || (data.result && data.result.stream_url);
+    const download_url = data.download_url || (data.result && data.result.download_url);
+    const source_type = data.source_type || (data.result && data.result.source_type);
+    const success = data.success || data.status;
+
+    if (!success || !stream_url) {
+      player.innerHTML = `<div style="padding:16px;color:var(--error);font-size:13px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);">${escHtml(data.error || 'Stream not available')}</div>`;
+      return;
+    }
+    player.innerHTML = `
+      <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);overflow:hidden;">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${escHtml(_currentAnime.title)} — Episode ${escHtml(epNumber)}</div>
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;">${escHtml(source_type || 'mp4')}</div>
+        </div>
+        <video controls autoplay style="width:100%;display:block;background:#000;" src="${stream_url}">
+          Your browser does not support the video tag.
+        </video>
+        <div style="padding:10px 14px;display:flex;gap:10px;">
+          <a href="${stream_url}" target="_blank" style="font-size:12px;color:var(--accent);text-decoration:none;font-weight:600;">Open stream ↗</a>
+          <a href="${download_url}" style="font-size:12px;color:var(--text-secondary);text-decoration:none;font-weight:600;">Download ↓</a>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    player.innerHTML = `<div style="padding:16px;color:var(--error);font-size:13px;">Stream failed: ${escHtml(e.message)}</div>`;
+  }
+}
+
+async function downloadAnimeEpisode(epNumber, epId) {
+  try {
+    const key = globalToken;
+    const headers = key ? {'x-api-key': key} : {};
+    let fetchUrl = `${BASE_URL}/api/anime/download?ep_number=${encodeURIComponent(epNumber)}&ep_id=${encodeURIComponent(epId)}&title=${encodeURIComponent(_currentAnime.title)}`;
+    if (_currentAnime.id) fetchUrl += `&id=${encodeURIComponent(_currentAnime.id)}`;
+    if (_currentAnime.url) fetchUrl += `&url=${encodeURIComponent(_currentAnime.url)}`;
+    const res = await fetch(fetchUrl, { headers });
+    const data = await res.json();
+    
+    const download_url = data.download_url || (data.result && data.result.download_url);
+    const success = data.success || data.status;
+
+    if (!success || !download_url) {
+      showToast(data.error || 'Download not available', 'error');
+      return;
+    }
+    window.open(download_url, '_blank');
+    showToast('Download started', 'success');
+  } catch (e) {
+    showToast('Download failed: ' + e.message, 'error');
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.activeElement === document.getElementById('animeSearchInput')) {
+    searchAnime();
+  }
+});
 
 </script>
 </body>
