@@ -1283,6 +1283,93 @@ async def proxy_downloader(
         )
 
 
+
+# ================================================================================
+# PREXZY STALK/LOOKUP PROXY ROUTES
+# ================================================================================
+# Proxy user lookup endpoints for TikTok, Instagram, YouTube, Twitter, etc.
+
+@app.get("/api/stalk/{endpoint}")
+async def proxy_stalk(
+    endpoint: str,
+    request: Request,
+):
+    """
+    Proxy Prexzy stalk/lookup endpoints with ZENTRIX branding.
+    
+    Examples:
+    - GET /api/stalk/ttstalk?user=username
+    - GET /api/stalk/igstalk?user=username
+    - GET /api/stalk/ytstalk?user=username
+    - GET /api/stalk/twitterstalk?user=username
+    - GET /api/stalk/ffstalk?id=userid
+    """
+    from datetime import datetime
+    
+    try:
+        # Get query parameters
+        query_params = dict(request.query_params)
+        
+        # Build Prexzy URL
+        prexzy_url = f"https://prexzyapis.com/stalk/{endpoint}"
+        
+        # Make request to Prexzy
+        async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            resp = await client.get(prexzy_url, params=query_params)
+        
+        # Parse response
+        try:
+            data = resp.json()
+        except:
+            return JSONResponse(
+                status_code=resp.status_code,
+                content={
+                    "success": False,
+                    "creator": "ZENTRIX TECH",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "error": "Failed to parse response from stalk endpoint"
+                }
+            )
+        
+        # Wrap with ZENTRIX branding and hide Prexzy reference
+        if resp.is_success:
+            # Replace any "creator": "prexzy" with "ZENTRIX TECH"
+            if isinstance(data, dict) and "creator" in data:
+                data["creator"] = "ZENTRIX TECH"
+            
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "success": True,
+                    "creator": "ZENTRIX TECH",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "data": data
+                }
+            )
+        else:
+            return JSONResponse(
+                status_code=resp.status_code,
+                content={
+                    "success": False,
+                    "creator": "ZENTRIX TECH",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "error": data.get("error", "Stalk request failed")
+                }
+            )
+    
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "creator": "ZENTRIX TECH",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "error": str(e)
+            }
+        )
+
+
+
 @app.get("/admin/stats")
 async def admin_stats(request: Request, adminkey: str = Query(...)):
     if adminkey != "ZENTRIX_ADMIN_2024":
