@@ -224,7 +224,7 @@ async def track_requests(request: Request, call_next):
 # -- Auth middleware -------------------------------------------------------------
 _AUTH_REQUIRED_PREFIXES = ("/api/",)
 _AUTH_REQUIRED_EXACT = {"/zentrix/encode"}
-_OPEN_PATHS = {"/health"}
+_OPEN_PATHS = {"/health", "/api/endpoints"}
 
 
 @app.middleware("http")
@@ -262,7 +262,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
     logger.exception("Unhandled error on %s %s", request.method, request.url.path)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"success": False, "error": "An internal server error occurred."},
+        content={"success": False, "error": f"Internal server error: {str(exc)}"},
     )
 
 
@@ -273,6 +273,30 @@ async def generic_exception_handler(request: Request, exc: Exception):
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     return {"status": "ok", "version": APP_VERSION, "creator": "ZENTRIX TECH"}
+
+@app.get("/api/endpoints")
+async def get_endpoints():
+    """Return all available endpoints for dynamic frontend loading."""
+    return {
+        "success": True,
+        "creator": "ZENTRIX TECH",
+        "categories": ["AI Chat", "AI Media", "AI Image", "Media", "Utility", "Info", "Social", "Movies & TV", "Anime", "System", "Proxy"],
+        "endpoints": [
+            {"path": "/api/search", "method": "GET", "category": "Movies & TV", "name": "Search", "desc": "Search movies, TV, anime"},
+            {"path": "/api/details", "method": "GET", "category": "Movies & TV", "name": "Details", "desc": "Get full movie/show details"},
+            {"path": "/api/sources", "method": "GET", "category": "Movies & TV", "name": "Sources", "desc": "Get stream URLs + subtitles"},
+            {"path": "/api/trailer", "method": "GET", "category": "Movies & TV", "name": "Trailer", "desc": "Get YouTube trailer"},
+            {"path": "/api/anime/search", "method": "GET", "category": "Anime", "name": "Anime Search", "desc": "Search anime titles"},
+            {"path": "/api/anime/episodes", "method": "GET", "category": "Anime", "name": "Anime Episodes", "desc": "Get episode list"},
+            {"path": "/api/anime/stream", "method": "GET", "category": "Anime", "name": "Anime Stream", "desc": "Get stream URL"},
+            {"path": "/api/ai/chat", "method": "GET", "category": "AI Chat", "name": "AI Chat", "desc": "Chat with multiple AI models"},
+            {"path": "/api/ai/qwen", "method": "GET", "category": "AI Chat", "name": "Qwen AI", "desc": "Chat with Alibaba Qwen"},
+            {"path": "/api/ai/music", "method": "GET", "category": "AI Media", "name": "AI Music", "desc": "Generate AI music"},
+            {"path": "/api/image/generate", "method": "GET", "category": "AI Image", "name": "Image Generate", "desc": "Text to image"},
+            {"path": "/api/image/edit", "method": "GET", "category": "AI Image", "name": "Image Edit", "desc": "Edit image with prompt"},
+            {"path": "/zentrix/encode", "method": "GET", "category": "Proxy", "name": "Encode URL", "desc": "Encode CDN URL to token"}
+        ]
+    }
 
 
 @app.get("/api/search")
@@ -320,15 +344,12 @@ async def search(
         })
 
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
-        "result": {
-            "items": serialized,
-            "page": pager.get("page", page),
-            "hasMore": pager.get("hasMore", False),
-            "totalCount": pager.get("totalCount", 0),
-        }
+        "success": True,
+        "creator": "ZENTRIX TECH",
+        "results": serialized,
+        "page": pager.get("page", page),
+        "hasMore": pager.get("hasMore", False),
+        "totalCount": pager.get("totalCount", 0),
     }
 
 
@@ -396,13 +417,10 @@ async def get_sources(
         })
 
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
-        "result": {
-            "streams": streams,
-            "subtitles": subtitles,
-        }
+        "success": True,
+        "creator": "ZENTRIX TECH",
+        "streams": streams,
+        "subtitles": subtitles,
     }
 
 
@@ -442,40 +460,37 @@ async def get_details(
         return subject.get(key) or data.get(key) or fallback
 
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
-        "result": {
-            "id": g("subjectId", ""),
-            "title": g("title", ""),
-            "description": g("description", ""),
-            "releaseDate": g("releaseDate", ""),
-            "genre": g("genre", []),
-            "rating": g("imdbRatingValue", 0),
-            "ratingCount": g("imdbRatingCount", 0),
-            "country": g("countryName", ""),
-            "subjectType": g("subjectType", ""),
-            "detailPath": g("detailPath", ""),
-            "hasResource": g("hasResource", False),
-            "poster": g("cover", {}).get("url", "") if isinstance(g("cover"), dict) else g("cover", ""),
-            "backdrop": subject.get("stills", {}).get("url", "") if isinstance(subject.get("stills"), dict) else "",
-            "duration": g("duration", 0),
-            "totalSeasons": data.get("totalSeasons", 0),
-            "episodeList": data.get("episodeList", []),
-            "trailer": {
-                "url": build_url(f"/zentrix/stream?token={make_token(trailer_url)}", request) if trailer_url else None,
-                "raw_url": trailer_url,
-                "cover": trailer_cover,
-            } if trailer_url else None,
-            "cast": [
-                {
-                    "name": s.get("name"),
-                    "character": s.get("character"),
-                    "avatar": s.get("avatarUrl") or s.get("avatar"),
-                }
-                for s in data.get("stafflist", [])[:20]
-            ],
-        }
+        "success": True,
+        "creator": "ZENTRIX TECH",
+        "id": g("subjectId", ""),
+        "title": g("title", ""),
+        "description": g("description", ""),
+        "releaseDate": g("releaseDate", ""),
+        "genre": g("genre", []),
+        "rating": g("imdbRatingValue", 0),
+        "ratingCount": g("imdbRatingCount", 0),
+        "country": g("countryName", ""),
+        "subjectType": g("subjectType", ""),
+        "detailPath": g("detailPath", ""),
+        "hasResource": g("hasResource", False),
+        "poster": g("cover", {}).get("url", "") if isinstance(g("cover"), dict) else g("cover", ""),
+        "backdrop": subject.get("stills", {}).get("url", "") if isinstance(subject.get("stills"), dict) else "",
+        "duration": g("duration", 0),
+        "totalSeasons": data.get("totalSeasons", 0),
+        "episodeList": data.get("episodeList", []),
+        "trailer": {
+            "url": build_url(f"/zentrix/stream?token={make_token(trailer_url)}", request) if trailer_url else None,
+            "raw_url": trailer_url,
+            "cover": trailer_cover,
+        } if trailer_url else None,
+        "cast": [
+            {
+                "name": s.get("name"),
+                "character": s.get("character"),
+                "avatar": s.get("avatarUrl") or s.get("avatar"),
+            }
+            for s in data.get("stafflist", [])[:20]
+        ],
     }
 
 
@@ -748,10 +763,9 @@ async def anime_search(
     results.sort(key=get_priority)
 
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
-        "result": results,
+        "success": True,
+        "creator": "ZENTRIX TECH",
+        "results": results,
     }
 
 
@@ -773,17 +787,16 @@ async def anime_episodes(
             return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
 
     try:
-        episodes = ah_episodes(url, id)
+        id, url = _resolve_anime_by_title(title)
     except AnimeHeavenError as e:
         return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": f"Failed to fetch episodes: {str(e)}"})
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
 
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
-        "result": episodes,
+        "success": True,
+        "creator": "ZENTRIX TECH",
+        "episodes": episodes,
     }
 
 
@@ -801,16 +814,13 @@ def _build_anime_stream_response(
     safe_token = urllib.parse.quote(token)
     safe_filename = urllib.parse.quote(filename)
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
-        "result": {
-            "title": title,
-            "episode": ep_number,
-            "source_type": source_type,
-            "stream_url": build_url(f"/zentrix/stream?token={safe_token}", request),
-            "download_url": build_url(f"/zentrix/download?token={safe_token}&filename={safe_filename}", request),
-        }
+        "success": True,
+        "creator": "ZENTRIX TECH",
+        "title": title,
+        "episode": ep_number,
+        "source_type": source_type,
+        "stream_url": build_url(f"/zentrix/stream?token={make_token(video_url)}", request),
+        "download_url": build_url(f"/zentrix/download?token={make_token(video_url)}&filename={filename}", request),
     }
 
 
@@ -911,20 +921,17 @@ async def get_trailer(
     data = resp.json()
     items = data.get("items", [])
     if not items:
-        return {"success": False, "error": "No trailer found"}
+        return JSONResponse(status_code=404, content={"success": False, "error": "No trailer found"})
     video = items[0]
     video_id = video["id"]["videoId"]
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
-        "result": {
-            "title": video["snippet"]["title"],
-            "youtube_id": video_id,
-            "url": f"https://www.youtube.com/watch?v={video_id}",
-            "embed_url": f"https://www.youtube.com/embed/{video_id}",
-            "thumbnail": video["snippet"]["thumbnails"]["high"]["url"],
-        }
+        "success": True,
+        "creator": "ZENTRIX TECH",
+        "title": video["snippet"]["title"],
+        "youtube_id": video_id,
+        "url": f"https://www.youtube.com/watch?v={video_id}",
+        "embed_url": f"https://www.youtube.com/embed/{video_id}",
+        "thumbnail": video["snippet"]["thumbnails"]["high"]["url"],
     }
 
 
@@ -993,9 +1000,8 @@ async def image_generate(
     if "image" in cleaned:
         cleaned["image"] = await _rehost_image(cleaned["image"])
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
+        "success": True,
+        "creator": "ZENTRIX TECH",
         "result": cleaned
     }
 
@@ -1036,9 +1042,8 @@ async def image_edit(
         if key in cleaned:
             cleaned[key] = await _rehost_image(cleaned[key])
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
+        "success": True,
+        "creator": "ZENTRIX TECH",
         "result": cleaned
     }
 
@@ -1064,9 +1069,8 @@ async def image_transform(
 
     cleaned = _clean_omega(data)
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
+        "success": True,
+        "creator": "ZENTRIX TECH",
         "result": cleaned
     }
 
@@ -1099,9 +1103,8 @@ async def image_transform_result(
         if key in cleaned:
             cleaned[key] = await _rehost_image(cleaned[key])
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
+        "success": True,
+        "creator": "ZENTRIX TECH",
         "result": cleaned
     }
 
@@ -1138,9 +1141,8 @@ async def image_blend(
     if "image" in cleaned:
         cleaned["image"] = await _rehost_image(cleaned["image"])
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
+        "success": True,
+        "creator": "ZENTRIX TECH",
         "result": cleaned
     }
 
@@ -1171,9 +1173,8 @@ async def ai_chat(
 
     cleaned = _clean_omega(data)
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
+        "success": True,
+        "creator": "ZENTRIX TECH",
         "result": cleaned
     }
 
@@ -1199,9 +1200,8 @@ async def ai_qwen(
 
     cleaned = _clean_omega(data)
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
+        "success": True,
+        "creator": "ZENTRIX TECH",
         "result": cleaned
     }
 
@@ -1226,9 +1226,8 @@ async def ai_music(
 
     cleaned = _clean_omega(data)
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
+        "success": True,
+        "creator": "ZENTRIX TECH",
         "result": cleaned
     }
 
@@ -1253,9 +1252,8 @@ async def ai_music_result(
 
     cleaned = _clean_omega(data)
     return {
-        "status": True,
-        "statusCode": 200,
-        "creator": "zentrix",
+        "success": True,
+        "creator": "ZENTRIX TECH",
         "result": cleaned
     }
 

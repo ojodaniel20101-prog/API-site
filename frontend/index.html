@@ -1,580 +1,2193 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zentrix APIs — Free, Unlimited, No API Key Required</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-        body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-            color: #e2e8f0;
-        }
-        .gradient-text {
-            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .gradient-button {
-            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
-            transition: all 0.3s ease;
-        }
-        .gradient-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
-        }
-        .glass {
-            background: rgba(30, 41, 59, 0.5);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(148, 163, 184, 0.1);
-        }
-        .glass-hover:hover {
-            background: rgba(30, 41, 59, 0.7);
-            border-color: rgba(148, 163, 184, 0.2);
-            transform: translateY(-2px);
-        }
-        .endpoint-card {
-            background: rgba(30, 41, 59, 0.6);
-            border: 1px solid rgba(148, 163, 184, 0.1);
-            border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        .endpoint-card:hover {
-            background: rgba(30, 41, 59, 0.8);
-            border-color: rgba(59, 130, 246, 0.3);
-            transform: translateY(-4px);
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.1);
-        }
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .badge-get {
-            background: rgba(34, 197, 94, 0.1);
-            color: #22c55e;
-            border: 1px solid rgba(34, 197, 94, 0.3);
-        }
-        .badge-post {
-            background: rgba(249, 115, 22, 0.1);
-            color: #f97316;
-            border: 1px solid rgba(249, 115, 22, 0.3);
-        }
-        .modal-overlay {
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-        }
-        .code-block {
-            background: #0f172a;
-            border: 1px solid rgba(148, 163, 184, 0.1);
-            border-radius: 8px;
-            padding: 16px;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            overflow-x: auto;
-            color: #cbd5e1;
-        }
-        .code-block .keyword { color: #f472b6; }
-        .code-block .string { color: #86efac; }
-        .code-block .number { color: #fbbf24; }
-        .code-block .function { color: #60a5fa; }
-        .tab-button {
-            padding: 10px 20px;
-            border-bottom: 2px solid transparent;
-            color: #94a3b8;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .tab-button.active {
-            color: #3b82f6;
-            border-bottom-color: #3b82f6;
-        }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+<title>Zentrix API — Developer Portal v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-orb1: #6c3fa6;
+    --bg-orb2: #1a6bdc;
+    --bg-orb3: #0d9488;
+    --bg-base: #08060f;
+    --glass-bg: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.12);
+    --glass-hover: rgba(255,255,255,0.1);
+    --glass-strong: rgba(255,255,255,0.09);
+    --text-primary: #f0eeff;
+    --text-secondary: rgba(240,238,255,0.55);
+    --text-dim: rgba(240,238,255,0.3);
+    --accent: #a78bfa;
+    --accent2: #38bdf8;
+    --accent3: #34d399;
+    --success: #34d399;
+    --error: #f87171;
+    --warning: #fbbf24;
+    --glow: rgba(167,139,250,0.18);
+    --glow-strong: rgba(167,139,250,0.35);
+    --radius: 18px;
+    --radius-sm: 10px;
+    --blur: blur(24px);
+    --transition: 0.22s cubic-bezier(.4,0,.2,1);
+  }
+
+  body.light {
+    --bg-orb1: #a78bfa;
+    --bg-orb2: #60a5fa;
+    --bg-orb3: #34d399;
+    --bg-base: #e8e6f5;
+    --glass-bg: rgba(255,255,255,0.45);
+    --glass-border: rgba(255,255,255,0.7);
+    --glass-hover: rgba(255,255,255,0.65);
+    --glass-strong: rgba(255,255,255,0.55);
+    --text-primary: #1a1535;
+    --text-secondary: rgba(26,21,53,0.6);
+    --text-dim: rgba(26,21,53,0.35);
+    --accent: #7c3aed;
+    --accent2: #0ea5e9;
+    --accent3: #059669;
+    --glow: rgba(124,58,237,0.12);
+    --glow-strong: rgba(124,58,237,0.25);
+  }
+
+  html, body { height: 100%; font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 14px; touch-action: pan-x pan-y; }
+
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* === BACKGROUND ORBS === */
+  .bg-layer {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  }
+  .orb {
+    position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.45;
+    animation: orbFloat 12s ease-in-out infinite;
+  }
+  .orb1 { width: 520px; height: 520px; background: var(--bg-orb1); top: -120px; left: -80px; animation-delay: 0s; }
+  .orb2 { width: 400px; height: 400px; background: var(--bg-orb2); bottom: -80px; right: -60px; animation-delay: -4s; }
+  .orb3 { width: 300px; height: 300px; background: var(--bg-orb3); top: 40%; left: 40%; animation-delay: -8s; }
+  @keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.04); }
+    66% { transform: translate(-20px, 25px) scale(0.97); }
+  }
+  body.light .orb { opacity: 0.28; }
+
+  /* === LAYOUT === */
+  .app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* === HEADER === */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 62px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 18px; font-weight: 700; letter-spacing: -0.3px; color: var(--text-primary);
+    white-space: nowrap;
+  }
+  .logo-icon { width: 30px; height: 30px; flex-shrink: 0; }
+  .logo span { color: var(--accent); }
+
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  /* Search */
+  .search-wrap {
+    position: relative; display: flex; align-items: center;
+  }
+  .search-input {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 50px;
+    color: var(--text-primary);
+    font-family: inherit; font-size: 13px;
+    padding: 8px 14px 8px 36px;
+    width: 220px;
+    outline: none;
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    transition: border-color var(--transition), width var(--transition), box-shadow var(--transition);
+  }
+  .search-input::placeholder { color: var(--text-dim); }
+  .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); width: 280px; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-dim); pointer-events: none; }
+  .search-results {
+    position: absolute; top: calc(100% + 8px); right: 0; min-width: 300px;
+    background: var(--glass-strong);
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    display: none; flex-direction: column; z-index: 200;
+    animation: fadeDown 0.18s ease;
+  }
+  .search-results.open { display: flex; }
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .search-result-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 16px; cursor: pointer;
+    border-bottom: 1px solid var(--glass-border);
+    transition: background var(--transition);
+  }
+  .search-result-item:last-child { border-bottom: none; }
+  .search-result-item:hover { background: var(--glass-hover); }
+  .search-result-item .sri-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--glass-bg); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sri-info { display: flex; flex-direction: column; gap: 1px; }
+  .sri-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .sri-tag { font-size: 11px; color: var(--text-dim); }
+
+  /* Theme toggle */
+  .theme-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary); transition: background var(--transition), border-color var(--transition);
+    flex-shrink: 0;
+  }
+  .theme-btn:hover { background: var(--glass-hover); border-color: var(--accent); color: var(--accent); }
+
+  /* === MAIN === */
+  main { flex: 1; padding: 28px 24px 40px; max-width: 1200px; margin: 0 auto; width: 100%; }
+
+  /* === HERO === */
+  .hero { text-align: center; padding: 30px 0 40px; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: 50px; padding: 5px 14px; margin-bottom: 18px;
+    font-size: 11px; font-weight: 500; color: var(--accent); text-transform: uppercase; letter-spacing: 1.2px;
+  }
+  .hero h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 700; letter-spacing: -0.8px; line-height: 1.1; color: var(--text-primary); margin-bottom: 12px; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { font-size: 15px; color: var(--text-secondary); max-width: 520px; margin: 0 auto; line-height: 1.6; }
+
+  /* === STATS BAR === */
+  .stats-bar {
+    display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin: 24px 0 36px;
+  }
+  .stat-pill {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: 50px; padding: 7px 16px;
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--text-secondary);
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  }
+  .stat-pill strong { color: var(--text-primary); font-weight: 600; }
+  .stat-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); box-shadow: 0 0 6px var(--success); animation: pulse 2s ease infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* === BASE URL COPY === */
+  .baseurl-pill { gap: 6px; }
+  .baseurl-copy-btn {
+    background: none; border: none; cursor: pointer; padding: 2px 4px; border-radius: 5px;
+    color: var(--text-dim); transition: color var(--transition), background var(--transition);
+    display: flex; align-items: center; line-height: 1;
+  }
+  .baseurl-copy-btn:hover { color: var(--accent); background: var(--glow); }
+  .baseurl-copy-btn.copied { color: var(--success); }
+
+  /* === TOKEN ROW === */
+  .token-row-wrap {
+    display: flex; align-items: center; gap: 12px;
+    margin: -16px 0 28px;
+    flex-wrap: wrap;
+  }
+  .token-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.9px; color: var(--text-dim); white-space: nowrap; flex-shrink: 0;
+  }
+  .token-input-group {
+    display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: 50px; padding: 4px 6px 4px 14px;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  .token-input-group:focus-within {
+    border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow);
+  }
+  .token-inp {
+    flex: 1; min-width: 0; background: none; border: none; outline: none;
+    color: var(--text-primary); font-family: 'SF Mono','Fira Code',monospace; font-size: 12px;
+    letter-spacing: 0.4px;
+  }
+  .token-inp::placeholder { color: var(--text-dim); font-family: inherit; letter-spacing: 0; }
+  .token-eye {
+    background: none; border: none; cursor: pointer; color: var(--text-dim);
+    padding: 4px; display: flex; align-items: center; transition: color var(--transition);
+    flex-shrink: 0;
+  }
+  .token-eye:hover { color: var(--accent); }
+  .token-apply {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 50px; color: #fff;
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    padding: 6px 14px; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    transition: opacity var(--transition), box-shadow var(--transition);
+  }
+  .token-apply:hover { opacity: 0.88; box-shadow: 0 2px 12px var(--glow-strong); }
+  .token-clear {
+    background: none; border: none; cursor: pointer; color: var(--error);
+    padding: 4px; display: flex; align-items: center; flex-shrink: 0;
+    transition: opacity var(--transition);
+  }
+  .token-clear:hover { opacity: 0.7; }
+  .token-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 50px;
+    background: rgba(52,211,153,0.14); color: var(--success);
+    border: 1px solid rgba(52,211,153,0.28); white-space: nowrap; flex-shrink: 0;
+  }
+
+  /* === CATEGORY FILTER === */
+  .cat-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .cat-btn {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: 50px; padding: 7px 16px;
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    color: var(--text-secondary); cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: all var(--transition);
+  }
+  .cat-btn:hover, .cat-btn.active {
+    background: var(--glow); border-color: var(--accent); color: var(--accent);
+    box-shadow: 0 0 18px var(--glow);
+  }
+
+  /* === API GRID === */
+  .api-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .api-card {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: var(--radius); padding: 16px;
+    cursor: pointer; position: relative; overflow: hidden;
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+  }
+  .api-card::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .api-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 8px 40px var(--glow); }
+  .card-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .card-icon {
+    width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+    background: var(--glass-strong); border: 1px solid var(--glass-border);
+    display: flex; align-items: center; justify-content: center; color: var(--accent);
+  }
+  .card-meta { flex: 1; min-width: 0; }
+  .card-name { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+  .card-cat { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; }
+  .card-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px; }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; }
+  .card-badge {
+    font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 50px;
+    text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .badge-free { background: rgba(52,211,153,0.15); color: var(--success); border: 1px solid rgba(52,211,153,0.25); }
+  .badge-auth { background: rgba(167,139,250,0.15); color: var(--accent); border: 1px solid rgba(167,139,250,0.25); }
+  .badge-premium { background: rgba(251,191,36,0.12); color: var(--warning); border: 1px solid rgba(251,191,36,0.2); }
+  .card-try {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 600; color: var(--accent);
+    background: none; border: none; cursor: pointer; font-family: inherit;
+    transition: gap var(--transition);
+  }
+  .card-try:hover { gap: 8px; }
+
+  /* === MODAL OVERLAY === */
+  .overlay {
+    position: fixed; inset: 0; z-index: 300;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    animation: fadeIn 0.2s ease;
+    pointer-events: none; opacity: 0; transition: opacity var(--transition);
+  }
+  .overlay.open { opacity: 1; pointer-events: all; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--glass-strong);
+    backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px; width: 100%; max-width: 580px;
+    max-height: 90vh; overflow-y: auto; padding: 28px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+    position: relative;
+    transform: translateY(20px); transition: transform 0.22s cubic-bezier(.4,0,.2,1);
+    scrollbar-width: thin; scrollbar-color: var(--glass-border) transparent;
+  }
+  .overlay.open .modal { transform: translateY(0); }
+  .modal-close {
+    position: absolute; top: 18px; right: 18px;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary); transition: all var(--transition);
+  }
+  .modal-close:hover { background: rgba(248,113,113,0.15); border-color: var(--error); color: var(--error); }
+  .modal-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding-right: 40px; }
+  .modal-icon {
+    width: 50px; height: 50px; border-radius: 14px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    display: flex; align-items: center; justify-content: center; color: var(--accent); flex-shrink: 0;
+  }
+  .modal-title { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+  .modal-subtitle { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .modal-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 22px; }
+
+  /* === TABS === */
+  .modal-tabs { display: flex; gap: 4px; margin-bottom: 22px; background: var(--glass-bg); border-radius: 10px; padding: 4px; border: 1px solid var(--glass-border); }
+  .tab-btn {
+    flex: 1; padding: 8px; border-radius: 7px; font-family: inherit; font-size: 12px; font-weight: 600;
+    background: none; border: none; cursor: pointer; color: var(--text-dim);
+    transition: all var(--transition);
+  }
+  .tab-btn.active { background: var(--glass-strong); color: var(--text-primary); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* === FORM ELEMENTS === */
+  .field-group { margin-bottom: 16px; }
+  .field-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;
+    color: var(--text-dim); margin-bottom: 7px;
+  }
+  .glass-input {
+    width: 100%;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm); color: var(--text-primary);
+    font-family: inherit; font-size: 13px;
+    padding: 11px 14px; outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  .glass-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); }
+  .glass-input::placeholder { color: var(--text-dim); }
+  .input-wrap { position: relative; }
+  .input-wrap .glass-input { padding-right: 42px; }
+  .input-action {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: var(--text-dim);
+    transition: color var(--transition); padding: 2px;
+  }
+  .input-action:hover { color: var(--accent); }
+  select.glass-input { -webkit-appearance: none; appearance: none; cursor: pointer; }
+
+  /* === VERIFY SECTION === */
+  .verify-row { display: flex; gap: 8px; align-items: flex-end; }
+  .verify-row .field-group { flex: 1; margin-bottom: 0; }
+  .verify-btn {
+    display: flex; align-items: center; gap: 7px; padding: 11px 18px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: var(--radius-sm); color: #fff;
+    font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: opacity var(--transition), box-shadow var(--transition), transform var(--transition);
+    white-space: nowrap;
+  }
+  .verify-btn:hover { opacity: 0.9; box-shadow: 0 4px 20px var(--glow-strong); transform: translateY(-1px); }
+  .verify-btn:active { transform: translateY(0); }
+  .verify-status {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-radius: var(--radius-sm);
+    font-size: 12px; font-weight: 500; margin-top: 10px;
+    transition: all var(--transition);
+  }
+  .verify-status.success { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25); color: var(--success); }
+  .verify-status.error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25); color: var(--error); }
+  .verify-status.hidden { display: none; }
+
+  /* === RUN BUTTON === */
+  .run-btn {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 9px;
+    padding: 13px; border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    border: none; color: #fff; font-family: inherit; font-size: 14px; font-weight: 700;
+    cursor: pointer; letter-spacing: 0.3px; margin-top: 6px;
+    transition: opacity var(--transition), box-shadow var(--transition), transform var(--transition);
+    position: relative; overflow: hidden;
+  }
+  .run-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .run-btn:hover { opacity: 0.92; box-shadow: 0 6px 30px var(--glow-strong); transform: translateY(-1px); }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .run-btn.loading .btn-label { opacity: 0; }
+  .run-btn .spinner { display: none; }
+  .run-btn.loading .spinner { display: block; }
+  .run-btn.loading .btn-icon { display: none; }
+
+  /* === RESPONSE VIEWER === */
+  .response-panel {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm); overflow: hidden; margin-top: 16px;
+  }
+  .response-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border-bottom: 1px solid var(--glass-border);
+  }
+  .response-toolbar-left { display: flex; align-items: center; gap: 8px; }
+  .resp-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-dim); }
+  .resp-status {
+    font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 50px;
+  }
+  .resp-status.ok { background: rgba(52,211,153,0.15); color: var(--success); }
+  .resp-status.err { background: rgba(248,113,113,0.15); color: var(--error); }
+  .response-actions { display: flex; gap: 6px; }
+  .resp-action-btn {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--text-dim); transition: all var(--transition);
+  }
+  .resp-action-btn:hover { background: var(--glass-hover); color: var(--text-primary); border-color: var(--glass-hover); }
+  .response-body { padding: 14px; max-height: 320px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--glass-border) transparent; }
+  .json-tree { font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace; font-size: 12px; line-height: 1.7; color: var(--text-secondary); }
+  .json-key { color: var(--accent); }
+  .json-str { color: var(--accent3); }
+  .json-num { color: var(--accent2); }
+  .json-bool { color: var(--warning); }
+  .json-null { color: var(--text-dim); }
+  .json-node { cursor: pointer; }
+  .json-collapsible { margin-left: 16px; }
+  .json-collapsed > .json-collapsible { display: none; }
+  .json-toggle { display: inline-flex; align-items: center; margin-right: 3px; color: var(--text-dim); transition: transform 0.15s; }
+  .json-collapsed .json-toggle { transform: rotate(-90deg); }
+  .response-empty { text-align: center; padding: 30px 20px; color: var(--text-dim); font-size: 13px; }
+
+  /* === ENDPOINT LIST === */
+  .endpoint-list { display: flex; flex-direction: column; gap: 8px; }
+  .endpoint-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border-radius: var(--radius-sm);
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    cursor: pointer; transition: all var(--transition);
+  }
+  .endpoint-item:hover { border-color: var(--accent); background: var(--glass-hover); }
+  .method-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px; min-width: 44px; text-align: center; }
+  .method-get { background: rgba(52,211,153,0.15); color: var(--success); }
+  .method-post { background: rgba(56,189,248,0.15); color: var(--accent2); }
+  .endpoint-path { font-family: monospace; font-size: 12px; color: var(--text-secondary); flex: 1; }
+  .endpoint-desc { font-size: 11px; color: var(--text-dim); }
+
+  /* === LOCKED OVERLAY === */
+  .locked-msg {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    padding: 32px 20px; text-align: center;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm); color: var(--text-secondary); font-size: 13px;
+  }
+  .locked-msg svg { color: var(--text-dim); }
+
+  /* === SECTION HEADER === */
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .section-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+  .section-count { font-size: 12px; color: var(--text-dim); }
+
+  /* === TOAST === */
+  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    display: flex; align-items: center; gap: 9px; padding: 11px 16px;
+    background: var(--glass-strong); border: 1px solid var(--glass-border);
+    border-radius: 12px; font-size: 13px; color: var(--text-primary);
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    animation: toastIn 0.25s ease, toastOut 0.25s ease 2.8s forwards;
+  }
+  .toast.t-success { border-color: rgba(52,211,153,0.35); }
+  .toast.t-error { border-color: rgba(248,113,113,0.35); }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes toastOut { to { opacity: 0; transform: translateX(20px); } }
+
+  /* === SCROLLBAR === */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 99px; }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 600px) {
+    main { padding: 20px 14px 32px; }
+    header { padding: 0 14px; }
+    .search-input { width: 150px; }
+    .search-input:focus { width: 180px; }
+    .modal { padding: 20px 16px; }
+    .api-grid { grid-template-columns: 1fr; }
+    .verify-row { flex-direction: column; }
+    .verify-btn { width: 100%; justify-content: center; }
+  }
+
+  /* ===== DOCS DRAWER ===== */
+  .docs-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .docs-overlay.open { opacity: 1; pointer-events: all; }
+  .docs-drawer {
+    position: absolute; top: 0; right: 0; bottom: 0;
+    width: min(420px, 100vw);
+    background: var(--surface);
+    border-left: 1px solid var(--glass-border);
+    display: flex; flex-direction: column;
+    transform: translateX(100%); transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+  }
+  .docs-overlay.open .docs-drawer { transform: translateX(0); }
+  .docs-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px; border-bottom: 1px solid var(--glass-border);
+    background: var(--glass-bg); flex-shrink: 0;
+  }
+  .docs-title { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; color: var(--text-primary); }
+  .docs-close {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .docs-close:hover { background: rgba(248,113,113,0.1); color: var(--error); border-color: var(--error); }
+  .docs-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 28px; }
+  .docs-section { display: flex; flex-direction: column; gap: 12px; }
+  .docs-section-title { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
+  .docs-text { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin: 0; }
+  .docs-text code { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 4px; padding: 1px 5px; font-size: 11px; color: var(--accent); }
+  .docs-endpoint { display: flex; align-items: center; gap: 10px; }
+  .docs-method { font-size: 10px; font-weight: 800; padding: 3px 7px; border-radius: 5px; letter-spacing: 0.05em; }
+  .docs-method.get { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+  .docs-method.post { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+  .docs-path { font-family: monospace; font-size: 13px; color: var(--text-primary); font-weight: 600; }
+  .docs-params { display: flex; flex-direction: column; gap: 6px; }
+  .docs-param { font-size: 12px; color: var(--text-secondary); display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .param-name { font-family: monospace; color: var(--text-primary); font-weight: 600; }
+  .param-req { font-size: 10px; background: rgba(167,139,250,0.15); color: var(--accent); border: 1px solid rgba(167,139,250,0.3); border-radius: 4px; padding: 1px 5px; }
+  .param-opt { font-size: 10px; background: var(--glass-bg); color: var(--text-dim); border: 1px solid var(--glass-border); border-radius: 4px; padding: 1px 5px; }
+  .docs-code {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: 10px; padding: 12px 14px;
+    font-family: monospace; font-size: 11px; color: var(--text-secondary);
+    white-space: pre-wrap; word-break: break-all; line-height: 1.7;
+  }
+  .docs-response {
+    background: rgba(52,211,153,0.03); border: 1px solid rgba(52,211,153,0.15);
+    border-radius: 10px; padding: 12px 14px;
+    font-family: monospace; font-size: 11px; color: var(--text-secondary);
+    white-space: pre-wrap; line-height: 1.7;
+  }
+  .docs-divider { height: 1px; background: var(--glass-border); margin: 4px 0; }
+
+</style>
 </head>
-<body class="min-h-screen">
-    <!-- Navigation -->
-    <nav class="sticky top-0 z-50 glass border-b border-slate-700/50 px-6 py-4">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 gradient-button rounded-lg flex items-center justify-center">
-                    <i class="fas fa-bolt text-white text-sm"></i>
-                </div>
-                <span class="text-xl font-bold tracking-tight">Zentrix <span class="gradient-text">APIs</span></span>
-            </div>
-            <div class="hidden md:flex items-center gap-8 text-sm font-medium">
-                <a href="#" class="text-slate-400 hover:text-white transition-colors">Docs</a>
-                <a href="#" class="text-slate-400 hover:text-white transition-colors">Stats</a>
-                <a href="#" class="text-slate-400 hover:text-white transition-colors">Contact</a>
-            </div>
-            <button class="gradient-button px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity">Get Started</button>
-        </div>
-    </nav>
+<body>
+<div class="bg-layer">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+<div class="app">
 
-    <!-- Hero Section -->
-    <header class="relative pt-20 pb-16 px-6 text-center">
-        <div class="max-w-4xl mx-auto">
-            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-slate-700/50 text-xs font-bold tracking-widest text-blue-400 uppercase mb-8">
-                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                v2.0 — New endpoints available
-            </div>
-            <h1 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
-                Build Faster with <br>
-                <span class="gradient-text">Zentrix APIs</span>
-            </h1>
-            <p class="text-lg text-slate-400 mb-10 leading-relaxed">
-                Powerful, reliable APIs for AI, media downloads, search, and more. Currently serving <span class="font-semibold text-white">639+</span> active endpoints.
-            </p>
-            <div class="flex flex-wrap justify-center gap-4 mb-16">
-                <a href="#explore" class="gradient-button px-8 py-4 rounded-xl font-bold text-white hover:scale-105 transition-transform shadow-lg shadow-blue-500/20">Explore APIs →</a>
-                <a href="#" class="glass px-8 py-4 rounded-xl font-bold text-white hover:bg-slate-700/30 transition-colors border border-slate-700/50">Documentation</a>
-            </div>
-            
-            <!-- Stats -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="glass p-6 rounded-2xl border border-slate-700/50">
-                    <div class="text-3xl font-bold mb-1">639+</div>
-                    <div class="text-xs text-slate-500 uppercase tracking-wider">Endpoints</div>
-                </div>
-                <div class="glass p-6 rounded-2xl border border-slate-700/50">
-                    <div class="text-3xl font-bold mb-1">1.1M+</div>
-                    <div class="text-xs text-slate-500 uppercase tracking-wider">Requests Served</div>
-                </div>
-                <div class="glass p-6 rounded-2xl border border-slate-700/50">
-                    <div class="text-3xl font-bold mb-1">99.9%</div>
-                    <div class="text-xs text-slate-500 uppercase tracking-wider">Uptime</div>
-                </div>
-                <div class="glass p-6 rounded-2xl border border-slate-700/50">
-                    <div class="text-3xl font-bold mb-1">Free</div>
-                    <div class="text-xs text-slate-500 uppercase tracking-wider">No API Key</div>
-                </div>
-            </div>
-        </div>
-    </header>
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <svg class="logo-icon" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="30" height="30" rx="8" fill="url(#lg)"/>
+        <path d="M8 10h14M8 15h10M8 20h12" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="23" cy="20" r="3" fill="#a78bfa"/>
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="30" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#7c3aed"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs>
+      </svg>
+      Zentrix <span>API</span>
+    </div>
+    <div class="header-right">
+<button class="theme-btn" id="themeBtn" title="Toggle theme">
+        <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="theme-btn" id="docsBtn" title="Documentation" onclick="openDocs()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </header>
 
-    <!-- API Explorer -->
-    <section id="explore" class="relative py-20 px-6">
-        <div class="max-w-7xl mx-auto">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-                <div>
-                    <h2 class="text-3xl font-bold mb-2">Browse by Category</h2>
-                    <p class="text-slate-400">Choose from hundreds of free endpoints</p>
-                </div>
-                <div class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-                    <button onclick="filterCategory('all')" class="cat-btn active px-4 py-2 rounded-lg glass border border-blue-500/50 text-blue-400 text-sm font-medium transition-all">All</button>
-                    <button onclick="filterCategory('downloader')" class="cat-btn px-4 py-2 rounded-lg glass border border-slate-700/50 text-slate-400 text-sm font-medium hover:border-slate-600/50 transition-all">Downloader</button>
-                    <button onclick="filterCategory('ai')" class="cat-btn px-4 py-2 rounded-lg glass border border-slate-700/50 text-slate-400 text-sm font-medium hover:border-slate-600/50 transition-all">AI</button>
-                    <button onclick="filterCategory('anime')" class="cat-btn px-4 py-2 rounded-lg glass border border-slate-700/50 text-slate-400 text-sm font-medium hover:border-slate-600/50 transition-all">Anime</button>
-                    <button onclick="filterCategory('search')" class="cat-btn px-4 py-2 rounded-lg glass border border-slate-700/50 text-slate-400 text-sm font-medium hover:border-slate-600/50 transition-all">Search</button>
-                </div>
-            </div>
+  <!-- MAIN -->
+  <main>
 
-            <div id="api-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Cards injected by JavaScript -->
-            </div>
-        </div>
-    </section>
-
-    <!-- Endpoint Tester Modal -->
-    <div id="tester-modal" class="fixed inset-0 z-[100] hidden modal-overlay">
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl glass rounded-2xl border border-slate-700/50 p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <button onclick="closeModal()" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-            
-            <div class="flex items-center gap-4 mb-8">
-                <div id="modal-icon" class="w-12 h-12 gradient-button rounded-xl flex items-center justify-center text-xl text-white"></div>
-                <div>
-                    <h3 id="modal-title" class="text-2xl font-bold"></h3>
-                    <p id="modal-desc" class="text-slate-400 text-sm mt-1"></p>
-                </div>
-            </div>
-
-            <!-- Endpoint Info -->
-            <div class="flex items-center gap-2 bg-slate-900/50 rounded-xl p-4 font-mono text-sm border border-slate-700/50 mb-6">
-                <span id="modal-method" class="font-bold text-green-400">GET</span>
-                <span id="modal-path" class="text-slate-300 truncate"></span>
-                <button onclick="copyEndpoint()" class="ml-auto text-slate-500 hover:text-white transition-colors">
-                    <i class="fas fa-copy"></i>
-                </button>
-            </div>
-
-            <!-- Parameters -->
-            <div id="params-container" class="space-y-4 mb-6">
-                <!-- Params injected here -->
-            </div>
-
-            <!-- Send Request Button -->
-            <button onclick="sendRequest()" class="w-full gradient-button py-3 rounded-xl font-bold text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2 mb-6">
-                <i class="fas fa-play text-sm"></i> Try Request
-            </button>
-
-            <!-- Response Tabs -->
-            <div class="border-b border-slate-700/50 mb-6">
-                <button class="tab-button active" onclick="switchTab('response')">Response</button>
-                <button class="tab-button" onclick="switchTab('code')">Code Examples</button>
-            </div>
-
-            <!-- Response Tab -->
-            <div id="response-tab" class="space-y-4">
-                <div id="result-container" class="hidden">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-slate-500 uppercase">Response Body</span>
-                        <span id="resp-status" class="text-xs font-bold px-2 py-1 rounded bg-green-500/20 text-green-400"></span>
-                    </div>
-                    <pre id="json-output" class="code-block max-h-64"></pre>
-                </div>
-                <div id="loading-container" class="hidden text-center py-8">
-                    <div class="inline-block">
-                        <i class="fas fa-spinner fa-spin text-2xl text-blue-400 mb-3"></i>
-                        <p class="text-slate-400">Sending request...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Code Tab -->
-            <div id="code-tab" class="hidden space-y-6">
-                <div>
-                    <h4 class="text-sm font-bold text-slate-300 mb-3">JavaScript</h4>
-                    <pre id="code-js" class="code-block"></pre>
-                    <button onclick="copyCode('js')" class="mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors">
-                        <i class="fas fa-copy"></i> Copy
-                    </button>
-                </div>
-                <div>
-                    <h4 class="text-sm font-bold text-slate-300 mb-3">Python</h4>
-                    <pre id="code-py" class="code-block"></pre>
-                    <button onclick="copyCode('py')" class="mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors">
-                        <i class="fas fa-copy"></i> Copy
-                    </button>
-                </div>
-                <div>
-                    <h4 class="text-sm font-bold text-slate-300 mb-3">cURL</h4>
-                    <pre id="code-curl" class="code-block"></pre>
-                    <button onclick="copyCode('curl')" class="mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors">
-                        <i class="fas fa-copy"></i> Copy
-                    </button>
-                </div>
-            </div>
-        </div>
+    <div class="hero">
+      <div class="hero-badge">
+        <div class="stat-dot"></div>
+        Live · All systems operational
+      </div>
+      <h1>The <span>Zentrix</span> API Lab</h1>
+      <p>Test, verify, and explore every endpoint in a futuristic glass playground. Bring your key and build something great.</p>
     </div>
 
-    <!-- Footer -->
-    <footer class="relative py-12 px-6 border-t border-slate-700/50 text-center text-slate-500 text-sm">
-        <div class="flex items-center justify-center gap-2 mb-4">
-            <div class="w-6 h-6 gradient-button rounded flex items-center justify-center">
-                <i class="fas fa-bolt text-white text-xs"></i>
-            </div>
-            <span class="font-bold text-white tracking-tight">Zentrix <span class="text-blue-400">APIs</span></span>
+    <div class="stats-bar">
+      <div class="stat-pill"><div class="stat-dot"></div> <strong id="apiCount">16</strong> APIs Available</div>
+      <div class="stat-pill baseurl-pill">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Base URL: <strong id="baseUrlText">api.zentrixtech.name.ng</strong>
+        <button class="baseurl-copy-btn" id="baseUrlCopyBtn" title="Copy base URL" onclick="copyBaseUrl()">
+          <svg id="baseUrlCopyIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+      <div class="stat-pill">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Key-based auth
+      </div>
+    </div>
+
+    <!-- TOKEN INPUT -->
+    <div class="token-row-wrap">
+      <div class="token-label">API Token</div>
+      <div class="token-input-group">
+        <input class="token-inp" id="globalTokenInput" type="password" placeholder="Paste your API key to unlock all endpoints…" autocomplete="off" />
+        <button class="token-eye" id="tokenEyeBtn" title="Show / hide">
+          <svg id="eyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="token-apply" id="applyTokenBtn">Apply</button>
+        <button class="token-clear" id="clearTokenBtn" style="display:none" title="Clear token">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <span class="token-badge" id="tokenBadge" style="display:none">Active</span>
+      </div>
+    </div>
+
+    <div class="cat-bar" id="catBar">
+      <!-- Categories will be injected dynamically -->
+    </div>
+
+    <!-- ANIME SECTION -->
+    <div class="section-head" style="margin-top:8px;">
+      <div class="section-title">🍥 Anime</div>
+      <div class="section-count" id="animeStatus">Search AnimeHeaven</div>
+    </div>
+    <div class="anime-panel" id="animePanel" style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="field-group" style="flex:1;min-width:200px;margin-bottom:0;">
+          <div class="field-label">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Search Anime
+          </div>
+          <input class="glass-input" type="text" id="animeSearchInput" placeholder="e.g. One Piece, Attack on Titan..." />
         </div>
-        <p>© 2026 Zentrix Tech. All rights reserved.</p>
-    </footer>
+        <button class="run-btn" id="animeSearchBtn" onclick="searchAnime()" style="width:auto;padding:11px 22px;margin-top:0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Search
+        </button>
+      </div>
+      <div id="animeResults" style="display:none;flex-direction:column;gap:10px;"></div>
+      <div id="animeEpisodes" style="display:none;flex-direction:column;gap:10px;"></div>
+      <div id="animePlayer" style="display:none;"></div>
+    </div>
 
-    <script>
-        // API Endpoints Data
-        const ENDPOINTS = [
-            {
-                id: "ai_chatgpt",
-                name: "ChatGPT",
-                desc: "Chat with OpenAI's ChatGPT model",
-                category: "ai",
-                method: "GET",
-                path: "/ai/chatgpt",
-                params: [{ name: "prompt", type: "string", required: true, placeholder: "Ask anything..." }],
-                icon: "fa-brain"
-            },
-            {
-                id: "ai_gemini",
-                name: "Gemini",
-                desc: "Chat with Google's Gemini AI",
-                category: "ai",
-                method: "GET",
-                path: "/ai/gemini",
-                params: [{ name: "prompt", type: "string", required: true, placeholder: "Your question..." }],
-                icon: "fa-sparkles"
-            },
-            {
-                id: "ai_text2img",
-                name: "Text to Image",
-                desc: "Generate images from text descriptions",
-                category: "ai",
-                method: "GET",
-                path: "/ai/text2img",
-                params: [{ name: "prompt", type: "string", required: true, placeholder: "Describe the image..." }],
-                icon: "fa-image"
-            },
-            {
-                id: "downloader_tiktok",
-                name: "TikTok Downloader",
-                desc: "Download videos from TikTok",
-                category: "downloader",
-                method: "GET",
-                path: "/download/tiktok",
-                params: [{ name: "url", type: "string", required: true, placeholder: "TikTok video URL..." }],
-                icon: "fa-video"
-            },
-            {
-                id: "downloader_ig",
-                name: "Instagram Downloader",
-                desc: "Download posts and reels from Instagram",
-                category: "downloader",
-                method: "GET",
-                path: "/download/ig",
-                params: [{ name: "url", type: "string", required: true, placeholder: "Instagram URL..." }],
-                icon: "fa-camera"
-            },
-            {
-                id: "downloader_youtube",
-                name: "YouTube Downloader",
-                desc: "Download videos from YouTube",
-                category: "downloader",
-                method: "GET",
-                path: "/download/ytmp4",
-                params: [{ name: "url", type: "string", required: true, placeholder: "YouTube URL..." }],
-                icon: "fa-play"
-            },
-            {
-                id: "search_pinterest",
-                name: "Pinterest Search",
-                desc: "Search for images and pins on Pinterest",
-                category: "search",
-                method: "GET",
-                path: "/search/pinterest",
-                params: [{ name: "query", type: "string", required: true, placeholder: "Search term..." }],
-                icon: "fa-magnifying-glass"
-            },
-            {
-                id: "search_google",
-                name: "Google Search",
-                desc: "Search the web with Google",
-                category: "search",
-                method: "GET",
-                path: "/search/google",
-                params: [{ name: "query", type: "string", required: true, placeholder: "Search..." }],
-                icon: "fa-search"
-            },
-            {
-                id: "anime_search",
-                name: "Anime Search",
-                desc: "Search for anime titles",
-                category: "anime",
-                method: "GET",
-                path: "/anime/search",
-                params: [{ name: "q", type: "string", required: true, placeholder: "Anime name..." }],
-                icon: "fa-film"
-            },
-            {
-                id: "tools_shorturl",
-                name: "URL Shortener",
-                desc: "Shorten long URLs",
-                category: "tools",
-                method: "GET",
-                path: "/tools/tinyurl",
-                params: [{ name: "url", type: "string", required: true, placeholder: "Long URL..." }],
-                icon: "fa-link"
-            },
-            {
-                id: "tools_screenshot",
-                name: "Screenshot Website",
-                desc: "Take screenshots of websites",
-                category: "tools",
-                method: "GET",
-                path: "/tools/ssweb",
-                params: [{ name: "url", type: "string", required: true, placeholder: "Website URL..." }],
-                icon: "fa-screenshot"
-            },
-            {
-                id: "textmaker_glitch",
-                name: "Glitch Text",
-                desc: "Generate glitch text effects",
-                category: "tools",
-                method: "GET",
-                path: "/textmaker/glitch",
-                params: [{ name: "text", type: "string", required: true, placeholder: "Your text..." }],
-                icon: "fa-wand-magic-sparkles"
-            }
-        ];
+    <div class="section-head">
+      <div class="section-title">API Marketplace</div>
+      <div class="section-count" id="filteredCount">Showing 16 APIs</div>
+    </div>
+    <div class="api-grid" id="apiGrid"></div>
 
-        let currentFilter = "all";
-        let currentEndpoint = null;
+  </main>
+</div>
 
-        function renderEndpoints() {
-            const grid = document.getElementById("api-grid");
-            grid.innerHTML = "";
+<!-- MODAL OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModalDirect()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div id="modalContent"></div>
+  </div>
+</div>
 
-            const filtered = currentFilter === "all" 
-                ? ENDPOINTS 
-                : ENDPOINTS.filter(e => e.category === currentFilter);
+<!-- DOCS DRAWER -->
+<div class="docs-overlay" id="docsOverlay" onclick="closeDocs(event)">
+  <div class="docs-drawer" id="docsDrawer">
+    <div class="docs-header">
+      <div class="docs-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        API Documentation
+      </div>
+      <button class="docs-close" onclick="closeDocs()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="docs-body">
 
-            filtered.forEach(endpoint => {
-                const card = document.createElement("div");
-                card.className = "endpoint-card";
-                card.onclick = () => openModal(endpoint);
-                card.innerHTML = `
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="w-10 h-10 gradient-button rounded-lg flex items-center justify-center text-white">
-                            <i class="fas ${endpoint.icon}"></i>
-                        </div>
-                        <span class="badge badge-${endpoint.method.toLowerCase()}">${endpoint.method}</span>
-                    </div>
-                    <h3 class="text-lg font-bold mb-1">${endpoint.name}</h3>
-                    <p class="text-sm text-slate-400 mb-4">${endpoint.desc}</p>
-                    <div class="font-mono text-xs text-slate-500 bg-slate-900/50 px-3 py-2 rounded border border-slate-700/50">${endpoint.path}</div>
-                `;
-                grid.appendChild(card);
-            });
+      <div class="docs-section">
+        <div class="docs-section-title">Authentication</div>
+        <p class="docs-text">All endpoints (except <code>/health</code>) require an API key. Pass it via header or query param:</p>
+        <div class="docs-code">x-api-key: YOUR_KEY
+<span style="color:var(--text-dim)">-- or --</span>
+?apikey=YOUR_KEY</div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">🎬 Movie & TV</div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/search</div>
+        </div>
+        <p class="docs-text">Search for movies, TV shows, and anime.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">q</span><span class="param-req">required</span> — Search query</div>
+          <div class="docs-param"><span class="param-name">type</span><span class="param-opt">optional</span> — <code>movie</code> | <code>tv</code> | <code>anime</code> | <code>all</code> (default: all)</div>
+          <div class="docs-param"><span class="param-name">page</span><span class="param-opt">optional</span> — Page number (default: 1)</div>
+        </div>
+        <div class="docs-code">GET /api/search?q=Avengers&type=movie&apikey=KEY</div>
+        <div class="docs-response">{
+  "success": true,
+  "results": [
+    {
+      "subjectId": "tt0848228",
+      "title": "The Avengers",
+      "subjectType": "MOVIE",
+      "detailPath": "/movie/tt0848228",
+      "releaseDate": "2012-05-04",
+      "poster": "https://...",
+      "genre": ["Action", "Adventure"],
+      "imdbRatingValue": 8.0
+    }
+  ],
+  "page": 1,
+  "hasMore": true
+}</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/details</div>
+        </div>
+        <p class="docs-text">Get full details for a movie or show including cast, trailer, and episode list.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">detailPath</span><span class="param-req">required</span> — From search results (e.g. <code>/movie/tt0848228</code>)</div>
+        </div>
+        <div class="docs-code">GET /api/details?detailPath=/movie/tt0848228&apikey=KEY</div>
+        <div class="docs-response">{
+  "success": true,
+  "title": "The Avengers",
+  "rating": 8.0,
+  "genre": ["Action"],
+  "cast": [...],
+  "totalSeasons": null,
+  "episodeList": [],
+  "trailer": { "embed_url": "https://youtube.com/embed/..." }
+}</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/sources</div>
+        </div>
+        <p class="docs-text">Get stream URLs and subtitles for a movie or TV episode.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">id</span><span class="param-req">required</span> — Subject ID from search</div>
+          <div class="docs-param"><span class="param-name">detailPath</span><span class="param-req">required</span> — Detail path from search</div>
+          <div class="docs-param"><span class="param-name">season</span><span class="param-opt">optional</span> — Season number (0 for movies)</div>
+          <div class="docs-param"><span class="param-name">episode</span><span class="param-opt">optional</span> — Episode number (0 for movies)</div>
+        </div>
+        <div class="docs-code">GET /api/sources?id=tt0848228&detailPath=/movie/tt0848228&season=0&episode=0&apikey=KEY</div>
+        <div class="docs-response">{
+  "success": true,
+  "streams": [
+    {
+      "quality": "1080p",
+      "stream_url": "https://api.zentrixtech.name.ng/zentrix/stream?token=...",
+      "player_url": "https://api.zentrixtech.name.ng/zentrix/player?token=...",
+      "download_url": "https://api.zentrixtech.name.ng/zentrix/download?token=..."
+    }
+  ],
+  "subtitles": [{ "language": "en", "languageName": "English", "url": "..." }]
+}</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/trailer</div>
+        </div>
+        <p class="docs-text">Get a YouTube trailer for any movie or show by title.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">title</span><span class="param-req">required</span> — Movie or show title</div>
+          <div class="docs-param"><span class="param-name">year</span><span class="param-opt">optional</span> — Release year</div>
+        </div>
+        <div class="docs-code">GET /api/trailer?title=Inception&year=2010&apikey=KEY</div>
+        <div class="docs-response">{
+  "success": true,
+  "youtube_id": "YoHD9XEInc0",
+  "embed_url": "https://www.youtube.com/embed/YoHD9XEInc0",
+  "thumbnail": "https://..."
+}</div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">🎌 Anime</div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/anime/search</div>
+        </div>
+        <p class="docs-text">Search for anime titles.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">q</span><span class="param-req">required</span> — Anime title</div>
+          <div class="docs-param"><span class="param-name">page</span><span class="param-opt">optional</span> — Page number</div>
+        </div>
+        <div class="docs-code">GET /api/anime/search?q=Naruto&apikey=KEY</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/anime/episodes</div>
+        </div>
+        <p class="docs-text">Get episode list and season breakdown for an anime.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">title</span><span class="param-req">required</span> — Anime title to search</div>
+          <div class="docs-param"><span class="param-name">id</span><span class="param-opt">optional</span> — Anime ID from search results</div>
+          <div class="docs-param"><span class="param-name">url</span><span class="param-opt">optional</span> — Anime URL from search results</div>
+        </div>
+        <div class="docs-code">GET /api/anime/episodes?title=Naruto&apikey=KEY</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/anime/stream</div>
+        </div>
+        <p class="docs-text">Get stream URLs for a specific anime episode.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">title</span><span class="param-req">required</span> — Anime title</div>
+          <div class="docs-param"><span class="param-name">ep_number</span><span class="param-req">required</span> — Episode number</div>
+          <div class="docs-param"><span class="param-name">id</span><span class="param-opt">optional</span> — Anime ID from search results</div>
+          <div class="docs-param"><span class="param-name">url</span><span class="param-opt">optional</span> — Anime URL from search results</div>
+          <div class="docs-param"><span class="param-name">ep_id</span><span class="param-opt">optional</span> — Episode hash ID (speeds up extraction)</div>
+        </div>
+        <div class="docs-code">GET /api/anime/stream?title=Naruto&ep_number=1&apikey=KEY</div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">💬 AI Chat</div>
+        <p class="docs-text">Chat with various AI models using the following endpoints.</p>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/ai/chat</div>
+        </div>
+        <p class="docs-text">Multi-model AI chat (ChatGPT, Claude, Gemini, etc.).</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">message</span><span class="param-req">required</span> — User message</div>
+          <div class="docs-param"><span class="param-name">model</span><span class="param-opt">optional</span> — AI model (default: chatgpt)</div>
+          <div class="docs-param"><span class="param-name">sessionId</span><span class="param-opt">optional</span> — Session memory ID</div>
+        </div>
+        <div class="docs-code">GET /api/ai/chat?message=hello&model=chatgpt&apikey=KEY</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/ai/qwen</div>
+        </div>
+        <p class="docs-text">Direct access to Alibaba's Qwen AI.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">message</span><span class="param-req">required</span> — User message</div>
+          <div class="docs-param"><span class="param-name">sessionId</span><span class="param-opt">optional</span> — Session memory ID</div>
+        </div>
+        <div class="docs-code">GET /api/ai/qwen?message=hello&apikey=KEY</div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">🎵 AI Media</div>
+        <p class="docs-text">Generate AI music tracks from text prompts.</p>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/ai/music</div>
+        </div>
+        <p class="docs-text">Start a music generation job. Returns a <code>taskId</code>.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">prompt</span><span class="param-req">required</span> — Music description</div>
+        </div>
+        <div class="docs-code">GET /api/ai/music?prompt=lofi+hip+hop&apikey=KEY</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/ai/music/result</div>
+        </div>
+        <p class="docs-text">Poll for the result of a music generation job.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">taskId</span><span class="param-req">required</span> — Task ID from /api/ai/music</div>
+        </div>
+        <div class="docs-code">GET /api/ai/music/result?taskId=abc&apikey=KEY</div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">🖼️ AI Image</div>
+        <p class="docs-text">All image endpoints return a hosted URL on <code>files.zentrixtech.name.ng</code>.</p>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/image/generate</div>
+        </div>
+        <p class="docs-text">Generate an image from a text prompt.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">prompt</span><span class="param-req">required</span> — Description of the image</div>
+        </div>
+        <div class="docs-code">GET /api/image/generate?prompt=a+cat+in+space&apikey=KEY</div>
+        <div class="docs-response">{
+  "success": true,
+  "image": "https://files.zentrixtech.name.ng/xxx.webp"
+}</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/image/transform</div>
+        </div>
+        <p class="docs-text">Transform an image with AI. Returns a <code>task_id</code> — poll <code>/api/image/transform/result</code> to get the output.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">image</span><span class="param-req">required</span> — Source image URL</div>
+          <div class="docs-param"><span class="param-name">prompt</span><span class="param-opt">optional</span> — Transformation instruction</div>
+        </div>
+        <div class="docs-code">GET /api/image/transform?image=https://...&prompt=change+background+to+space&apikey=KEY
+
+<span style="color:var(--text-dim)">-- then poll --</span>
+GET /api/image/transform/result?task_id=abc&fp=xyz&apikey=KEY</div>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/api/image/blend</div>
+        </div>
+        <p class="docs-text">Blend up to 4 images together.</p>
+        <div class="docs-params">
+          <div class="docs-param"><span class="param-name">image1</span><span class="param-req">required</span> — First image URL</div>
+          <div class="docs-param"><span class="param-name">image2–4</span><span class="param-opt">optional</span> — Additional images</div>
+          <div class="docs-param"><span class="param-name">prompt</span><span class="param-opt">optional</span> — Blending instruction</div>
+        </div>
+        <div class="docs-code">GET /api/image/blend?image1=https://...&image2=https://...&apikey=KEY</div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">⚡ Proxy</div>
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/zentrix/stream</div>
+        </div>
+        <p class="docs-text">Proxy a video stream. Supports range requests for seeking. Use the <code>stream_url</code> from sources directly — no need to call this manually.</p>
+
+        <div class="docs-divider"></div>
+
+        <div class="docs-endpoint">
+          <div class="docs-method get">GET</div>
+          <div class="docs-path">/zentrix/player</div>
+        </div>
+        <p class="docs-text">Opens an in-browser HTML5 video player for a stream token. Use the <code>player_url</code> from sources in an iframe or browser tab.</p>
+        <div class="docs-code">&lt;iframe src="https://api.zentrixtech.name.ng/zentrix/player?token=TOKEN"&gt;&lt;/iframe&gt;</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===================== DATA =====================
+const API_BASE_URL = "https://zentrix-api-production-c00a.up.railway.app";
+const BASE_URL = API_BASE_URL;
+
+const APIS = [
+  {
+    id: 'health',
+    name: 'Health Check',
+    category: 'System',
+    badge: 'free',
+    desc: 'Check if the Zentrix API is online. Returns version and status. No API key required.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/health', desc: 'Get API status and version' },
+    ],
+    fields: [],
+    endpoint: '/health',
+    method: 'GET',
+  },
+  {
+    id: 'search',
+    name: 'Search',
+    category: 'Movies & TV',
+    badge: 'auth',
+    desc: 'Search for movies, TV shows, and anime. Returns poster, rating, genre, release date and more.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/search', desc: 'Search movies, TV shows, anime' },
+    ],
+    fields: [
+      { name: 'q', label: 'Search Query', placeholder: 'Avengers', type: 'text' },
+      { name: 'type', label: 'Type', type: 'select', options: ['all', 'movie', 'tv', 'anime'] },
+      { name: 'page', label: 'Page', placeholder: '1', type: 'text' },
+    ],
+    endpoint: '/api/search',
+    method: 'GET',
+  },
+  {
+    id: 'details',
+    name: 'Details',
+    category: 'Movies & TV',
+    badge: 'auth',
+    desc: 'Get full details for a movie or show: cast, trailer, episode list, seasons, ratings.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/details', desc: 'Get full movie/show details' },
+    ],
+    fields: [
+      { name: 'q', label: 'Title', placeholder: 'Naruto', type: 'text' },
+      { name: 'type', label: 'Type', type: 'select', options: ['all', 'movie', 'tv', 'anime'] },
+    ],
+    endpoint: '/api/details',
+    method: 'GET',
+  },
+  {
+    id: 'sources',
+    name: 'Stream Sources',
+    category: 'Movies & TV',
+    badge: 'auth',
+    desc: 'Get stream URLs and subtitles for a movie or TV episode. Returns multiple resolutions with proxy URLs.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/sources', desc: 'Get stream URLs + subtitles' },
+    ],
+    fields: [
+      { name: 'q', label: 'Title', placeholder: 'Naruto', type: 'text' },
+      { name: 'type', label: 'Type', type: 'select', options: ['all', 'movie', 'tv', 'anime'] },
+      { name: 'season', label: 'Season (0 for movies)', placeholder: '0', type: 'text' },
+      { name: 'episode', label: 'Episode (0 for movies)', placeholder: '0', type: 'text' },
+    ],
+    endpoint: '/api/sources',
+    method: 'GET',
+  },
+  {
+    id: 'trailer',
+    name: 'Trailer',
+    category: 'Movies & TV',
+    badge: 'auth',
+    desc: 'Fetch a YouTube trailer for any movie or show by title. Returns embed URL and thumbnail.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/trailer', desc: 'Get YouTube trailer URL' },
+    ],
+    fields: [
+      { name: 'title', label: 'Title', placeholder: 'Inception', type: 'text' },
+      { name: 'year', label: 'Year (optional)', placeholder: '2010', type: 'text' },
+    ],
+    endpoint: '/api/trailer',
+    method: 'GET',
+  },
+  {
+    id: 'anime-search',
+    name: 'Anime Search',
+    category: 'Anime',
+    badge: 'auth',
+    desc: 'Search for anime titles. Returns poster, type, rating, and detail path for streaming.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/anime/search', desc: 'Search anime titles' },
+    ],
+    fields: [
+      { name: 'q', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
+      { name: 'page', label: 'Page', placeholder: '1', type: 'text' },
+    ],
+    endpoint: '/api/anime/search',
+    method: 'GET',
+  },
+  {
+    id: 'anime-episodes',
+    name: 'Anime Episodes',
+    category: 'Anime',
+    badge: 'auth',
+    desc: 'Get episode list and season breakdown for an anime series using its detail path.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/anime/episodes', desc: 'Get episode list for anime' },
+    ],
+    fields: [
+      { name: 'title', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
+      { name: 'id', label: 'Anime ID (optional)', placeholder: 'from search results', type: 'text' },
+      { name: 'url', label: 'Anime URL (optional)', placeholder: 'from search results', type: 'text' },
+    ],
+    endpoint: '/api/anime/episodes',
+    method: 'GET',
+  },
+  {
+    id: 'anime-stream',
+    name: 'Anime Stream',
+    category: 'Anime',
+    badge: 'auth',
+    desc: 'Get stream URLs and subtitles for a specific anime episode by season and episode number.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/anime/stream', desc: 'Get stream URLs for anime episode' },
+    ],
+    fields: [
+      { name: 'title', label: 'Anime Title', placeholder: 'Naruto', type: 'text' },
+      { name: 'ep_number', label: 'Episode', placeholder: '1', type: 'text' },
+      { name: 'id', label: 'Anime ID (optional)', placeholder: 'from search results', type: 'text' },
+      { name: 'url', label: 'Anime URL (optional)', placeholder: 'from search results', type: 'text' },
+    ],
+    endpoint: '/api/anime/stream',
+    method: 'GET',
+  },
+  {
+    id: 'encode',
+    name: 'Encode URL',
+    category: 'Proxy',
+    badge: 'auth',
+    desc: 'Encode a CDN URL into a Zentrix proxy token. Returns stream, player, and download URLs.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/zentrix/encode', desc: 'Encode CDN URL to proxy token' },
+    ],
+    fields: [
+      { name: 'url', label: 'CDN URL', placeholder: 'https://cdn.example.com/video.mp4', type: 'url' },
+    ],
+    endpoint: '/zentrix/encode',
+    method: 'GET',
+  },
+  {
+    id: 'image-generate',
+    name: 'Image Generate',
+    category: 'AI Image',
+    badge: 'auth',
+    desc: 'Generate an AI image from a text prompt. Returns a hosted image URL on Zentrix CDN.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/image/generate', desc: 'Text to image' }],
+    fields: [
+      { name: 'prompt', label: 'Prompt', placeholder: 'a cat wearing sunglasses', type: 'text' },
+    ],
+    endpoint: '/api/image/generate',
+    method: 'GET',
+  },
+  {
+    id: 'image-edit',
+    name: 'Image Edit',
+    category: 'AI Image',
+    badge: 'auth',
+    desc: 'Edit an existing image using a text instruction. Provide an image URL and describe the change.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/image/edit', desc: 'Edit image with prompt' }],
+    fields: [
+      { name: 'url', label: 'Image URL', placeholder: 'https://files.zentrixtech.name.ng/xxx.webp', type: 'url' },
+      { name: 'prompt', label: 'Edit Instruction', placeholder: 'make it look like a painting', type: 'text' },
+    ],
+    endpoint: '/api/image/edit',
+    method: 'GET',
+  },
+  {
+    id: 'image-transform',
+    name: 'Image Transform',
+    category: 'AI Image',
+    badge: 'auth',
+    desc: 'Transform an image using AI (img2img). Returns a task_id — use Image Transform Result to get the output.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/image/transform', desc: 'Start image transform job' }],
+    fields: [
+      { name: 'image', label: 'Image URL', placeholder: 'https://files.zentrixtech.name.ng/xxx.webp', type: 'url' },
+      { name: 'prompt', label: 'Instruction', placeholder: 'change background to space', type: 'text' },
+    ],
+    endpoint: '/api/image/transform',
+    method: 'GET',
+  },
+  {
+    id: 'image-transform-result',
+    name: 'Transform Result',
+    category: 'AI Image',
+    badge: 'auth',
+    desc: 'Poll the result of an image transform job using the task_id and fp from Image Transform.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/image/transform/result', desc: 'Get transform result' }],
+    fields: [
+      { name: 'task_id', label: 'Task ID', placeholder: 'from transform response', type: 'text' },
+      { name: 'fp', label: 'Fingerprint (fp)', placeholder: 'from transform response', type: 'text' },
+    ],
+    endpoint: '/api/image/transform/result',
+    method: 'GET',
+  },
+  {
+    id: 'image-blend',
+    name: 'Image Blend',
+    category: 'AI Image',
+    badge: 'auth',
+    desc: 'Blend up to 4 images together using AI. Add an optional prompt to guide the blending.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/image/blend', desc: 'Blend multiple images' }],
+    fields: [
+      { name: 'image1', label: 'Image 1 URL', placeholder: 'https://...', type: 'url' },
+      { name: 'image2', label: 'Image 2 URL (optional)', placeholder: 'https://...', type: 'url' },
+      { name: 'image3', label: 'Image 3 URL (optional)', placeholder: 'https://...', type: 'url' },
+      { name: 'image4', label: 'Image 4 URL (optional)', placeholder: 'https://...', type: 'url' },
+      { name: 'prompt', label: 'Blending Instruction (optional)', placeholder: 'merge into one scene', type: 'text' },
+    ],
+    endpoint: '/api/image/blend',
+    method: 'GET',
+  },
+  {
+    id: 'ai-chat',
+    name: 'AI Chat',
+    category: 'AI Chat',
+    badge: 'auth',
+    desc: 'Chat with multiple AI models (ChatGPT, Claude, Gemini, DeepSeek, etc.). Supports session memory.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/ai/chat', desc: 'Chat with AI models' }],
+    fields: [
+      { name: 'message', label: 'Message', placeholder: 'Hello, how are you?', type: 'text' },
+      { name: 'sessionId', label: 'Session ID', placeholder: 'zentrix_chat', type: 'text' },
+      { name: 'model', label: 'Model', type: 'select', options: ['chatgpt', 'claude', 'gemini', 'grok', 'deepseek', 'qwen', 'kimi', 'perplexity'] },
+    ],
+    endpoint: '/api/ai/chat',
+    method: 'GET',
+  },
+  {
+    id: 'ai-qwen',
+    name: 'Qwen AI',
+    category: 'AI Chat',
+    badge: 'auth',
+    desc: 'Direct access to Alibaba\'s Qwen AI for high-quality conversations and reasoning.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6a6 6 0 1 0 6 6 6 6 0 0 0-6-6zm0 10a4 4 0 1 1 4-4 4 4 0 0 1-4 4z"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/ai/qwen', desc: 'Chat with Qwen AI' }],
+    fields: [
+      { name: 'message', label: 'Message', placeholder: 'Explain quantum physics', type: 'text' },
+      { name: 'sessionId', label: 'Session ID', placeholder: 'zentrix_qwen', type: 'text' },
+    ],
+    endpoint: '/api/ai/qwen',
+    method: 'GET',
+  },
+  {
+    id: 'ai-music',
+    name: 'AI Music',
+    category: 'AI Media',
+    badge: 'auth',
+    desc: 'Generate AI music from text prompts. Returns a task_id to poll for the final audio result.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/ai/music', desc: 'Generate AI music' }],
+    fields: [
+      { name: 'prompt', label: 'Music Prompt', placeholder: 'lofi hip hop beat for studying', type: 'text' },
+    ],
+    endpoint: '/api/ai/music',
+    method: 'GET',
+  },
+  {
+    id: 'ai-music-result',
+    name: 'Music Result',
+    category: 'AI Media',
+    badge: 'auth',
+    desc: 'Poll for the result of an AI music generation job using the taskId.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    endpoints: [{ method: 'GET', path: '/api/ai/music/result', desc: 'Get music result' }],
+    fields: [
+      { name: 'taskId', label: 'Task ID', placeholder: 'from music response', type: 'text' },
+    ],
+    endpoint: '/api/ai/music/result',
+    method: 'GET',
+  },
+];
+
+// ===================== MERGE ADMIN APIS =====================
+(function mergeAdminApis() {
+  try {
+    const adminData = localStorage.getItem('zentrix_admin_apis');
+    if (!adminData) return;
+    const adminApis = JSON.parse(adminData);
+    adminApis.forEach(a => {
+      if (a.status === 'disabled' || a.visibility === 'hidden') return;
+      if (!APIS.find(x => x.id === a.id)) {
+        APIS.push({
+          id: a.id,
+          name: a.name,
+          category: a.category || 'Utility',
+          badge: a.auth === 'key' ? 'auth' : 'free',
+          desc: a.desc || '',
+          icon: a.icon || `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+          endpoints: a.endpoints || [{ method: a.method || 'GET', path: a.endpoint || '/', desc: a.desc || '' }],
+          fields: a.fields || [],
+          endpoint: a.endpoint || '/',
+          method: a.method || 'GET',
+          _adminPosted: true,
+        });
+      }
+    });
+  } catch(e) {}
+})();
+
+// ===================== LIVE SYNC (instant, no reload) =====================
+function applyAdminApis() {
+  try {
+    const raw = localStorage.getItem('zentrix_admin_apis');
+    if (!raw) return;
+    const adminApis = JSON.parse(raw);
+    const validIds = new Set(
+      adminApis.filter(a => a.status !== 'disabled' && a.visibility !== 'hidden').map(a => a.id)
+    );
+    // Remove stale admin entries
+    for (let i = APIS.length - 1; i >= 0; i--) {
+      if (APIS[i]._adminPosted && !validIds.has(APIS[i].id)) APIS.splice(i, 1);
+    }
+    // Add / update
+    adminApis.forEach(a => {
+      if (a.status === 'disabled' || a.visibility === 'hidden') return;
+      const mapped = {
+        id: a.id, name: a.name,
+        category: a.category || 'Utility',
+        badge: a.auth === 'key' ? 'auth' : 'free',
+        desc: a.desc || '',
+        icon: a.icon || '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+        endpoints: a.endpoints || [{ method: a.method || 'GET', path: a.endpoint || '/', desc: a.desc || '' }],
+        fields: a.fields || [],
+        endpoint: a.endpoint || '/',
+        method: a.method || 'GET',
+        _adminPosted: true,
+      };
+      const idx = APIS.findIndex(x => x.id === a.id);
+      if (idx >= 0) APIS[idx] = mapped; else APIS.unshift(mapped);
+    });
+  } catch(e) {}
+}
+
+window.addEventListener('storage', e => {
+  if (e.key === 'zentrix_admin_apis') {
+    applyAdminApis();
+    renderGrid();
+    syncCatBar();
+    // subtle flash to show the update landed
+    const g = document.getElementById('apiGrid');
+    if (g) { g.style.transition = 'opacity .35s'; g.style.opacity = '.4'; setTimeout(() => g.style.opacity = '1', 80); }
+  }
+});
+
+// ===================== STATE =====================
+let verifiedKeys = {}; // { apiId: key }
+let currentApi = null;
+let activeCategory = 'all';
+let searchQuery = '';
+
+// ===================== RENDER GRID =====================
+function renderGrid() {
+  const grid = document.getElementById('apiGrid');
+  const filtered = APIS.filter(a =>
+    (activeCategory === 'all' || a.category === activeCategory) &&
+    (searchQuery === '' || a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.category.toLowerCase().includes(searchQuery.toLowerCase()) || a.desc.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+  document.getElementById('filteredCount').textContent = `Showing ${filtered.length} API${filtered.length !== 1 ? 's' : ''}`;
+  grid.innerHTML = filtered.map(api => `
+    <div class="api-card" onclick="openApi('${api.id}')">
+      <div class="card-top">
+        <div class="card-icon">${api.icon || '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'}</div>
+        <div class="card-meta">
+          <div class="card-name">${api.name}</div>
+          <div class="card-cat">${api.category}</div>
+        </div>
+      </div>
+      <div class="card-desc">${api.desc}</div>
+      <div class="card-footer">
+        <span class="card-badge badge-${api.badge}">${api.badge === 'free' ? 'Free' : api.badge === 'auth' ? 'Auth Required' : 'Premium'}</span>
+        <button class="card-try">
+          Try it
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderCategories() {
+  const bar = document.getElementById('catBar');
+  if (!bar) return;
+  const categories = ['all', ...new Set(APIS.map(a => a.category))];
+  const icons = {
+    'all': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+    'AI Chat': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    'AI Media': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+    'AI Image': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+    'Media': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
+    'Utility': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+    'Info': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    'Social': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    'Movies & TV': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>',
+    'Anime': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 22a10 10 0 0 1-10-10"/></svg>',
+    'System': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    'Proxy': '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'
+  };
+
+  bar.innerHTML = categories.map(cat => `
+    <button class="cat-btn ${cat === activeCategory ? 'active' : ''}" data-cat="${cat}" onclick="filterCat(this,'${cat}')">
+      ${icons[cat] || icons['all']}
+      ${cat.charAt(0).toUpperCase() + cat.slice(1)}
+    </button>
+  `).join('');
+}
+window.renderCategories = renderCategories;
+
+function filterCat(btn, cat) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeCategory = cat;
+  renderGrid();
+}
+window.filterCat = filterCat;
+
+// Inject new categories from admin APIs
+(function syncCatBar() {
+  const bar = document.getElementById('catBar');
+  if (!bar) return;
+  const existing = new Set([...bar.querySelectorAll('.cat-btn')].map(b => b.dataset.cat));
+  APIS.forEach(a => {
+    if (!a._adminPosted) return;
+    if (existing.has(a.category)) return;
+    existing.add(a.category);
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn';
+    btn.dataset.cat = a.category;
+    btn.onclick = () => filterCat(btn, a.category);
+    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>${a.category}`;
+    bar.appendChild(btn);
+  });
+})();
+
+// ===================== SEARCH (removed) =====================
+
+// ===================== MODAL =====================
+function openApi(id) {
+  currentApi = APIS.find(a => a.id === id);
+  if (!currentApi) return;
+  renderModal();
+  document.getElementById('overlay').classList.add('open');
+}
+window.openApi = openApi;
+
+function closeModal(e) {
+  if (e.target === document.getElementById('overlay')) closeModalDirect();
+}
+window.closeModal = closeModal;
+
+function closeModalDirect() {
+  document.getElementById('overlay').classList.remove('open');
+  currentApi = null;
+}
+window.closeModalDirect = closeModalDirect;
+
+function renderModal() {
+  const api = currentApi;
+  const isVerified = !!(verifiedKeys[api.id] || globalToken);
+  // If we have a global token, register it for this API
+  if (globalToken && !verifiedKeys[api.id]) verifiedKeys[api.id] = globalToken;
+
+  const needsKey = api.badge !== 'free';
+  // Default to playground tab if verified, endpoints tab if not
+  const defaultTab = (needsKey && !isVerified) ? 'endpoints' : 'playground';
+
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">${api.name}</div>
+        <div class="modal-subtitle">${BASE_URL}${api.endpoint} &middot; <span style="color:${api.badge==='free'?'var(--success)':api.badge==='auth'?'var(--accent)':'var(--warning)'}">${api.badge}</span></div>
+      </div>
+    </div>
+    <div class="modal-desc">${api.desc}</div>
+
+    <div class="modal-tabs">
+      <button class="tab-btn ${defaultTab==='endpoints'?'active':''}" id="tabBtnEndpoints" onclick="switchTab(this,'endpoints')" ${needsKey && !isVerified ? '' : ''}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        Endpoints
+        ${needsKey && !isVerified ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-left:4px;opacity:0.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : ''}
+      </button>
+      <button class="tab-btn ${defaultTab==='playground'?'active':''}" id="tabBtnPlayground" onclick="switchTab(this,'playground')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><polygon points="5 3 19 12 5 21 5 3"/></svg>Playground</button>
+    </div>
+
+    <div class="tab-content ${defaultTab==='endpoints'?'active':''}" id="tab-endpoints">
+      ${needsKey && !isVerified ? `
+        <div class="locked-msg">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div>Enter your API token on the home page to view endpoints</div>
+        </div>
+      ` : `
+        <div class="endpoint-list">
+          ${api.endpoints.map(ep => `
+            <div class="endpoint-item" onclick="loadEndpointToPlayground('${ep.method}','${ep.path}')">
+              <span class="method-badge method-${ep.method.toLowerCase()}">${ep.method}</span>
+              <span class="endpoint-path">${ep.path}</span>
+              <span class="endpoint-desc">${ep.desc}</span>
+            </div>
+          `).join('')}
+        </div>
+      `}
+    </div>
+
+    <div class="tab-content ${defaultTab==='playground'?'active':''}" id="tab-playground">
+      ${needsKey && !isVerified ? `
+        <div class="field-group">
+          <div class="field-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            API Key
+          </div>
+          <div class="verify-row">
+            <div class="field-group">
+              <div class="input-wrap">
+                <input class="glass-input" type="password" id="apiKeyInput" placeholder="Enter your Zentrix API key..." value="" />
+                <button class="input-action" onclick="toggleKeyVis()" title="Show/hide key">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+            <button class="verify-btn" onclick="verifyKey()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Verify
+            </button>
+          </div>
+          <div class="verify-status hidden" id="verifyStatus">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Key verified — playground unlocked
+          </div>
+        </div>
+        <div class="locked-msg" style="margin-top:12px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div>Verify your key above, or paste your token on the home page to unlock all APIs at once</div>
+        </div>
+      ` : `
+        <div id="playgroundBody">
+          ${api.smartSearch ? `
+            <div class="field-group" id="smartSearchGroup">
+              <div class="field-label">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Search Title
+              </div>
+              <div style="display:flex;gap:8px;">
+                <input class="glass-input" type="text" id="smartSearchInput" placeholder="Type a title and search…" style="flex:1;" />
+                <button onclick="doSmartSearch()" style="padding:0 16px;height:42px;border-radius:var(--radius-sm);background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--text-primary);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Search</button>
+              </div>
+              <div id="smartSearchResults" style="margin-top:8px;display:none;max-height:220px;overflow-y:auto;border-radius:var(--radius-sm);border:1px solid var(--glass-border);background:var(--glass-bg);"></div>
+              <div id="smartSearchSelected" style="display:none;margin-top:8px;padding:10px 12px;border-radius:var(--radius-sm);background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);font-size:13px;color:var(--accent);"></div>
+            </div>
+          ` : ''}
+          ${api.fields.filter(f => !f.hidden).map(f => `
+            <div class="field-group">
+              <div class="field-label">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/></svg>
+                ${f.label}
+              </div>
+              ${f.type === 'select' ? `
+                <select class="glass-input" id="field_${f.name}">
+                  ${f.options.map(o => `<option value="${o}">${o}</option>`).join('')}
+                </select>
+              ` : `
+                <input class="glass-input" type="${f.type||'text'}" id="field_${f.name}" placeholder="${f.placeholder||''}" />
+              `}
+            </div>
+          `).join('')}
+          ${api.fields.filter(f => f.hidden).map(f => `<input type="hidden" id="field_${f.name}" />`).join('')}
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <button class="run-btn" id="runBtn" onclick="runPlayground()" style="margin-top:0;flex:1;">
+              <span class="btn-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </span>
+              <svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+              <span class="btn-label">Run Request</span>
+            </button>
+            <button id="copyRespBtn" onclick="copyResponse()" disabled style="
+              display:flex;align-items:center;gap:6px;padding:0 18px;height:46px;
+              border-radius:var(--radius-sm);background:var(--glass-bg);
+              border:1px solid var(--glass-border);color:var(--text-secondary);
+              font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+              white-space:nowrap;transition:all var(--transition);flex-shrink:0;opacity:0.35;
+            ">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span id="copyBtnLabel">Copy</span>
+            </button>
+          </div>
+          <div class="response-panel" id="responsePanel" style="display:none">
+            <div class="response-toolbar">
+              <div class="response-toolbar-left">
+                <span class="resp-label">Response</span>
+                <span class="resp-status ok" id="respStatus">200 OK</span>
+                <span style="font-size:11px;color:var(--text-dim)" id="respTime"></span>
+              </div>
+              <div class="response-actions">
+                <button class="resp-action-btn" title="Copy" onclick="copyResponse()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+                <button class="resp-action-btn" title="Download" onclick="downloadResponse()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="response-body" id="responseBody"></div>
+          </div>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function switchTab(btn, tab) {
+  btn.closest('.modal').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+window.switchTab = switchTab;
+
+function loadEndpointToPlayground(method, path) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-btn')[1].classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-playground').classList.add('active');
+}
+window.loadEndpointToPlayground = loadEndpointToPlayground;
+
+// ===================== VERIFY =====================
+function toggleKeyVis() {
+  const inp = document.getElementById('apiKeyInput');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+window.toggleKeyVis = toggleKeyVis;
+
+async function verifyKey() {
+  const inp = document.getElementById('apiKeyInput');
+  const key = inp.value.trim();
+  if (!key) { showToast('Enter an API key first', 'error'); return; }
+  const status = document.getElementById('verifyStatus');
+  status.className = 'verify-status hidden';
+  try {
+    const res = await fetch(`${BASE_URL}/health`, { headers: { 'x-api-key': key } });
+    if (res.status === 401) { showToast('Invalid API key', 'error'); return; }
+  } catch(e) { showToast('Could not reach API server', 'error'); return; }
+  globalToken = key;
+  localStorage.setItem('zentrix_global_token', key);
+  APIS.forEach(a => { verifiedKeys[a.id] = key; });
+  updateTokenUI();
+  showToast('Key verified — all APIs unlocked', 'success');
+  setTimeout(() => renderModal(), 400);
+}
+window.verifyKey = verifyKey;
+
+async function syncEndpoints() {
+  try {
+    const res = await fetch(`${BASE_URL}/api/endpoints`);
+    const data = await res.json();
+    if (data.success && data.endpoints) {
+      data.endpoints.forEach(remote => {
+        const local = APIS.find(a => a.endpoint === remote.path);
+        if (!local) {
+          APIS.push({
+            id: remote.path.replace(/\//g, '-'),
+            name: remote.name,
+            category: remote.category,
+            badge: 'auth',
+            desc: remote.desc,
+            endpoints: [{ method: remote.method, path: remote.path, desc: remote.desc }],
+            fields: [{ name: 'q', label: 'Query', placeholder: 'Enter search...', type: 'text' }],
+            endpoint: remote.path,
+            method: remote.method
+          });
         }
+      });
+      renderCategories();
+      renderGrid();
+      document.getElementById('apiCount').textContent = APIS.length;
+    }
+  } catch (e) {
+    console.warn('Failed to sync endpoints:', e);
+  }
+}
+window.syncEndpoints = syncEndpoints;
 
-        function filterCategory(cat) {
-            currentFilter = cat;
-            document.querySelectorAll(".cat-btn").forEach(btn => {
-                btn.classList.remove("active", "border-blue-500/50", "text-blue-400");
-                btn.classList.add("border-slate-700/50", "text-slate-400");
-            });
-            event.target.classList.add("active", "border-blue-500/50", "text-blue-400");
-            event.target.classList.remove("border-slate-700/50", "text-slate-400");
-            renderEndpoints();
-        }
+// ===================== SMART SEARCH =====================
+async function doSmartSearch() {
+  const api = currentApi;
+  if (!api || !api.smartSearch) return;
+  const q = document.getElementById('smartSearchInput').value.trim();
+  if (!q) { showToast('Enter a title to search', 'error'); return; }
 
-        function openModal(endpoint) {
-            currentEndpoint = endpoint;
-            document.getElementById("modal-title").textContent = endpoint.name;
-            document.getElementById("modal-desc").textContent = endpoint.desc;
-            document.getElementById("modal-icon").innerHTML = `<i class="fas ${endpoint.icon}"></i>`;
-            document.getElementById("modal-method").textContent = endpoint.method;
-            document.getElementById("modal-path").textContent = endpoint.path;
+  const resultsEl = document.getElementById('smartSearchResults');
+  resultsEl.style.display = 'block';
+  resultsEl.innerHTML = '<div style="padding:12px;color:var(--text-secondary);font-size:13px;">Searching…</div>';
 
-            // Render parameters
-            const paramsContainer = document.getElementById("params-container");
-            paramsContainer.innerHTML = "";
-            endpoint.params.forEach(param => {
-                const div = document.createElement("div");
-                div.innerHTML = `
-                    <label class="text-sm font-medium text-slate-300 block mb-2">${param.name}${param.required ? ' <span class="text-red-400">*</span>' : ''}</label>
-                    <input type="${param.type}" id="param_${param.name}" placeholder="${param.placeholder}" class="w-full bg-slate-900/50 border border-slate-700/50 rounded-lg px-4 py-2 text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500/50 transition-colors">
-                `;
-                paramsContainer.appendChild(div);
-            });
+  const key = verifiedKeys[api.id] || globalToken;
+  const type = api.smartSearchType || 'all';
+  const searchEndpoint = type === 'anime' ? '/api/anime/search' : '/api/search';
+  const params = type === 'anime' ? `q=${encodeURIComponent(q)}&apikey=${key}` : `q=${encodeURIComponent(q)}&type=all&apikey=${key}`;
 
-            // Generate code examples
-            generateCodeExamples();
+  try {
+    const res = await fetch(`${BASE_URL}${searchEndpoint}?${params}`, { headers: key ? { 'x-api-key': key } : {} });
+    const data = await res.json();
+    const results = data.results || [];
+    if (!results.length) {
+      resultsEl.innerHTML = '<div style="padding:12px;color:var(--text-secondary);font-size:13px;">No results found</div>';
+      return;
+    }
+    resultsEl.innerHTML = results.slice(0, 8).map((r, i) => `
+      <div onclick="selectSmartResult(${i})" data-idx="${i}" style="
+        display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;
+        border-bottom:1px solid var(--glass-border);transition:background 0.15s;
+      " onmouseover="this.style.background='var(--glass-hover)'" onmouseout="this.style.background=''">
+        ${r.poster || r.cover ? `<img src="${r.poster || (typeof r.cover === 'string' ? r.cover : r.cover?.url)}" style="width:32px;height:44px;object-fit:cover;border-radius:4px;flex-shrink:0;" onerror="this.style.display='none'" />` : ''}
+        <div style="min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.title}</div>
+          <div style="font-size:11px;color:var(--text-secondary);">${r.releaseDate ? r.releaseDate.slice(0,4) : ''} ${r.imdbRatingValue ? '⭐ ' + r.imdbRatingValue : ''} ${r.genre ? '· ' + (Array.isArray(r.genre) ? r.genre[0] : r.genre.split(',')[0]) : ''}</div>
+        </div>
+      </div>
+    `).join('');
+    // Store results for selection
+    window._smartResults = results;
+  } catch(e) {
+    resultsEl.innerHTML = '<div style="padding:12px;color:var(--error);font-size:13px;">Search failed: ' + e.message + '</div>';
+  }
+}
+window.doSmartSearch = doSmartSearch;
 
-            document.getElementById("tester-modal").classList.remove("hidden");
-            document.getElementById("result-container").classList.add("hidden");
-            document.getElementById("loading-container").classList.add("hidden");
-        }
+function selectSmartResult(idx) {
+  const r = window._smartResults[idx];
+  if (!r) return;
+  // Fill hidden fields
+  const idEl = document.getElementById('field_id');
+  const dpEl = document.getElementById('field_detailPath');
+  if (idEl) idEl.value = r.subjectId || r.id || '';
+  if (dpEl) dpEl.value = r.detailPath || '';
+  // Show selected
+  const sel = document.getElementById('smartSearchSelected');
+  sel.style.display = 'block';
+  sel.innerHTML = `✓ Selected: <strong>${r.title}</strong> · ID: ${r.subjectId || r.id || 'n/a'}`;
+  // Hide results
+  document.getElementById('smartSearchResults').style.display = 'none';
+}
+window.selectSmartResult = selectSmartResult;
 
-        function closeModal() {
-            document.getElementById("tester-modal").classList.add("hidden");
-        }
+// Allow Enter key in smart search
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('smartSearchInput') === document.activeElement) {
+    doSmartSearch();
+  }
+});
 
-        function switchTab(tab) {
-            document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
-            event.target.classList.add("active");
-            
-            document.getElementById("response-tab").classList.add("hidden");
-            document.getElementById("code-tab").classList.add("hidden");
-            
-            if (tab === "response") {
-                document.getElementById("response-tab").classList.remove("hidden");
-            } else {
-                document.getElementById("code-tab").classList.remove("hidden");
-            }
-        }
+// ===================== PLAYGROUND =====================
+let lastResponse = null;
 
-        function generateCodeExamples() {
-            const endpoint = currentEndpoint;
-            const baseUrl = window.location.origin;
-            const params = endpoint.params.map(p => `${p.name}=value`).join("&");
-            const fullUrl = `${baseUrl}${endpoint.path}?${params}`;
+async function runPlayground() {
+  const api = currentApi;
+  if (!api) return;
+  const btn = document.getElementById('runBtn');
+  btn.classList.add('loading'); btn.disabled = true;
 
-            // JavaScript
-            document.getElementById("code-js").textContent = `const response = await fetch('${fullUrl}');
-const data = await response.json();
-console.log(data.result);`;
+  const params = {};
+  api.fields.forEach(f => {
+    const el = document.getElementById('field_' + f.name);
+    if (el) params[f.name] = el.value.trim();
+  });
 
-            // Python
-            document.getElementById("code-py").textContent = `import requests
+  const t0 = Date.now();
+  try {
+    const isGet = api.method === 'GET';
+    let url = `${BASE_URL}${api.endpoint}`;
+    let opts = { method: api.method, headers: {} };
+    const key = verifiedKeys[api.id];
+    if (key) opts.headers['x-api-key'] = key;
+    if (isGet) {
+      const qs = Object.entries(params).filter(([,v])=>v).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join('&');
+      if (qs) url += '?' + qs;
+    } else {
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(params);
+    }
+    const res = await fetch(url, opts);
+    const elapsed = Date.now() - t0;
+    const contentType = res.headers.get("content-type");
+    let data;
+    
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      try { 
+        data = await res.json(); 
+      } catch (e) { 
+        data = { error: 'Failed to parse JSON response', details: e.message }; 
+      }
+    } else {
+      const text = await res.text();
+      data = { 
+        error: 'Received non-JSON response', 
+        contentType: contentType,
+        preview: text.substring(0, 500) + (text.length > 500 ? '...' : '')
+      };
+    }
+    
+    lastResponse = data;
+    showResponse(data, res.status, elapsed);
+  } catch (err) {
+    lastResponse = { error: err.message, note: 'Check your connection or the API key' };
+    showResponse(lastResponse, 0, Date.now() - t0);
+  }
 
-response = requests.get('${fullUrl}')
-data = response.json()
-print(data['result'])`;
+  btn.classList.remove('loading'); btn.disabled = false;
+}
+window.runPlayground = runPlayground;
 
-            // cURL
-            document.getElementById("code-curl").textContent = `curl "${fullUrl}"`;
-        }
+function showResponse(data, status, elapsed) {
+  const panel = document.getElementById('responsePanel');
+  const body = document.getElementById('responseBody');
+  const st = document.getElementById('respStatus');
+  const rt = document.getElementById('respTime');
+  panel.style.display = 'block';
+  st.textContent = status ? `${status} ${status < 300 ? 'OK' : 'Error'}` : 'Error';
+  st.className = 'resp-status ' + (status >= 200 && status < 300 ? 'ok' : 'err');
+  rt.textContent = `${elapsed}ms`;
+  body.innerHTML = `<div class="json-tree">${renderJSON(data, 0)}</div>`;
+  const cb = document.getElementById('copyRespBtn');
+  if (cb) { cb.disabled = false; cb.style.opacity = '1'; cb.style.cursor = 'pointer'; document.getElementById('copyBtnLabel').textContent = 'Copy'; }
+}
 
-        function copyCode(lang) {
-            let code = "";
-            if (lang === "js") code = document.getElementById("code-js").textContent;
-            else if (lang === "py") code = document.getElementById("code-py").textContent;
-            else if (lang === "curl") code = document.getElementById("code-curl").textContent;
-            
-            navigator.clipboard.writeText(code);
-            alert("Code copied to clipboard!");
-        }
+function renderJSON(obj, depth) {
+  if (obj === null) return `<span class="json-null">null</span>`;
+  if (typeof obj === 'boolean') return `<span class="json-bool">${obj}</span>`;
+  if (typeof obj === 'number') return `<span class="json-num">${obj}</span>`;
+  if (typeof obj === 'string') return `<span class="json-str">"${escHtml(obj)}"</span>`;
+  if (Array.isArray(obj)) {
+    if (!obj.length) return `<span style="color:var(--text-dim)">[]</span>`;
+    const inner = obj.map((v,i) => `<div style="padding-left:${(depth+1)*14}px">${renderJSON(v, depth+1)}${i<obj.length-1?',':''}</div>`).join('');
+    return `<span class="json-node" onclick="this.parentElement.classList.toggle('json-collapsed')"><span class="json-toggle"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span><span style="color:var(--text-dim)">[${obj.length}]</span></span><div class="json-collapsible">${inner}</div>`;
+  }
+  if (typeof obj === 'object') {
+    const entries = Object.entries(obj);
+    if (!entries.length) return `<span style="color:var(--text-dim)">{}</span>`;
+    const inner = entries.map(([k,v],i) => `<div style="padding-left:${(depth+1)*14}px"><span class="json-key">"${escHtml(k)}"</span><span style="color:var(--text-dim)">: </span>${renderJSON(v, depth+1)}${i<entries.length-1?',':''}</div>`).join('');
+    return `<span class="json-node" onclick="this.parentElement.classList.toggle('json-collapsed')"><span class="json-toggle"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span><span style="color:var(--text-dim)">{${entries.length}}</span></span><div class="json-collapsible">${inner}</div>`;
+  }
+  return String(obj);
+}
 
-        function copyEndpoint() {
-            const path = document.getElementById("modal-path").textContent;
-            navigator.clipboard.writeText(path);
-            alert("Endpoint copied to clipboard!");
-        }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-        async function sendRequest() {
-            const endpoint = currentEndpoint;
-            const params = new URLSearchParams();
-            
-            endpoint.params.forEach(param => {
-                const value = document.getElementById(`param_${param.name}`).value;
-                if (value) params.append(param.name, value);
-            });
+function copyResponse() {
+  if (!lastResponse) return;
+  navigator.clipboard.writeText(JSON.stringify(lastResponse, null, 2)).then(() => {
+    showToast('Copied to clipboard', 'success');
+    const lbl = document.getElementById('copyBtnLabel');
+    const btn = document.getElementById('copyRespBtn');
+    if (lbl && btn) {
+      lbl.textContent = 'Copied!';
+      btn.style.color = 'var(--success)';
+      btn.style.borderColor = 'rgba(52,211,153,0.35)';
+      setTimeout(() => { lbl.textContent = 'Copy'; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+    }
+  });
+}
+window.copyResponse = copyResponse;
 
-            const url = `${endpoint.path}?${params.toString()}`;
-            
-            document.getElementById("loading-container").classList.remove("hidden");
-            document.getElementById("result-container").classList.add("hidden");
+function downloadResponse() {
+  if (!lastResponse) return;
+  const blob = new Blob([JSON.stringify(lastResponse, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `zentrix-response-${Date.now()}.json`; a.click();
+  showToast('Downloaded', 'success');
+}
+window.downloadResponse = downloadResponse;
 
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                document.getElementById("resp-status").textContent = `${response.status} ${response.statusText}`;
-                document.getElementById("resp-status").className = response.ok 
-                    ? "text-xs font-bold px-2 py-1 rounded bg-green-500/20 text-green-400"
-                    : "text-xs font-bold px-2 py-1 rounded bg-red-500/20 text-red-400";
-                document.getElementById("json-output").textContent = JSON.stringify(data, null, 2);
-                
-                document.getElementById("loading-container").classList.add("hidden");
-                document.getElementById("result-container").classList.remove("hidden");
-            } catch (error) {
-                document.getElementById("loading-container").classList.add("hidden");
-                document.getElementById("result-container").classList.remove("hidden");
-                document.getElementById("resp-status").textContent = "Error";
-                document.getElementById("resp-status").className = "text-xs font-bold px-2 py-1 rounded bg-red-500/20 text-red-400";
-                document.getElementById("json-output").textContent = error.message;
-            }
-        }
+// ===================== THEME =====================
+let isDark = true;
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.classList.toggle('light', !isDark);
+  const icon = document.getElementById('themeIcon');
+  icon.innerHTML = isDark
+    ? `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`
+    : `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
+}
+document.getElementById('themeBtn').addEventListener('click', toggleTheme);
 
-        // Initialize
-        renderEndpoints();
-    </script>
+// ===================== TOAST =====================
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  const iconSvg = type === 'success'
+    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+    : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+  t.className = `toast t-${type}`;
+  t.innerHTML = `${iconSvg} ${msg}`;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+// ===================== UTILS =====================
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ===================== BASE URL COPY =====================
+function copyBaseUrl() {
+  const url = document.getElementById('baseUrlText').textContent;
+  navigator.clipboard.writeText('https://' + url).then(() => {
+    showToast('Base URL copied', 'success');
+    const btn = document.getElementById('baseUrlCopyBtn');
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<svg id="baseUrlCopyIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+    }, 2000);
+  });
+}
+window.copyBaseUrl = copyBaseUrl;
+
+// ===================== GLOBAL TOKEN =====================
+let globalToken = localStorage.getItem('zentrix_global_token') || '';
+
+function updateTokenUI() {
+  const inp = document.getElementById('globalTokenInput');
+  const clearBtn = document.getElementById('clearTokenBtn');
+  const badge = document.getElementById('tokenBadge');
+  if (globalToken) {
+    inp.value = globalToken;
+    clearBtn.style.display = 'flex';
+    badge.style.display = 'inline-flex';
+    APIS.forEach(a => { if (a.badge !== 'free') verifiedKeys[a.id] = globalToken; });
+  } else {
+    inp.value = '';
+    clearBtn.style.display = 'none';
+    badge.style.display = 'none';
+  }
+}
+
+document.getElementById('applyTokenBtn').addEventListener('click', () => {
+  const val = document.getElementById('globalTokenInput').value.trim();
+  if (!val) { showToast('Paste a token first', 'error'); return; }
+  globalToken = val;
+  localStorage.setItem('zentrix_global_token', val);
+  APIS.forEach(a => { verifiedKeys[a.id] = val; });
+  updateTokenUI();
+  if (currentApi) renderModal();
+  showToast('Token applied — all APIs unlocked', 'success');
+});
+
+document.getElementById('globalTokenInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('applyTokenBtn').click();
+});
+
+document.getElementById('clearTokenBtn').addEventListener('click', () => {
+  globalToken = '';
+  localStorage.removeItem('zentrix_global_token');
+  verifiedKeys = {};
+  updateTokenUI();
+  showToast('Token cleared', 'error');
+});
+
+document.getElementById('tokenEyeBtn').addEventListener('click', () => {
+  const inp = document.getElementById('globalTokenInput');
+  const showing = inp.type === 'text';
+  inp.type = showing ? 'password' : 'text';
+  document.getElementById('eyeIcon').innerHTML = showing
+    ? `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`
+    : `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+});
+
+// ===================== INIT =====================
+document.getElementById('apiCount').textContent = APIS.length;
+document.getElementById('filteredCount').textContent = `Showing ${APIS.length} APIs`;
+renderCategories();
+renderGrid();
+updateTokenUI();
+syncEndpoints();
+
+// Spin keyframe
+const style = document.createElement('style');
+style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+document.head.appendChild(style);
+
+function openDocs() {
+  document.getElementById('docsOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDocs(e) {
+  if (e && e.target !== document.getElementById('docsOverlay')) return;
+  document.getElementById('docsOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+window.openDocs = openDocs;
+window.closeDocs = closeDocs;
+
+
+// ===================== ANIME SECTION =====================
+let _currentAnime = { id: '', title: '' };
+
+async function searchAnime() {
+  const q = document.getElementById('animeSearchInput').value.trim();
+  if (!q) { showToast('Enter an anime title', 'error'); return; }
+  const btn = document.getElementById('animeSearchBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+  document.getElementById('animeEpisodes').style.display = 'none';
+  document.getElementById('animePlayer').style.display = 'none';
+  try {
+    const key = globalToken;
+    const headers = key ? {'x-api-key': key} : {};
+    const res = await fetch(`${BASE_URL}/api/anime/search?q=${encodeURIComponent(q)}`, { headers });
+    const data = await res.json();
+    const container = document.getElementById('animeResults');
+    container.style.display = 'flex';
+    
+    const results = data.results || (data.result && Array.isArray(data.result) ? data.result : null);
+    const success = data.success || data.status;
+
+    if (!success || !results || !results.length) {
+      container.innerHTML = `<div style="padding:16px;color:var(--text-secondary);font-size:13px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);">No results found for "${escHtml(q)}"</div>`;
+      btn.classList.remove('loading'); btn.disabled = false;
+      return;
+    }
+    container.innerHTML = `<div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">Found ${results.length} result(s)</div>` + results.map((r, i) => `
+      <div onclick="loadAnimeEpisodes('${escHtml(r.title)}','${escHtml(r.id)}','${escHtml(r.url)}')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--glass-border)'">
+        <div style="width:36px;height:36px;border-radius:10px;background:var(--glass-strong);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div style="min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.title)}</div>
+          <div style="font-size:11px;color:var(--text-dim);font-family:monospace;">${escHtml(r.id)}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    showToast('Anime search failed: ' + e.message, 'error');
+  }
+  btn.classList.remove('loading'); btn.disabled = false;
+}
+
+async function loadAnimeEpisodes(title, id = null, url = null) {
+  _currentAnime = { id, url, title };
+  document.getElementById('animeResults').style.display = 'none';
+  document.getElementById('animePlayer').style.display = 'none';
+  const container = document.getElementById('animeEpisodes');
+  container.style.display = 'flex';
+  container.innerHTML = '<div style="padding:16px;color:var(--text-secondary);font-size:13px;">Loading episodes...</div>';
+  try {
+    const key = globalToken;
+    const headers = key ? {'x-api-key': key} : {};
+    let fetchUrl = `${BASE_URL}/api/anime/episodes?title=${encodeURIComponent(title)}`;
+    if (id) fetchUrl += `&id=${encodeURIComponent(id)}`;
+    if (url) fetchUrl += `&url=${encodeURIComponent(url)}`;
+    const res = await fetch(fetchUrl, { headers });
+    const data = await res.json();
+    
+    const episodes = data.episodes || (data.result && Array.isArray(data.result) ? data.result : null);
+    const success = data.success || data.status;
+
+    if (!success || !episodes || !episodes.length) {
+      container.innerHTML = `<div style="padding:16px;color:var(--text-secondary);font-size:13px;">No episodes found.</div>`;
+      return;
+    }
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${escHtml(title)}</div>
+        <div style="font-size:11px;color:var(--text-dim);">${episodes.length} episode(s)</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;max-height:320px;overflow-y:auto;padding:4px;">
+        ${episodes.map(ep => `
+          <div style="display:flex;flex-direction:column;gap:6px;padding:10px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);text-align:center;cursor:pointer;transition:all var(--transition);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--glass-border)'">
+            <div style="font-size:12px;font-weight:600;color:var(--text-primary);">EP ${escHtml(ep.number)}</div>
+            <div style="display:flex;gap:6px;justify-content:center;">
+              <button onclick="playAnimeEpisode('${escHtml(ep.number)}','${escHtml(ep.ep_id)}')" style="padding:5px 10px;border-radius:6px;background:var(--glass-strong);border:1px solid var(--glass-border);color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">▶ Stream</button>
+              <button onclick="downloadAnimeEpisode('${escHtml(ep.number)}','${escHtml(ep.ep_id)}')" style="padding:5px 10px;border-radius:6px;background:var(--glass-strong);border:1px solid var(--glass-border);color:var(--text-secondary);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">⬇ DL</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } catch (e) {
+    container.innerHTML = `<div style="padding:16px;color:var(--error);font-size:13px;">Failed to load episodes: ${escHtml(e.message)}</div>`;
+  }
+}
+
+async function playAnimeEpisode(epNumber, epId) {
+  const player = document.getElementById('animePlayer');
+  player.style.display = 'block';
+  player.innerHTML = '<div style="padding:16px;color:var(--text-secondary);font-size:13px;">Extracting stream...</div>';
+  try {
+    const key = globalToken;
+    const headers = key ? {'x-api-key': key} : {};
+    let fetchUrl = `${BASE_URL}/api/anime/stream?ep_number=${encodeURIComponent(epNumber)}&ep_id=${encodeURIComponent(epId)}&title=${encodeURIComponent(_currentAnime.title)}`;
+    if (_currentAnime.id) fetchUrl += `&id=${encodeURIComponent(_currentAnime.id)}`;
+    if (_currentAnime.url) fetchUrl += `&url=${encodeURIComponent(_currentAnime.url)}`;
+    const res = await fetch(fetchUrl, { headers });
+    const data = await res.json();
+    
+    const stream_url = data.stream_url || (data.result && data.result.stream_url);
+    const download_url = data.download_url || (data.result && data.result.download_url);
+    const source_type = data.source_type || (data.result && data.result.source_type);
+    const success = data.success || data.status;
+
+    if (!success || !stream_url) {
+      player.innerHTML = `<div style="padding:16px;color:var(--error);font-size:13px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);">${escHtml(data.error || 'Stream not available')}</div>`;
+      return;
+    }
+    player.innerHTML = `
+      <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);overflow:hidden;">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${escHtml(_currentAnime.title)} — Episode ${escHtml(epNumber)}</div>
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;">${escHtml(source_type || 'mp4')}</div>
+        </div>
+        <video controls autoplay style="width:100%;display:block;background:#000;" src="${stream_url}">
+          Your browser does not support the video tag.
+        </video>
+        <div style="padding:10px 14px;display:flex;gap:10px;">
+          <a href="${stream_url}" target="_blank" style="font-size:12px;color:var(--accent);text-decoration:none;font-weight:600;">Open stream ↗</a>
+          <a href="${download_url}" style="font-size:12px;color:var(--text-secondary);text-decoration:none;font-weight:600;">Download ↓</a>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    player.innerHTML = `<div style="padding:16px;color:var(--error);font-size:13px;">Stream failed: ${escHtml(e.message)}</div>`;
+  }
+}
+
+async function downloadAnimeEpisode(epNumber, epId) {
+  try {
+    const key = globalToken;
+    const headers = key ? {'x-api-key': key} : {};
+    let fetchUrl = `${BASE_URL}/api/anime/download?ep_number=${encodeURIComponent(epNumber)}&ep_id=${encodeURIComponent(epId)}&title=${encodeURIComponent(_currentAnime.title)}`;
+    if (_currentAnime.id) fetchUrl += `&id=${encodeURIComponent(_currentAnime.id)}`;
+    if (_currentAnime.url) fetchUrl += `&url=${encodeURIComponent(_currentAnime.url)}`;
+    const res = await fetch(fetchUrl, { headers });
+    const data = await res.json();
+    
+    const download_url = data.download_url || (data.result && data.result.download_url);
+    const success = data.success || data.status;
+
+    if (!success || !download_url) {
+      showToast(data.error || 'Download not available', 'error');
+      return;
+    }
+    window.open(download_url, '_blank');
+    showToast('Download started', 'success');
+  } catch (e) {
+    showToast('Download failed: ' + e.message, 'error');
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.activeElement === document.getElementById('animeSearchInput')) {
+    searchAnime();
+  }
+});
+
+</script>
 </body>
 </html>
