@@ -1158,6 +1158,31 @@ async def ai_music_result(
 
 
 # ================================================================================
+# ================================================================================
+# API ENDPOINTS LIST
+# ================================================================================
+
+@app.get("/api/endpoints")
+async def get_endpoints():
+    """Return list of all available endpoints."""
+    return {
+        "success": True,
+        "creator": "ZENTRIX TECH",
+        "categories": {
+            "download": [
+                {"name": "TikTok", "endpoint": "tiktok", "path": "/api/download/tiktok", "method": "GET", "description": "Download TikTok videos"},
+                {"name": "YouTube", "endpoint": "youtube", "path": "/api/download/youtube", "method": "GET", "description": "Download YouTube videos"},
+                {"name": "Instagram", "endpoint": "instagram", "path": "/api/download/instagram", "method": "GET", "description": "Download Instagram posts"},
+                {"name": "Spotify", "endpoint": "spotify", "path": "/api/download/spotify", "method": "GET", "description": "Download Spotify tracks"},
+                {"name": "SoundCloud", "endpoint": "soundcloud", "path": "/api/download/soundcloud", "method": "GET", "description": "Download SoundCloud audio"},
+                {"name": "Facebook", "endpoint": "facebook", "path": "/api/download/facebook", "method": "GET", "description": "Download Facebook videos"},
+                {"name": "Twitter/X", "endpoint": "twitter", "path": "/api/download/twitter", "method": "GET", "description": "Download Twitter/X videos"},
+                {"name": "Pinterest", "endpoint": "pinterest", "path": "/api/download/pinterest", "method": "GET", "description": "Download Pinterest images"},
+            ]
+        }
+    }
+
+
 # PREXZY DOWNLOADER PROXY ROUTES
 # ================================================================================
 # Proxy all Prexzy downloader endpoints with ZENTRIX branding
