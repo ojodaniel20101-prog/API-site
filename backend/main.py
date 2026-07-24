@@ -44,7 +44,7 @@ from typing import Optional
 
 logger = logging.getLogger("zentrix")
 
-from fastapi import FastAPI, Query, Request, status
+from fastapi import FastAPI, Query, Request, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
 from pydantic import BaseModel
@@ -100,6 +100,8 @@ _API_KEY_RAW = os.getenv("ZENTRIX_API_KEYS", "")
 _API_KEY_LIST = [k.strip() for k in _API_KEY_RAW.split(",") if k.strip()]
 API_KEY = _API_KEY_SINGLE or (_API_KEY_LIST[0] if _API_KEY_LIST else "ZENTRIX")
 _VALID_KEYS = {_API_KEY_SINGLE} | set(_API_KEY_LIST)
+if not _VALID_KEYS or _VALID_KEYS == {""}:
+    _VALID_KEYS = {"ZENTRIX"}
 _VALID_KEYS.discard("")
 APP_VERSION = "1.8.0"
 BASE_URL = os.getenv("BASE_URL", "").rstrip("/")
@@ -231,7 +233,23 @@ _OPEN_PATHS = {"/health", "/api/endpoints"}
 async def api_key_middleware(request: Request, call_next):
     if request.method == "OPTIONS":
         return await call_next(request)
+    
     path = request.url.path
+    
+    # Check if the path exists in the app's routes to avoid shadowing 404s with 401s
+    # This ensures that non-existent routes return a 404 JSON instead of a 401 JSON
+    route_exists = False
+    for route in app.routes:
+        if hasattr(route, "path") and (route.path == path or (hasattr(route, "path_regex") and route.path_regex.match(path))):
+            route_exists = True
+            break
+    
+    if not route_exists and path.startswith("/api/"):
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"success": False, "error": f"Route {path} not found"}
+        )
+
     needs_auth = (
         path not in _OPEN_PATHS
         and (
@@ -256,7 +274,14 @@ async def api_key_middleware(request: Request, call_next):
     return await call_next(request)
 
 
-# -- Global exception handler ---------------------------------------------------
+# -- Global exception handlers --------------------------------------------------
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"success": False, "error": exc.detail},
+    )
+
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
     logger.exception("Unhandled error on %s %s", request.method, request.url.path)
@@ -677,15 +702,7 @@ async def _proxy_to_prexzy(category: str, endpoint: str, params: dict, request: 
         logger.error(f"Prexzy proxy error: {e}")
         return JSONResponse(status_code=502, content={"success": False, "error": "Failed to connect to upstream"})
 
-@app.get("/api/{category}/{endpoint}")
-async def proxy_generic(category: str, endpoint: str, request: Request):
-    """Generic proxy for all categories to match Prexzy structure."""
-    return await _proxy_to_prexzy(category, endpoint, dict(request.query_params), request)
-
-@app.get("/api/{category}/{sub_category}/{endpoint}")
-async def proxy_nested(category: str, sub_category: str, endpoint: str, request: Request):
-    """Nested proxy for categories like anime/search."""
-    return await _proxy_to_prexzy(f"{category}/{sub_category}", endpoint, dict(request.query_params), request)
+# Generic proxy routes moved to end to avoid shadowing specific routes
 
 if __name__ == "__main__":
     import uvicorn
@@ -787,11 +804,11 @@ async def anime_episodes(
             return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
 
     try:
-        id, url = _resolve_anime_by_title(title)
+        episodes = ah_episodes(url, id)
     except AnimeHeavenError as e:
         return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Failed to fetch episodes: {str(e)}"})
 
     return {
         "success": True,
@@ -903,6 +920,7 @@ async def anime_download(
 
 
 
+@app.get("/api/trailer")
 async def get_trailer(
     title: str = Query(..., description="Movie or show title"),
     year: str = Query("", description="Release year (optional)"),
@@ -1291,3 +1309,13 @@ async def admin_stats(request: Request, adminkey: str = Query(...)):
         "uptime": "running",
         "version": APP_VERSION,
     }
+
+@app.get("/api/{category}/{endpoint}")
+async def proxy_generic(category: str, endpoint: str, request: Request):
+    """Generic proxy for all categories to match Prexzy structure."""
+    return await _proxy_to_prexzy(category, endpoint, dict(request.query_params), request)
+
+@app.get("/api/{category}/{sub_category}/{endpoint}")
+async def proxy_nested(category: str, sub_category: str, endpoint: str, request: Request):
+    """Nested proxy for categories like anime/search."""
+    return await _proxy_to_prexzy(f"{category}/{sub_category}", endpoint, dict(request.query_params), request)
