@@ -1220,8 +1220,12 @@ async def proxy_downloader(
                 }
             )
         
-        # Wrap with ZENTRIX branding
+        # Wrap with ZENTRIX branding and hide Prexzy reference
         if resp.is_success:
+            # Replace any "creator": "prexzy" with "ZENTRIX TECH"
+            if isinstance(data, dict) and "creator" in data:
+                data["creator"] = "ZENTRIX TECH"
+            
             return JSONResponse(
                 status_code=200,
                 content={
