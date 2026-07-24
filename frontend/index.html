@@ -1308,6 +1308,71 @@ const APIS = [
     endpoint: '/api/ai/music/result',
     method: 'GET',
   },
+,
+  {
+    id: 'download-tiktok',
+    name: 'TikTok Downloader',
+    category: 'Downloader',
+    badge: 'free',
+    desc: 'Download TikTok videos in high quality. Returns video URL, metadata, and music.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/download/tiktok', desc: 'Download TikTok video' },
+    ],
+    fields: [
+      { name: 'url', label: 'TikTok URL', placeholder: 'https://vm.tiktok.com/...', type: 'text' },
+    ],
+    endpoint: '/api/download/tiktok',
+    method: 'GET',
+  },
+  {
+    id: 'download-youtube',
+    name: 'YouTube Downloader',
+    category: 'Downloader',
+    badge: 'free',
+    desc: 'Download YouTube videos in various qualities. Returns video and audio URLs.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/download/youtube', desc: 'Download YouTube video' },
+    ],
+    fields: [
+      { name: 'url', label: 'YouTube URL', placeholder: 'https://youtube.com/watch?v=...', type: 'text' },
+    ],
+    endpoint: '/api/download/youtube',
+    method: 'GET',
+  },
+  {
+    id: 'download-instagram',
+    name: 'Instagram Downloader',
+    category: 'Downloader',
+    badge: 'free',
+    desc: 'Download Instagram posts, reels, and stories. Returns high-quality media files.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37" /></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/download/instagram', desc: 'Download Instagram post' },
+    ],
+    fields: [
+      { name: 'url', label: 'Instagram URL', placeholder: 'https://instagram.com/p/...', type: 'text' },
+    ],
+    endpoint: '/api/download/instagram',
+    method: 'GET',
+  },
+  {
+    id: 'download-spotify',
+    name: 'Spotify Downloader',
+    category: 'Downloader',
+    badge: 'free',
+    desc: 'Download Spotify tracks and get metadata. Returns audio file and song details.',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg>`,
+    endpoints: [
+      { method: 'GET', path: '/api/download/spotify', desc: 'Download Spotify track' },
+    ],
+    fields: [
+      { name: 'url', label: 'Spotify URL', placeholder: 'https://open.spotify.com/track/...', type: 'text' },
+    ],
+    endpoint: '/api/download/spotify',
+    method: 'GET',
+  }
 ];
 
 // ===================== MERGE ADMIN APIS =====================
