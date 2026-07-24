@@ -13,15 +13,19 @@ Endpoints:
   GET  /api/trailer                  -> Get YouTube trailer
   GET  /api/anime/search             -> Search anime
   GET  /api/anime/episodes           -> Get episode list
-  GET  /api/anime/stream             -> Get anime stream URLs
-  GET  /api/image/generate           -> Text-to-image generation
-  GET  /api/image/edit               -> Edit image with AI prompt
-  GET  /api/image/transform          -> Transform image (img2img)
-  GET  /api/image/transform/result   -> Poll transform result by task_id
-  GET  /api/image/blend              -> Blend up to 4 images
-  GET  /zentrix/stream               -> Proxy video stream
+  GET  /api/anime/stream             -> Get anime stream URL
+    GET  /api/anime/download           -> Get anime download URL
+    GET  /api/ai/chat                  -> Chat with AI (multiple models)
+    GET  /api/ai/qwen                  -> Chat with Alibaba Qwen AI
+    GET  /api/ai/music                 -> Generate AI music
+    GET  /api/ai/music/result          -> Get AI music generation result
+    GET  /api/image/generate           -> Text-to-image generation
+    GET  /api/image/edit               -> Edit image with AI prompt
+    GET  /api/image/transform          -> Transform image (img2img)
+    GET  /api/image/transform/result   -> Poll transform result by task_id
+    GET  /api/image/blend              -> Blend up to 4 images
+    GET  /zentrix/stream               -> Proxy video stream
   GET  /zentrix/download             -> Proxy video download
-  GET  /zentrix/player               -> In-browser video player
   GET  /zentrix/encode               -> Encode CDN URL to token
 
 Auth:  x-api-key header or ?apikey= query param
@@ -54,6 +58,14 @@ from zentrix_proxy import (
 
 # -- Import hakuna search (uses gzmovieboxapi.septorch.tech) ----------------------
 from hakuna_v5 import hakuna_search as _hakuna_search
+
+# -- Import AnimeHeaven scraper -------------------------------------------------
+from animeheaven import (
+    search_anime as ah_search,
+    get_episode_list as ah_episodes,
+    extract_video_source as ah_extract,
+    AnimeHeavenError,
+)
 
 def zentrix_search(query: str, page: int = 1, subject_type: str = "ALL", per_page: int = 24):
     """Wrapper around hakuna_search that returns zentrix_proxy-compatible format."""
@@ -107,7 +119,10 @@ CDN_HEADERS = {
 def build_url(path: str, request: Request | None = None) -> str:
     base = BASE_URL
     if not base and request is not None:
-        base = str(request.base_url).rstrip("/")
+        # Check for Railway/Proxy forwarded protocol
+        protocol = request.headers.get("x-forwarded-proto", "http")
+        host = request.headers.get("x-forwarded-host") or request.url.netloc
+        base = f"{protocol}://{host}"
     return f"{base}{path}" if base else path
 
 
@@ -121,7 +136,12 @@ def make_token(url: str) -> str:
 
 def decode_token(token: str) -> str | None:
     try:
-        return base64.urlsafe_b64decode(token + "==").decode("utf-8")
+        # Unquote in case the token was double-encoded or contains URL-encoded chars
+        token = urllib.parse.unquote(token).strip()
+        missing_padding = len(token) % 4
+        if missing_padding:
+            token += "=" * (4 - missing_padding)
+        return base64.urlsafe_b64decode(token).decode("utf-8")
     except Exception:
         return None
 
@@ -204,7 +224,7 @@ async def track_requests(request: Request, call_next):
 # -- Auth middleware -------------------------------------------------------------
 _AUTH_REQUIRED_PREFIXES = ("/api/",)
 _AUTH_REQUIRED_EXACT = {"/zentrix/encode"}
-_OPEN_PATHS = {"/health", "/zentrix/player"}
+_OPEN_PATHS = {"/health"}
 
 
 @app.middleware("http")
@@ -353,13 +373,13 @@ async def get_sources(
         # Wrap through septorch proxy to bypass CDN 403
         proxied_url = f"https://gzmovieboxapi.septorch.tech/api/proxy?url={urllib.parse.quote(url, safe='')}&apikey=Godszeal"
         token = make_token(proxied_url)
+        safe_token = urllib.parse.quote(token)
         streams.append({
             "resolution": dl.resolution,
             "quality": f"{dl.resolution}p",
-            "stream_url": build_url(f"/zentrix/stream?token={token}", request),
-            "player_url": build_url(f"/zentrix/player?token={token}", request),
+            "stream_url": build_url(f"/zentrix/stream?token={safe_token}", request),
             "download_url": build_url(
-                f"/zentrix/download?token={token}&filename=video_{dl.resolution}p.mp4", request
+                f"/zentrix/download?token={safe_token}&filename=video_{dl.resolution}p.mp4", request
             ),
         })
 
@@ -454,6 +474,88 @@ async def get_details(
 # PROXY ENDPOINTS
 # ================================================================================
 
+async def _proxy_video_base(
+    cdn_url: str, 
+    request: Request, 
+    is_download: bool = False, 
+    filename: str = "video.mp4"
+):
+    """Internal helper to proxy video content from various CDNs."""
+    cdn_headers = dict(CDN_HEADERS)
+
+    # 1. Handle Range requests for streaming
+    range_header = request.headers.get("range")
+    if range_header:
+        cdn_headers["Range"] = range_header
+
+    # 2. Domain-specific header overrides
+    if "aoneroom.com" in cdn_url:
+        cdn_headers.update({"Referer": "https://aoneroom.com/", "Origin": "https://aoneroom.com/"})
+    elif "hakunaymatata.com" in cdn_url or "hakunamatata.com" in cdn_url:
+        cdn_headers.update({"Referer": "https://www.hakunaymatata.com/", "Origin": "https://www.hakunaymatata.com/"})
+    elif "animeheaven.me" in cdn_url:
+        cdn_headers.update({"Referer": "https://animeheaven.me/", "Origin": "https://animeheaven.me/"})
+    elif "septorch.tech" in cdn_url:
+        cdn_headers.update({"Referer": "https://gzmovieboxapi.septorch.tech/", "Origin": "https://gzmovieboxapi.septorch.tech/"})
+
+    # 3. Perform request via zentrix_proxy session (supports auth/cookies)
+    import asyncio
+    loop = asyncio.get_event_loop()
+    zx = _zx_session()
+    zx._ensure_auth()
+    
+    try:
+        resp_sync = await loop.run_in_executor(
+            None, 
+            lambda: zx.session.get(cdn_url, headers=cdn_headers, stream=True, timeout=120, allow_redirects=True)
+        )
+        
+        # If 403, try resetting session once
+        if resp_sync.status_code == 403:
+            zentrix_reset_session()
+            zx = _zx_session()
+            zx._ensure_auth()
+            resp_sync = await loop.run_in_executor(
+                None,
+                lambda: zx.session.get(cdn_url, headers=cdn_headers, stream=True, timeout=120, allow_redirects=True)
+            )
+            
+        if resp_sync.status_code >= 400:
+            return JSONResponse(
+                status_code=resp_sync.status_code,
+                content={"success": False, "error": f"Upstream error: {resp_sync.status_code}"}
+            )
+            
+    except Exception as e:
+        logger.error(f"Proxy error for {cdn_url}: {e}")
+        return JSONResponse(status_code=502, content={"success": False, "error": "Upstream connection failed"})
+
+    # 4. Prepare response headers
+    response_headers = {
+        "Accept-Ranges": "bytes",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges",
+        "Content-Type": resp_sync.headers.get("content-type", "video/mp4"),
+    }
+
+    if is_download:
+        response_headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    # Pass through relevant upstream headers
+    for h in ("content-length", "content-range", "accept-ranges", "etag", "last-modified", "cache-control"):
+        if h in resp_sync.headers:
+            response_headers[h] = resp_sync.headers[h]
+
+    async def byte_generator():
+        try:
+            for chunk in resp_sync.iter_content(chunk_size=65536):
+                yield chunk
+        finally:
+            resp_sync.close()
+
+    return StreamingResponse(byte_generator(), status_code=resp_sync.status_code, headers=response_headers)
+
+
 @app.get("/zentrix/stream")
 async def proxy_stream(
     request: Request,
@@ -463,64 +565,13 @@ async def proxy_stream(
     cdn_url = decode_token(token)
     if cdn_url is None:
         return JSONResponse(status_code=400, content={"success": False, "error": "Invalid token"})
-
-    cdn_headers = dict(CDN_HEADERS)
-
-    range_header = request.headers.get("range")
-    if range_header:
-        cdn_headers["Range"] = range_header
-
-    # Set correct referer based on CDN domain
-    if "aoneroom.com" in cdn_url:
-        cdn_headers.update({"Referer": "https://aoneroom.com/", "Origin": "https://aoneroom.com/"})
-    elif "hakunaymatata.com" in cdn_url or "hakunamatata.com" in cdn_url:
-        cdn_headers.update({"Referer": "https://www.hakunaymatata.com/", "Origin": "https://www.hakunaymatata.com/"})
-
-    import asyncio
-    loop = asyncio.get_event_loop()
-    zx = _zx_session()
-    zx._ensure_auth()
-    # Strip expired params and re-fetch fresh URL if needed
-    resp_sync = await loop.run_in_executor(
-        None, 
-        lambda: zx.session.get(cdn_url, headers=cdn_headers, stream=True, timeout=60, allow_redirects=True)
-    )
-    # If 403, try resetting session and retry once
-    if resp_sync.status_code == 403:
-        from zentrix_proxy import zentrix_reset_session
-        zentrix_reset_session()
-        zx = _zx_session()
-        zx._ensure_auth()
-        resp_sync = await loop.run_in_executor(
-            None,
-            lambda: zx.session.get(cdn_url, headers=cdn_headers, stream=True, timeout=60, allow_redirects=True)
-        )
-    resp = resp_sync
-    client = None
-
-    response_headers = {
-        "Accept-Ranges": "bytes",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges",
-        "Content-Type": resp.headers.get("content-type", "video/mp4"),
-    }
-
-    for h in ("content-length", "content-range", "accept-ranges", "etag", "last-modified", "cache-control"):
-        if h in resp.headers:
-            response_headers[h] = resp.headers[h]
-
-    async def byte_generator():
-        try:
-            for chunk in resp.iter_content(chunk_size=65536):
-                yield chunk
-        finally:
-            resp.close()
-
-    return StreamingResponse(byte_generator(), status_code=resp.status_code, headers=response_headers)
+    
+    return await _proxy_video_base(cdn_url, request, is_download=False)
 
 
 @app.get("/zentrix/download")
 async def proxy_download(
+    request: Request,
     token: str = Query(..., description="Base64-encoded CDN URL"),
     filename: str = Query("video.mp4", description="Download filename"),
 ):
@@ -528,27 +579,8 @@ async def proxy_download(
     cdn_url = decode_token(token)
     if cdn_url is None:
         return JSONResponse(status_code=400, content={"success": False, "error": "Invalid token"})
-
-    client = httpx.AsyncClient(timeout=120, follow_redirects=True)
-    req = client.build_request("GET", cdn_url, headers=CDN_HEADERS)
-    resp = await client.send(req, stream=True)
-
-    response_headers = {
-        "Content-Disposition": f'attachment; filename="{filename}"',
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": resp.headers.get("content-type", "video/mp4"),
-    }
-    if "content-length" in resp.headers:
-        response_headers["Content-Length"] = resp.headers["content-length"]
-
-    async def byte_generator():
-        try:
-            for chunk in resp.iter_content(chunk_size=65536):
-                yield chunk
-        finally:
-            resp.close()
-
-    return StreamingResponse(byte_generator(), status_code=resp.status_code, headers=response_headers)
+    
+    return await _proxy_video_base(cdn_url, request, is_download=True, filename=filename)
 
 
 @app.get("/zentrix/encode")
@@ -558,13 +590,13 @@ async def encode_url(
 ):
     """Encode a CDN URL to a proxy token."""
     token = make_token(url)
+    safe_token = urllib.parse.quote(token)
     return {
         "success": True,
         "creator": "ZENTRIX TECH",
         "token": token,
-        "stream_url": build_url(f"/zentrix/stream?token={token}", request),
-        "player_url": build_url(f"/zentrix/player?token={token}", request),
-        "download_url": build_url(f"/zentrix/download?token={token}", request),
+        "stream_url": build_url(f"/zentrix/stream?token={safe_token}", request),
+        "download_url": build_url(f"/zentrix/download?token={safe_token}", request),
     }
 
 
@@ -582,114 +614,207 @@ if __name__ == "__main__":
 # ANIME ENDPOINTS
 # ================================================================================
 
+def _resolve_anime_by_title(title: str) -> tuple[str, str]:
+    """
+    Search for anime by title and return (id, url) for the best match.
+    Prioritizes:
+    1. Exact (case-insensitive) title matches
+    2. Titles that start with the query
+    3. Fallback to the first search result
+    """
+    search_results = ah_search(title)
+    if not search_results:
+        raise AnimeHeavenError(f"No anime found for title '{title}'")
+
+    best_match = None
+    lower_title = title.lower().strip()
+
+    # 1. Try exact match
+    for r in search_results:
+        if r.get("title", "").lower().strip() == lower_title:
+            best_match = r
+            break
+
+    # 2. Try starts-with match
+    if not best_match:
+        for r in search_results:
+            if r.get("title", "").lower().strip().startswith(lower_title):
+                best_match = r
+                break
+
+    # 3. Fallback to first result
+    if not best_match:
+        best_match = search_results[0]
+
+    anime_id = best_match.get("id")
+    anime_url = best_match.get("url")
+    if not anime_id or not anime_url:
+        raise AnimeHeavenError(f"Could not resolve id/url for title '{title}'")
+    
+    return anime_id, anime_url
+
 @app.get("/api/anime/search")
 async def anime_search(
     q: str = Query(..., description="Anime title to search"),
-    page: int = Query(1, ge=1),
 ):
-    """Search anime — returns only anime/tv_series results."""
+    """Search anime on AnimeHeaven."""
     try:
-        result = zentrix_search(query=q, page=page, subject_type="ALL", per_page=24)
+        results = ah_search(q)
+    except AnimeHeavenError as e:
+        return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
 
-    items = result.get("items", [])
-    serialized = []
-    for item in items:
-        serialized.append({
-            "subjectId": item.get("subjectId", ""),
-            "title": item.get("title", ""),
-            "subjectType": item.get("subjectType", ""),
-            "detailPath": item.get("detailPath", ""),
-            "releaseDate": item.get("releaseDate", ""),
-            "imdbRatingValue": item.get("imdbRatingValue", 0),
-            "hasResource": item.get("hasResource", False),
-            "poster": item.get("cover", ""),
-            "genre": item.get("genre", []),
-            "duration": item.get("duration", 0),
-        })
+    # Sort results using tiered priority
+    lower_q = q.lower().strip()
+    
+    def get_priority(r):
+        title = r.get("title", "").lower().strip()
+        if title == lower_q:
+            return 0  # Exact match
+        if title.startswith(lower_q):
+            return 1  # Starts with
+        return 2      # Everything else
 
-    pager = result.get("pager", {})
+    # stable sort to maintain original order for same-priority items
+    results.sort(key=get_priority)
+
     return {
         "success": True,
         "creator": "ZENTRIX TECH",
-        "results": serialized,
-        "page": pager.get("page", page),
-        "hasMore": pager.get("hasMore", False),
+        "results": results,
     }
 
 
 @app.get("/api/anime/episodes")
 async def anime_episodes(
-    q: str = Query(..., description="Anime title"),
+    id: Optional[str] = Query(None, description="Anime ID from /api/anime/search (optional, if title is provided)"),
+    url: Optional[str] = Query(None, description="Anime URL from /api/anime/search (optional, if title is provided)"),
+    title: Optional[str] = Query(None, description="Anime title to search (optional, if id/url are not provided)"),
 ):
-    """Get episode list for an anime series by title."""
-    try:
-        result = zentrix_search(query=q, page=1, subject_type="ALL", per_page=5)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
-    items = result.get("items", [])
-    if not items:
-        return JSONResponse(status_code=404, content={"success": False, "error": f"No results found for '{q}'"})
-    detail_path = items[0].get("detailPath", "")
-    try:
-        data = zentrix_details(detail_path=detail_path)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+    """Get episode list for an anime."""
+    if not id or not url:
+        if not title:
+            return JSONResponse(status_code=400, content={"success": False, "error": "Either id/url or title must be provided."})
+        try:
+            id, url = _resolve_anime_by_title(title)
+        except AnimeHeavenError as e:
+            return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
 
-    raw = data.get("raw", {})
-    subject = raw.get("subject", {})
-    resource = raw.get("resource", {})
-    seasons = resource.get("seasons", [])
+    try:
+        episodes = ah_episodes(url, id)
+    except AnimeHeavenError as e:
+        return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Failed to fetch episodes: {str(e)}"})
+
     return {
         "success": True,
         "creator": "ZENTRIX TECH",
-        "title": subject.get("title", ""),
-        "totalSeasons": len(seasons),
-        "seasons": seasons,
-        "poster": subject.get("cover", ""),
-        "description": subject.get("description", ""),
+        "episodes": episodes,
+    }
+
+
+def _build_anime_stream_response(
+    request: Request,
+    anime_id: str,
+    ep_number: str,
+    ep_id: str,
+    title: str = "",
+) -> dict:
+    """Shared extraction logic for stream and download endpoints."""
+    video_url, source_type = ah_extract(anime_id, ep_number, ep_id)
+    token = make_token(video_url)
+    filename = f"{title}_Episode_{ep_number}.mp4" if title else f"Episode_{ep_number}.mp4"
+    safe_token = urllib.parse.quote(token)
+    safe_filename = urllib.parse.quote(filename)
+    return {
+        "success": True,
+        "creator": "ZENTRIX TECH",
+        "title": title,
+        "episode": ep_number,
+        "source_type": source_type,
+        "stream_url": build_url(f"/zentrix/stream?token={safe_token}", request),
+        "download_url": build_url(f"/zentrix/download?token={safe_token}&filename={safe_filename}", request),
     }
 
 
 @app.get("/api/anime/stream")
 async def anime_stream(
     request: Request,
-    q: str = Query(..., description="Anime title"),
-    season: int = Query(1, ge=1),
-    episode: int = Query(1, ge=1),
+    ep_number: str = Query(..., description="Episode number"),
+    id: Optional[str] = Query(None, description="Anime ID (optional, if title is provided)"),
+    url: Optional[str] = Query(None, description="Anime URL (optional, if title is provided)"),
+    title: Optional[str] = Query(None, description="Anime title (optional, if id/url are not provided)"),
+    ep_id: str = Query("", description="Episode hash ID (optional, speeds up extraction)"),
 ):
-    """Get stream URLs for an anime episode by title."""
-    import urllib.parse
-    try:
-        result = zentrix_search(query=q, page=1, subject_type="ALL", per_page=5)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
-    items = result.get("items", [])
-    if not items:
-        return JSONResponse(status_code=404, content={"success": False, "error": f"No results found for '{q}'"})
-    subject_id = items[0].get("subjectId", "")
-    detail_path = items[0].get("detailPath", "")
-    try:
-        downloads, captions = zentrix_media(subject_id=subject_id, detail_path=detail_path, season=season, episode=episode)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+    """Get stream URL for an anime episode (token-proxied for in-browser playback)."""
+    if not id or not url:
+        if not title:
+            return JSONResponse(status_code=400, content={"success": False, "error": "Either id/url or title must be provided."})
+        try:
+            id, url = _resolve_anime_by_title(title)
+        except AnimeHeavenError as e:
+            return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
 
-    streams = []
-    for dl in downloads:
-        url = dl.url
-        proxied_url = f"https://gzmovieboxapi.septorch.tech/api/proxy?url={urllib.parse.quote(url, safe='')}&apikey=Godszeal"
-        token = make_token(proxied_url)
-        streams.append({
-            "resolution": dl.resolution,
-            "quality": f"{dl.resolution}p",
-            "stream_url": build_url(f"/zentrix/stream?token={token}", request),
-            "player_url": build_url(f"/zentrix/player?token={token}", request),
-            "download_url": build_url(f"/zentrix/download?token={token}&filename=ep{episode}_{dl.resolution}p.mp4", request),
-        })
+    # If ep_id is missing, resolve it from the episode list
+    if not ep_id:
+        try:
+            episodes = ah_episodes(url, id)
+            target_ep = next((ep for ep in episodes if ep.get("number") == ep_number), None)
+            if target_ep and target_ep.get("ep_id"):
+                ep_id = target_ep["ep_id"]
+        except Exception as e:
+            logger.warning(f"Failed to auto-resolve ep_id for {id} ep {ep_number}: {e}")
 
-    subtitles = [{"language": cap.lan, "languageName": cap.lanName, "url": cap.url} for cap in captions]
-    return {"success": True, "creator": "ZENTRIX TECH", "title": items[0].get("title", ""), "streams": streams, "subtitles": subtitles}
+    try:
+        return _build_anime_stream_response(request, id, ep_number, ep_id, title)
+    except AnimeHeavenError as e:
+        return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Stream extraction failed: {str(e)}"})
+
+
+@app.get("/api/anime/download")
+async def anime_download(
+    request: Request,
+    ep_number: str = Query(..., description="Episode number"),
+    id: Optional[str] = Query(None, description="Anime ID (optional, if title is provided)"),
+    url: Optional[str] = Query(None, description="Anime URL (optional, if title is provided)"),
+    title: Optional[str] = Query(None, description="Anime title (optional, if id/url are not provided)"),
+    ep_id: str = Query("", description="Episode hash ID (optional, speeds up extraction)"),
+):
+    """Get download URL for an anime episode (token-proxied)."""
+    if not id or not url:
+        if not title:
+            return JSONResponse(status_code=400, content={"success": False, "error": "Either id/url or title must be provided."})
+        try:
+            id, url = _resolve_anime_by_title(title)
+        except AnimeHeavenError as e:
+            return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"success": False, "error": f"Search failed: {str(e)}"})
+
+    # If ep_id is missing, resolve it from the episode list
+    if not ep_id:
+        try:
+            episodes = ah_episodes(url, id)
+            target_ep = next((ep for ep in episodes if ep.get("number") == ep_number), None)
+            if target_ep and target_ep.get("ep_id"):
+                ep_id = target_ep["ep_id"]
+        except Exception as e:
+            logger.warning(f"Failed to auto-resolve ep_id for {id} ep {ep_number}: {e}")
+
+    try:
+        return _build_anime_stream_response(request, id, ep_number, ep_id, title)
+    except AnimeHeavenError as e:
+        return JSONResponse(status_code=404, content={"success": False, "error": str(e)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Download extraction failed: {str(e)}"})
 
 
 
@@ -895,23 +1020,23 @@ async def image_transform_result(
 
 @app.get("/api/image/blend")
 async def image_blend(
-    image1: str = Query(..., description="First image URL (required)"),
-    image2: str = Query("", description="Second image URL (optional)"),
+    image1: str = Query(..., description="First image URL"),
+    image2: str = Query(..., description="Second image URL"),
     image3: str = Query("", description="Third image URL (optional)"),
     image4: str = Query("", description="Fourth image URL (optional)"),
-    prompt: str = Query("", description="Blending instruction (optional)"),
+    prompt: str = Query("Blend these images together creatively", description="Blending instruction"),
 ):
-    """Blend up to 4 images together using AI."""
-    params: dict = {"image1": image1}
-    if image2: params["image2"] = image2
-    if image3: params["image3"] = image3
-    if image4: params["image4"] = image4
-    if prompt: params["prompt"] = prompt
+    """Blend up to 4 images using AI."""
+    params = {"image1": image1, "image2": image2, "prompt": prompt}
+    if image3:
+        params["image3"] = image3
+    if image4:
+        params["image4"] = image4
 
     async with httpx.AsyncClient(timeout=90) as client:
         try:
             resp = await client.get(
-                f"{_OMEGA_BASE}/api/ai/nanobana-pro-v3",
+                f"{_OMEGA_BASE}/api/ai/nano-banana-blend",
                 params=params,
             )
             data = resp.json()
@@ -927,6 +1052,206 @@ async def image_blend(
     cleaned["success"] = True
     cleaned["creator"] = "ZENTRIX TECH"
     return cleaned
+
+
+# ================================================================================
+# AI CHAT & MEDIA ENDPOINTS
+# ================================================================================
+
+@app.get("/api/ai/chat")
+async def ai_chat(
+    message: str = Query(..., description="User message"),
+    session_id: str = Query("zentrix_chat", alias="sessionId", description="Session ID for conversation memory"),
+    model: str = Query("chatgpt", description="AI model to use (chatgpt, claude, gemini, deepseek, etc.)"),
+):
+    """Chat with various AI models."""
+    async with httpx.AsyncClient(timeout=60) as client:
+        try:
+            resp = await client.get(
+                f"{_OMEGA_BASE}/api/ai/Chatai",
+                params={"message": message, "sessionId": session_id, "model": model, "action": "chat"},
+            )
+            data = resp.json()
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+    if not resp.is_success:
+        return JSONResponse(status_code=resp.status_code, content={"success": False, "error": data.get("error", "Chat failed")})
+
+    cleaned = _clean_omega(data)
+    cleaned["success"] = True
+    cleaned["creator"] = "ZENTRIX TECH"
+    return cleaned
+
+
+@app.get("/api/ai/qwen")
+async def ai_qwen(
+    message: str = Query(..., description="User message"),
+    session_id: str = Query("zentrix_qwen", alias="sessionId", description="Session ID for conversation memory"),
+):
+    """Chat with Alibaba's Qwen AI."""
+    async with httpx.AsyncClient(timeout=60) as client:
+        try:
+            resp = await client.get(
+                f"{_OMEGA_BASE}/api/ai/Qwen-mv2",
+                params={"message": message, "sessionId": session_id},
+            )
+            data = resp.json()
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+    if not resp.is_success:
+        return JSONResponse(status_code=resp.status_code, content={"success": False, "error": data.get("error", "Qwen chat failed")})
+
+    cleaned = _clean_omega(data)
+    cleaned["success"] = True
+    cleaned["creator"] = "ZENTRIX TECH"
+    return cleaned
+
+
+@app.get("/api/ai/music")
+async def ai_music(
+    prompt: str = Query(..., description="Music generation prompt"),
+):
+    """Generate AI music. Returns a task_id to poll for result."""
+    async with httpx.AsyncClient(timeout=60) as client:
+        try:
+            resp = await client.get(
+                f"{_OMEGA_BASE}/api/ai/sonu3",
+                params={"prompt": prompt, "action": "generate"},
+            )
+            data = resp.json()
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+    if not resp.is_success:
+        return JSONResponse(status_code=resp.status_code, content={"success": False, "error": data.get("error", "Music generation failed")})
+
+    cleaned = _clean_omega(data)
+    cleaned["success"] = True
+    cleaned["creator"] = "ZENTRIX TECH"
+    return cleaned
+
+
+@app.get("/api/ai/music/result")
+async def ai_music_result(
+    task_id: str = Query(..., alias="taskId", description="Task ID from /api/ai/music"),
+):
+    """Poll for AI music generation result."""
+    async with httpx.AsyncClient(timeout=30) as client:
+        try:
+            resp = await client.get(
+                f"{_OMEGA_BASE}/api/ai/sonu3",
+                params={"taskId": task_id, "action": "result"},
+            )
+            data = resp.json()
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+    if not resp.is_success:
+        return JSONResponse(status_code=resp.status_code, content={"success": False, "error": data.get("error", "Music result poll failed")})
+
+    cleaned = _clean_omega(data)
+    cleaned["success"] = True
+    cleaned["creator"] = "ZENTRIX TECH"
+    return cleaned
+
+
+# ================================================================================
+# PREXZY DOWNLOADER PROXY ROUTES
+# ================================================================================
+# Proxy all Prexzy downloader endpoints with ZENTRIX branding
+
+@app.get("/api/download/{endpoint}")
+@app.post("/api/download/{endpoint}")
+async def proxy_downloader(
+    endpoint: str,
+    request: Request,
+):
+    """
+    Proxy Prexzy downloader endpoints with ZENTRIX branding.
+    
+    Examples:
+    - GET /api/download/tiktok?url=https://tiktok.com/video/123
+    - GET /api/download/youtube?url=https://youtube.com/watch?v=xyz
+    - GET /api/download/instagram?url=https://instagram.com/p/abc
+    """
+    from datetime import datetime
+    
+    # Exclude AIO downloader
+    if endpoint.lower() == "aio":
+        return JSONResponse(
+            status_code=403,
+            content={
+                "success": False,
+                "creator": "ZENTRIX TECH",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "error": "AIO downloader is not available"
+            }
+        )
+    
+    try:
+        # Get query parameters
+        query_params = dict(request.query_params)
+        
+        # Build Prexzy URL
+        prexzy_url = f"https://prexzyapis.com/download/{endpoint}"
+        
+        # Make request to Prexzy
+        async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            if request.method == "POST":
+                body = await request.body()
+                resp = await client.post(prexzy_url, params=query_params, content=body)
+            else:
+                resp = await client.get(prexzy_url, params=query_params)
+        
+        # Parse response
+        try:
+            data = resp.json()
+        except:
+            # If not JSON, return error
+            return JSONResponse(
+                status_code=resp.status_code,
+                content={
+                    "success": False,
+                    "creator": "ZENTRIX TECH",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "error": "Failed to parse response from downloader"
+                }
+            )
+        
+        # Wrap with ZENTRIX branding
+        if resp.is_success:
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "success": True,
+                    "creator": "ZENTRIX TECH",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "data": data
+                }
+            )
+        else:
+            return JSONResponse(
+                status_code=resp.status_code,
+                content={
+                    "success": False,
+                    "creator": "ZENTRIX TECH",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "error": data.get("error", "Downloader request failed")
+                }
+            )
+    
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "creator": "ZENTRIX TECH",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "error": str(e)
+            }
+        )
 
 
 @app.get("/admin/stats")
